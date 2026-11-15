@@ -104,3 +104,7 @@ confidence:
   labels:                  # lowest score for each label; below "medium" = low
     high: 0.75
     medium: 0.5
+  # If less than this share of the band's total weight could be compared
+  # (values missing on Mars or Earth), the level becomes "insufficient_data"
+  # instead of excellent/good/... so a near-empty match never looks great.
+  min_coverage: 0.5

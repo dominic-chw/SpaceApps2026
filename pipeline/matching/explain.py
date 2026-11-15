@@ -57,6 +57,18 @@ def quality_grid(table, features, confidence_settings):
     return np.column_stack(columns) if columns else np.empty((len(table), 0))
 
 
+def coverage(differences, weights):
+    """Share of the band's total weight that could actually be compared (0-1).
+
+    Example: weights 3, 1, 1 and the weight-3 feature is missing -> 2 / 5 = 0.4.
+    """
+    total_weight = weights[weights > 0].sum()
+    if total_weight == 0:
+        return 0.0
+    present = ~np.isnan(differences) & (weights > 0)
+    return float(weights[present].sum() / total_weight)
+
+
 def confidence(differences, weights, mars_quality, earth_quality, band, confidence_settings):
     """Score how much to trust one match, then turn the score into a label.
 
@@ -68,15 +80,13 @@ def confidence(differences, weights, mars_quality, earth_quality, band, confiden
     Returns (label, score), e.g. ("medium", 0.62).
     """
     present = ~np.isnan(differences) & (weights > 0)
-    total_weight = weights[weights > 0].sum()
-    if total_weight == 0 or not present.any():
+    if not present.any():
         return "low", 0.0
 
-    coverage = weights[present].sum() / total_weight
     trust = np.minimum(mars_quality, earth_quality)[present]
     quality = (weights[present] * trust).sum() / weights[present].sum()
     band_factor = confidence_settings["band_factor"].get(band, 1.0)
-    score = coverage * quality * band_factor
+    score = coverage(differences, weights) * quality * band_factor
 
     labels = confidence_settings["labels"]
     if score >= labels["high"]:

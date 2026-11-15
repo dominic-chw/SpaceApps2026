@@ -228,5 +228,8 @@ def test_match_band_end_to_end():
     # A cell with almost no data still gets twins, but with low confidence.
     unknown = cells[2]
     assert unknown["twins"] and all(t["confidence"] == "low" for t in unknown["twins"])
+    # ...and is never called "excellent": too little was compared.
+    assert all(t["level"] == "insufficient_data" for t in unknown["twins"])
+    assert all(t["level"] != "insufficient_data" for t in icy["twins"])
     assert unknown["mars"]["temp_mean"] is None      # NaN became JSON-safe None
     assert not math.isnan(info["curve_steepness"])

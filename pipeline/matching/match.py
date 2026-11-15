@@ -195,6 +195,10 @@ def match_band(mars, earth, band, how_many=3, spacing_km=200, levels=None,
         twin_list = []
         for e, distance, differences in twins:
             pct = match_pct(distance, steepness)
+            level = level_for(pct, levels)
+            # Too little data compared? Don't let a near-empty match look great.
+            if explain.coverage(differences, weights) < confidence_settings["min_coverage"]:
+                level = "insufficient_data"
             best, worst = explain.best_and_worst(differences, weights, names)
             label, _score = explain.confidence(
                 differences, weights, mars_quality[m], earth_quality[e], band, confidence_settings
@@ -206,7 +210,7 @@ def match_band(mars, earth, band, how_many=3, spacing_km=200, levels=None,
                 "lat": plain_value(earth_row["lat"]),
                 "lon": plain_value(earth_row["lon"]),
                 "match_pct": pct,
-                "level": level_for(pct, levels),
+                "level": level,
                 "best": best,
                 "worst": worst,
                 "confidence": label,
