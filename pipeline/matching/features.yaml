@@ -1,0 +1,106 @@
+# =====================================================================
+# FEATURE LIST: the one place that says which variables we score on.
+# =====================================================================
+# Markus is still choosing datasets, so this list WILL change.
+# To add, remove or rename a variable, edit this file (and the weights in
+# weights/default.json). The scoring code reads this file and never
+# hard-codes feature names.
+#
+# Each feature has:
+#   column:  the column name in the Mars/Earth feature tables (CSV).
+#            Two features can read the same column in different ways.
+#   type:    number   -> a measurement (temperature, slope...)
+#            category -> a word from a fixed list (rock, ground...)
+#            ordered  -> a whole number on a scale (hardness 0-3)
+#   compare: how two values are turned into a difference from 0 to 1:
+#            percentile -> rank within its own planet (0 = lowest, 1 = highest),
+#                          then compare ranks. Good when Mars and Earth have
+#                          very different ranges (Mars is much colder).
+#            absolute   -> plain difference divided by `scale`.
+#            log_z      -> log, then z-score using Earth's average and spread,
+#                          then difference divided by `scale`. Good for terrain.
+#            same       -> 0 if the two words are the same, 1 if different.
+#            steps      -> difference in steps divided by (max - min).
+#   bands:   which depth bands use this feature ("all" = every band).
+#
+# Bands: skin (0-10 cm), upper_metre (10 cm-1 m), drill_zone (1-3 m), deep (>3 m)
+# Temperatures are in kelvin. Slope in degrees. Roughness in metres.
+
+features:
+  temp_mean_rank:          # "is this one of the colder places on its planet?"
+    column: temp_mean
+    type: number
+    compare: percentile
+    bands: all
+  temp_mean_abs:           # "how many degrees apart are they?"
+    column: temp_mean
+    type: number
+    compare: absolute
+    scale: 60              # 60 K apart (or more) counts as a full mismatch
+    bands: all
+  temp_swing:              # how much the temperature changes over a cycle
+    column: temp_swing
+    type: number
+    compare: percentile
+    bands: [skin, upper_metre, drill_zone]
+  ice:                     # is there ice in the ground? (yes / no)
+    column: ice
+    type: category
+    compare: same
+    bands: all
+  ground_class:
+    column: ground_class
+    type: category
+    compare: same
+    allowed: [dry_regolith, ice_cemented, massive_ice, bedrock]
+    bands: all
+  hardness:
+    column: hardness
+    type: ordered
+    compare: steps
+    min: 0
+    max: 3
+    bands: all
+  rock:
+    column: rock
+    type: category
+    compare: same
+    allowed: [volcanic, sedimentary, clay_sulfate, icy, impact_mixed]
+    bands: all
+  slope_deg:
+    column: slope_deg
+    type: number
+    compare: log_z
+    scale: 4               # 4 standard deviations apart = full mismatch
+    bands: all
+  roughness_m:
+    column: roughness_m
+    type: number
+    compare: log_z
+    scale: 4
+    bands: all
+  dryness:
+    column: dryness
+    type: number
+    compare: percentile
+    bands: [skin, upper_metre]
+
+# ---------------------------------------------------------------------
+# CONFIDENCE: how much we trust a match (high / medium / low).
+# ---------------------------------------------------------------------
+# Every value in the tables has a quality tag in a "<column>_quality" column.
+# Each tag gets a trust factor (1 = fully trusted).
+confidence:
+  quality_factor:
+    measured: 1.0
+    modelled: 0.8
+    predicted: 0.6
+    missing_tag: 0.8       # used when a table has no quality column for a value
+  band_factor:             # deeper = less direct data, so less trust
+    skin: 1.0
+    upper_metre: 1.0
+    drill_zone: 0.85
+    deep: 0.6
+  labels:                  # lowest score for each label; below "medium" = low
+    high: 0.75
+    medium: 0.5
