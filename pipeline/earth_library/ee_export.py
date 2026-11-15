@@ -43,7 +43,12 @@ def era5_stats(ee, start, end):
     img = ee.ImageCollection(ERA5).filterDate(start, end).select(ERA5_BANDS)
     mean = img.mean().rename([b + "_mean" for b in ERA5_BANDS])
     rng = img.max().subtract(img.min()).rename([b + "_range" for b in ERA5_BANDS])
-    return mean.addBands(rng)
+    # Real frozen_fraction per soil layer: share of monthly means below 0 °C (273.15 K).
+    # ERA5-Land layers: 1 = 0-7 cm, 2 = 7-28 cm, 3 = 28-100 cm, 4 = 100-289 cm.
+    soil = ERA5_BANDS[:4]
+    frozen = img.select(soil).map(lambda m: m.lt(273.15)).mean().rename(
+        [b + "_frozen" for b in soil])
+    return mean.addBands(rng).addBands(frozen)
 
 
 def modis_stats(ee, start, end):
@@ -68,8 +73,9 @@ def aridity(ee):
 
 
 def worldcover_bare(ee):
+    # 60 = bare / sparse vegetation, 100 = moss and lichen (Arctic polar desert, e.g. Devon Island)
     wc = ee.ImageCollection(WORLDCOVER).first().select("Map")
-    return wc.eq(60).rename("bare_fraction")
+    return wc.eq(60).Or(wc.eq(100)).rename("bare_fraction")
 
 
 def soilgrids_0_2m(ee):
