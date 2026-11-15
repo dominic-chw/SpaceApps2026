@@ -34,7 +34,7 @@ Shared (PR only): `CLAUDE.md`, `README.md`, `config.yaml`, `docs/plan.md`.
 - `weights/default.json`: `{band: {feature: weight}}`, default 1
 
 **Outputs**
-- `output/grid/<band>.json`: `{band, grid_deg, matcher, fake, cells:[{cell_id, lat, lon, mars:{features}, twins:[{region_id, name, lat, lon, match_pct, best[3], worst[3], confidence}]}]}`, top 3 twins
+- `output/grid/<band>.json`: `{band, grid_deg, matcher, fake, cells:[{cell_id, lat, lon, mars:{features}, twins:[{region_id, name, lat, lon, match_pct, level, best[3], worst[3], confidence}]}]}`, top 3 twins
 - `output/showcase.json`: same per showcase site, all bands, top 5, full conditions, `data_quality` (measured/modelled/predicted) per value
 - `output/validation.json`: `{matcher, recall_at_10, recall_at_20, random_recall_at_20, per_band, n_pairs, notes}`
 - `output/earth_library.json`: normalized Earth features + normalization settings, for slider re-scoring with the same Gower formula (reference implementation provided)
@@ -45,6 +45,7 @@ Shared (PR only): `CLAUDE.md`, `README.md`, `config.yaml`, `docs/plan.md`.
 - Rock: `volcanic, sedimentary, clay_sulfate, icy, impact_mixed`
 - Ground: `dry_regolith, ice_cemented, massive_ice, bedrock`; hardness 0–3
 - Matcher: `knn` (default), `deep`, `hybrid`
+- Level (from `match_pct`, cut-offs in `config.yaml`): `excellent, good, fair, poor, no_match`
 
 ## 4. Tools
 GitHub + GitHub Desktop; VS Code + Claude Code; Python 3.11 (Miniconda); Earth Engine (Planetary Computer as backup); rasterio, rioxarray, xarray, geopandas, pandas, pyarrow; scikit-learn; XGBoost/LightGBM; optional PyTorch, torchvision, FAISS on Colab; Drive for data/models; Firebase Hosting/Functions; Leaflet + Mars Trek tiles, Google Maps; Meteomatics.

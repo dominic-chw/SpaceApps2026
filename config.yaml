@@ -9,3 +9,9 @@ paths:
   weights: weights/default.json
   output: output
   models: models
+# Match levels: lowest match_pct for each level (anything below "poor" is no_match)
+levels:
+  excellent: 85
+  good: 70
+  fair: 50
+  poor: 30
