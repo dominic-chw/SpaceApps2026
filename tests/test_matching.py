@@ -25,6 +25,7 @@ def fake_mars():
         "lon": [-126.0, 77.0, 10.0],
         "temp_mean": [190.0, 215.0, np.nan],
         "temp_swing": [60.0, 80.0, np.nan],
+        "frozen_fraction": [1.0, 1.0, np.nan],
         "ice": ["yes", "no", np.nan],
         "ground_class": ["ice_cemented", "dry_regolith", np.nan],
         "hardness": [2, 1, np.nan],
@@ -44,6 +45,7 @@ def fake_earth():
         "lon": [161.0, -89.8, -69.0, -155.5],
         "temp_mean": [253.0, 258.0, 290.0, 285.0],
         "temp_swing": [30.0, 35.0, 25.0, 10.0],
+        "frozen_fraction": [1.0, 0.9, 0.0, 0.0],
         "ice": ["TRUE", "yes", "false", "no"],          # mixed spellings on purpose
         "ground_class": ["ice_cemented", "ice_cemented", "dry_regolith", "bedrock"],
         "hardness": [2, 2, 1, 3],

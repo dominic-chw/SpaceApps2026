@@ -32,12 +32,12 @@ features:
     type: number
     compare: percentile
     bands: all
-  temp_mean_abs:           # "how many degrees apart are they?"
-    column: temp_mean
-    type: number
-    compare: absolute
-    scale: 60              # 60 K apart (or more) counts as a full mismatch
-    bands: all
+  frozen_fraction:         # share of the year the ground at this depth is below 0 °C
+    column: frozen_fraction  # 0 = never frozen, 1 = frozen all year (permafrost)
+    type: number           # Earth: from ERA5-Land monthly soil temperature.
+    compare: absolute      # Mars: from the heat model (~1 almost everywhere).
+    scale: 1               # Used instead of comparing plain kelvin: Mars is 40-100 K
+    bands: all             # colder than all of Earth, so kelvin always mismatches.
   temp_swing:              # how much the temperature changes over a cycle
     column: temp_swing
     type: number

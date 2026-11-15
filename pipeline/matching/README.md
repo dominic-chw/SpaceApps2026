@@ -15,10 +15,13 @@ One CSV per planet per band, e.g. `mars_upper_metre.csv`, `earth_upper_metre.csv
 
 - **Mars columns:** `cell_id, lat, lon`, then the feature columns.
 - **Earth columns:** `region_id, name, lat, lon`, then the feature columns.
-- **Feature columns:** the `column` names in `features.yaml` (right now `temp_mean, temp_swing, ice, ground_class, hardness, rock, slope_deg, roughness_m, dryness`).
+- **Feature columns:** the `column` names in `features.yaml` (right now `temp_mean, frozen_fraction, temp_swing, ice, ground_class, hardness, rock, slope_deg, roughness_m, dryness`).
 - **Quality (optional, recommended):** `<column>_quality` = `measured`, `modelled` or `predicted`.
 - Leave a cell **empty** when the value is unknown. It is skipped and confidence goes down.
 - `lon` east-positive, -180..180. Temperatures in kelvin. `ice` = yes/no.
+- `frozen_fraction` = share of the year (0-1) the ground at that band's depth is below 0 °C.
+  Earth: count months below 0 °C in ERA5-Land soil temperature at that depth, divide by 12.
+  Mars: from the heat model (close to 1 almost everywhere).
 - `rock` and `ground_class` must use the fixed words from plan s3. Translate dataset labels first (lookup CSVs).
 
 A column the code expects but the table lacks is treated as all-missing, so partial tables still run.
