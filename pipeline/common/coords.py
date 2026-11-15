@@ -5,10 +5,19 @@ Check with Jezero (18.4 N, 77.5 E). Step 3; plan s3.
 from .config import get_processing
 
 
+def wrap_lon(lon, west_positive=False):
+    """Convert any longitude to east-positive -180..180.
+    Mars data often comes as 0..360 east (fine, wraps) or west-positive (pass west_positive=True)."""
+    if west_positive:
+        lon = -lon
+    return (lon + 180) % 360 - 180
+
+
 def snap(lat, lon, params=None):
     """Snap lat/lon to the centre of its grid cell."""
     g = (params or get_processing())["grid_deg"]
-    wrap = (lon + 180) % 360 - 180
+    lat = min(max(lat, -90), 90 - 1e-9)  # keep the pole inside the top cell
+    wrap = wrap_lon(lon)
     return (lat // g) * g + g / 2, (wrap // g) * g + g / 2
 
 
