@@ -60,6 +60,25 @@ def clean_word(value):
     return word
 
 
+def position_in_planet(values):
+    """Rank values from 0 (lowest) to 1 (highest). Missing values stay missing.
+
+    (rank - 1) / (count - 1): with 3 values you get 0, 0.5, 1. A single value gets 0.5.
+    """
+    count = values.notna().sum()
+    if count <= 1:
+        return values.where(values.isna(), 0.5)
+    return (values.rank() - 1) / (count - 1)
+
+
+def mars_quantiles(values, points=101):
+    """Mars values at 0%, 1%, ... 100% (None if the column is empty)."""
+    clean = values.dropna().to_numpy(dtype=float)
+    if clean.size == 0:
+        return None
+    return [round(float(q), 4) for q in np.quantile(clean, np.linspace(0, 1, points))]
+
+
 def normalize_pair(mars, earth, features):
     """Turn raw Mars and Earth tables into comparable number grids.
 
@@ -87,11 +106,14 @@ def normalize_pair(mars, earth, features):
 
         if compare == "percentile":
             # Rank each place within its OWN planet: 0 = lowest, 1 = highest.
-            # Example: the coldest Mars cell and the coldest Earth site both get ~0,
+            # Example: the coldest Mars cell and the coldest Earth site both get 0,
             # even though Mars is about 80 K colder.
-            mars_values = pd.to_numeric(mars_raw, errors="coerce").rank(pct=True)
-            earth_values = pd.to_numeric(earth_raw, errors="coerce").rank(pct=True)
-            settings[name] = {"compare": compare}
+            mars_numbers = pd.to_numeric(mars_raw, errors="coerce")
+            mars_values = position_in_planet(mars_numbers)
+            earth_values = position_in_planet(pd.to_numeric(earth_raw, errors="coerce"))
+            # 101 evenly spaced Mars values (0%, 1%, ... 100%), so the web app can
+            # rank a Mars value the same way without the whole Mars table.
+            settings[name] = {"compare": compare, "mars_quantiles": mars_quantiles(mars_numbers)}
 
         elif compare == "absolute":
             # Keep the real values (e.g. kelvin); match.py divides by `scale`.

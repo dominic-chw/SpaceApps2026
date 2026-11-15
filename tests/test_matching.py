@@ -98,7 +98,7 @@ def test_percentile_ranks_within_each_planet():
     earth = pd.DataFrame({"temp_mean": [250.0, 300.0]})
     m, e, _ = normalize.normalize_pair(mars, earth, features)
     # The coldest place on each planet gets the same rank, despite 100 K difference.
-    assert m[:, 0].tolist() == e[:, 0].tolist() == [0.5, 1.0]
+    assert m[:, 0].tolist() == e[:, 0].tolist() == [0.0, 1.0]
 
 
 def test_categories_share_codes_and_tidy_spelling():

@@ -36,8 +36,8 @@ Shared (PR only): `CLAUDE.md`, `README.md`, `config.yaml`, `docs/plan.md`.
 **Outputs**
 - `output/grid/<band>.json`: `{band, grid_deg, matcher, fake, cells:[{cell_id, lat, lon, mars:{features}, twins:[{region_id, name, new_site, lat, lon, match_pct, level, best[3], worst[3], confidence}]}]}`, top 3 twins. `new_site: true` = an Earth cell outside the known analog regions (`region_id` is then its cell id, `name` e.g. "New site, 120 km from Devon Island")
 - `output/showcase.json`: same per showcase site, all bands, top 5, full conditions, `data_quality` (measured/modelled/predicted) per value
-- `output/validation.json`: `{matcher, recall_at_10, recall_at_20, random_recall_at_20, per_band, n_pairs, notes}`
-- `output/earth_library.json`: normalized Earth features + normalization settings, for slider re-scoring with the same Gower formula (reference implementation provided)
+- `output/validation.json`: `{matcher, recall_at_10, recall_at_20, random_recall_at_20, per_band, n_pairs, notes}` + extra detail `overall` (recall@1/3/10/20, mean_rank and their random_ versions), `n_regions`, `ablation_mean_rank_change` (see s15a)
+- `output/earth_library.json`: normalized Earth features + normalization settings, for slider re-scoring with the same Gower formula. Exact format and step-by-step formula: s15a
 - Placeholder outputs carry `"fake": true`
 
 **Vocabularies**
@@ -146,8 +146,62 @@ Sat first hour: steps 0–1 / team sets up, starts research. Sat evening: 2–7 
 ## 14. Showcase sites and research (team)
 _TBD_
 
-## 15. Website (team)
-_TBD_
+## 15. Website (team: Archit, Waleed)
+> AI agents working on `web/`: this section is everything you need from the backend. Don't edit `pipeline/`; ask Jad (scoring) or Dominic (data) for changes.
+
+### 15a. Data the web app reads (all static JSON in `output/`)
+Build against the placeholder files first (they carry `"fake": true`; show a small "demo data" tag while it's true). The shapes below don't change when the real data arrives.
+
+**`output/grid/<band>.json`**: one file per band (`skin`, `upper_metre`, `drill_zone`, `deep`). On a map click, snap to the nearest `cells[]` entry (2° grid, lat ±70, lon −180..180 east-positive).
+```
+{band, grid_deg, matcher, fake,
+ cells: [{cell_id, lat, lon,
+          mars: {temp_mean: 205.1, frozen_fraction: 1.0, ice: "yes", rock: "volcanic", ...},  // raw values, null = unknown
+          twins: [{region_id, name, new_site, lat, lon, match_pct, level, best:[...], worst:[...], confidence}]}]}
+```
+**`output/showcase.json`**: same twin shape, for the quick-jump showcase sites, all bands, top 5.
+
+**Twin fields: how to show them**
+| Field | Meaning | Display suggestion |
+|---|---|---|
+| `name` | Known analog ("Devon Island") or a generated label ("New site, 120 km from Devon Island") | Title of the result card |
+| `new_site` | `true` = outside all known analog regions: a candidate site nobody has tested | **"New site" badge.** This is our headline feature; make it visible |
+| `match_pct` | 0–100, relative: a typical best match ≈ 75 | Number on the card |
+| `level` | `excellent` ≥85, `good` ≥70, `fair` ≥50, `poor` ≥30, `no_match` <30, `insufficient_data` (under half the features could be compared) | Coloured pill. `insufficient_data` = grey, "Not enough data", hide the % |
+| `best` / `worst` | Up to 3 feature names each | "Matched on" / "Differs on" lists, using the feature `label` from `earth_library.json` |
+| `confidence` | `high` / `medium` / `low` (lower for missing, modelled, predicted or deep data) | Small tag; "low" in amber |
+| `lat`, `lon` | Earth location | Marker on the Earth map (Leaflet / Google Maps) |
+
+Twins are already sorted best first and at least 200 km apart.
+
+**`output/validation.json`**: model accuracy, shown in an "How accurate is this?" panel.
+- Headline: `overall.recall_at_3` ("found the known analog in its top 3 for X% of known pairs") vs `overall.random_recall_at_3` (chance). Also `overall.mean_rank` vs `overall.random_mean_rank` out of `n_regions` Earth places.
+- `per_band` has the same numbers per depth band; `ablation_mean_rank_change` = how much worse it gets without each feature (bigger = more important). Good for a small bar chart.
+- Plan fields `recall_at_10`, `recall_at_20`, `random_recall_at_20`, `n_pairs`, `notes` are also present.
+
+**`output/earth_library.json`**: for the advanced weight sliders (re-score in the browser, kNN only).
+```
+{fake, levels: {excellent:85, good:70, fair:50, poor:30}, min_coverage: 0.5, spacing_km: 200,
+ bands: {<band>: {
+   features: [{name, label, unit, compare, scale, min, max, codes, mars_quantiles,
+               earth_log_mean, earth_log_std}],     // only the keys that compare method needs
+   weights: {<feature>: weight},                    // default slider positions (0 = off)
+   steepness: 0.12,                                 // match % curve
+   places: [{id, name, new_site, lat, lon, v: [..]}] // Earth values, already normalized, same order as features; null = missing
+ }}}
+```
+Re-scoring one clicked Mars cell (same maths as `pipeline/matching/match.py`):
+1. Normalize each raw Mars value `x` from the grid file by its feature's `compare`:
+   `percentile` → position of `x` in `mars_quantiles` (101 values, 0..1, interpolate) · `absolute`, `steps` → `x` · `log_z` → `(ln(1+max(x,0)) − earth_log_mean) / earth_log_std` · `same` → `codes[x]` (lower-case; yes/no for ice).
+2. For each Earth place and feature: `d = |v − m| / s` capped at 1, where `s` = `scale` (absolute, log_z), `max − min` (steps) or 1 (percentile). For `same`: `d = 0` if equal, else 1. Skip if either value is null.
+3. `distance = Σ(w·d) / Σ(w)` over the features that weren't skipped (w = slider weight). `coverage = Σ(w of non-skipped) / Σ(all w)`.
+4. Sort by distance; take the top 3, skipping any within `spacing_km` of one already picked (haversine).
+5. `match_pct = 100 · exp(−distance / steepness)`; `level` from `levels`; if `coverage < min_coverage` → `insufficient_data`.
+6. "Matched on" = up to 3 features with the smallest `d` (and `d < 0.5`); "differs on" = up to 3 with the largest `w·d` (and `d > 0`).
+Keep the pipeline's `confidence` from the grid file; the browser doesn't recompute it.
+
+### 15b. UI design
+_TBD (Archit, Waleed)_
 
 ## 16. Weather backend (team)
 _TBD_

@@ -19,7 +19,7 @@ def fake_pairs():
         "mars_name": ["icy plain", "dry volcano", "nowhere"],
         "mars_lat": [67.5, 18.4, 68.0],              # close to, not exactly on, the cells
         "mars_lon": [-125.0, 77.5, -126.0],
-        "earth_region_id": ["devon", "atacama", "not_in_library"],
+        "earth_region_id": ["dry_valleys", "atacama", "not_in_library"],
         "depth_band": ["upper_metre", "upper_metre", "upper_metre"],
         "source_url": ["x", "y", "z"],
     })

@@ -303,8 +303,8 @@ def match_band(mars, earth, band, how_many=3, spacing_km=200, levels=None,
             )
             earth_row = earth.iloc[e]
             twin_list.append({
-                "region_id": prepared["site_ids"][e],
-                "name": prepared["site_names"][e],
+                "region_id": str(prepared["site_ids"][e]),
+                "name": str(prepared["site_names"][e]),
                 "new_site": bool(prepared["new_site"][e]),
                 "lat": plain_value(earth_row["lat"]),
                 "lon": plain_value(earth_row["lon"]),
@@ -323,5 +323,6 @@ def match_band(mars, earth, band, how_many=3, spacing_km=200, levels=None,
         })
 
     info = {"normalization": settings, "curve_steepness": steepness, "features": names,
-            "weights": dict(zip(names, weights.tolist()))}
+            "weights": dict(zip(names, weights.tolist())),
+            "prepared": prepared}   # reused by earth_library.py (no second normalization)
     return cells, info

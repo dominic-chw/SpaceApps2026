@@ -8,6 +8,7 @@ Plain maths, no AI model: normalize -> weighted Gower distance -> nearest Earth 
 | `normalize.py` | Puts every feature on a 0-1 comparable scale. |
 | `match.py` | Distance, top twins (200 km apart), match %, level. Entry point: `match_band()`. |
 | `explain.py` | best[3] / worst[3] features and the confidence label. |
+| `earth_library.py` | Writes `output/earth_library.json` for the web sliders (format + browser formula: plan s15a; `tests/test_earth_library.py` proves the formula matches Python). |
 | `../../weights/default.json` | How much each feature counts per depth band (placeholders for now). |
 
 ## Feature tables (handoff from the data side)

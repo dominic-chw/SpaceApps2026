@@ -7,6 +7,7 @@
 # hard-codes feature names.
 #
 # Each feature has:
+#   label, unit: how the app shows this feature ("Ground ice").
 #   column:  the column name in the Mars/Earth feature tables (CSV).
 #            Two features can read the same column in different ways.
 #   type:    number   -> a measurement (temperature, slope...)
@@ -28,33 +29,45 @@
 
 features:
   temp_mean_rank:          # "is this one of the colder places on its planet?"
+    label: "Coldness (rank on its planet)"
+    unit: ""
     column: temp_mean
     type: number
     compare: percentile
     bands: all
   frozen_fraction:         # share of the year the ground at this depth is below 0 °C
+    label: "Frozen share of the year"
+    unit: "fraction"
     column: frozen_fraction  # 0 = never frozen, 1 = frozen all year (permafrost)
     type: number           # Earth: from ERA5-Land monthly soil temperature.
     compare: absolute      # Mars: from the heat model (~1 almost everywhere).
     scale: 1               # Used instead of comparing plain kelvin: Mars is 40-100 K
     bands: all             # colder than all of Earth, so kelvin always mismatches.
   temp_swing:              # how much the temperature changes over a cycle
+    label: "Temperature swing"
+    unit: "K"
     column: temp_swing
     type: number
     compare: percentile
     bands: [skin, upper_metre, drill_zone]
   ice:                     # is there ice in the ground? (yes / no)
+    label: "Ground ice"
+    unit: ""
     column: ice
     type: category
     compare: same
     bands: all
   ground_class:
+    label: "Ground type"
+    unit: ""
     column: ground_class
     type: category
     compare: same
     allowed: [dry_regolith, ice_cemented, massive_ice, bedrock]
     bands: all
   hardness:
+    label: "Hardness"
+    unit: "0-3"
     column: hardness
     type: ordered
     compare: steps
@@ -62,24 +75,32 @@ features:
     max: 3
     bands: all
   rock:
+    label: "Rock type"
+    unit: ""
     column: rock
     type: category
     compare: same
     allowed: [volcanic, sedimentary, clay_sulfate, icy, impact_mixed]
     bands: all
   slope_deg:
+    label: "Slope"
+    unit: "°"
     column: slope_deg
     type: number
     compare: log_z
     scale: 4               # 4 standard deviations apart = full mismatch
     bands: all
   roughness_m:
+    label: "Surface roughness"
+    unit: "m"
     column: roughness_m
     type: number
     compare: log_z
     scale: 4
     bands: all
   dryness:
+    label: "Dryness"
+    unit: ""
     column: dryness
     type: number
     compare: percentile
