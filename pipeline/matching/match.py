@@ -140,6 +140,10 @@ def format_lat_lon(lat, lon):
 
 # An unnamed site this close to a known analog region is labelled "N km from <region>".
 NEAR_KNOWN_KM = 500
+# An unnamed cell this close to a known analog region counts AS that region (known, not new).
+# A region is tagged on one 0.5 deg cell (~50 km), but places like the Atacama are much bigger.
+# 100 km = the same radius the validation uses for "this is the known site" (SITE_RADIUS_KM).
+KNOWN_RADIUS_KM = 100
 
 
 def site_labels(earth):
@@ -165,15 +169,27 @@ def site_labels(earth):
     known = (regions.notna() & (regions.astype(str).str.strip() != "")).to_numpy()
     known_rows = np.where(known)[0]
 
-    ids, labels = [], []
+    ids, labels, near = [], [], np.zeros(n, dtype=bool)
     for i in range(n):
         if known[i]:
             ids.append(str(regions.iloc[i]).strip())
             labels.append(str(names.iloc[i]) if pd.notna(names.iloc[i]) else ids[-1])
             continue
-        # New site: use its cell_id if it has one, otherwise build one from lat/lon.
         cell = cell_ids.iloc[i]
-        ids.append(str(cell) if pd.notna(cell) else f"earth_{lats[i]:+.2f}_{lons[i]:+.2f}")
+        cell_id = str(cell) if pd.notna(cell) else f"earth_{lats[i]:+.2f}_{lons[i]:+.2f}"
+        if known_rows.size:
+            gaps = distance_km(lats[i], lons[i], lats[known_rows], lons[known_rows])
+            nearest = int(np.argmin(gaps))
+            if gaps[nearest] <= KNOWN_RADIUS_KM:
+                # Inside a known region: keep its own (unique) cell id, but show the region's name.
+                nearest_row = known_rows[nearest]
+                region_name = names.iloc[nearest_row]
+                ids.append(cell_id)
+                labels.append(str(region_name) if pd.notna(region_name) else str(regions.iloc[nearest_row]))
+                near[i] = True
+                continue
+        # New site: use its cell_id if it has one, otherwise build one from lat/lon.
+        ids.append(cell_id)
         label = f"New site ({format_lat_lon(lats[i], lons[i])})"
         if known_rows.size:
             gaps = distance_km(lats[i], lons[i], lats[known_rows], lons[known_rows])
@@ -185,7 +201,7 @@ def site_labels(earth):
                     nearest_name = regions.iloc[nearest_row]
                 label = f"New site, {round(gaps[nearest])} km from {nearest_name}"
         labels.append(label)
-    return np.array(ids), np.array(labels, dtype=object), ~known
+    return np.array(ids), np.array(labels, dtype=object), ~(known | near)
 
 
 def plain_value(value):

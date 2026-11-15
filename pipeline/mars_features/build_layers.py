@@ -171,6 +171,37 @@ def mola_terrain(cells, scale_m=500.0):
     return slope, rough
 
 
+EXTRAS = ROOT / "data" / "mars" / "mars_extras.csv"   # from Dominic: pipeline.data_fetch.export_mars_extras
+ICE_STABLE_N, ICE_STABLE_S = 35.0, -40.0               # equatorward of these, ground ice isn't stable today
+
+
+def mars_extras(cells):
+    """Ice fraction, its quality tag, and water vapour per cell.
+
+    - NASA Mars Odyssey neutron hydrogen (Dominic's mars_extras.csv): ice = clip((h - 0.15) / 0.5, 0, 1).
+      Used ONLY where ice is stable (>= 35 N, <= 40 S): near the equator high hydrogen is
+      hydrated minerals (e.g. Arabia Terra), not ice. The final ice_frac is the larger of
+      this and the latitude rule, because neutrons only see the top ~1 m and miss buried
+      excess ice (Arcadia, Utopia). Quality "measured" where hydrogen decides, else "modelled".
+    - MCD water vapour (precipitable microns) -> water_vapour_pr_um (Mars dryness).
+    Without the CSV: latitude rule only, vapour empty.
+    """
+    by_lat = ice_by_latitude(cells["lat"])
+    if not EXTRAS.exists():
+        print("WARNING: data/mars/mars_extras.csv missing; ice from latitude only, dryness empty")
+        return by_lat, np.full(len(cells), "modelled", dtype=object), np.full(len(cells), np.nan)
+    extra = cells[["cell_id"]].merge(pd.read_csv(EXTRAS), on="cell_id", how="left")
+    lat = cells["lat"].to_numpy(float)
+    stable = (lat >= ICE_STABLE_N) | (lat <= ICE_STABLE_S)
+    # Neutrons see pore ice in the top ~1 m = ice-cemented ground, so cap at 0.6 (below the
+    # 0.7 massive-ice threshold): massive ice comes only from the buried excess-ice belt / polar units.
+    from_h = np.clip((extra["hydrogen"].to_numpy(float) - 0.15) / 0.5, 0, 0.6)
+    from_h = np.where(stable, np.nan_to_num(from_h), 0.0)
+    ice = np.maximum(by_lat, from_h)
+    quality = np.where(stable & (from_h >= by_lat) & (from_h > 0), "measured", "modelled").astype(object)
+    return ice, quality, extra["water_vapour_pr_um"].to_numpy(float)
+
+
 def build(out=OUT, params=None):
     p = params or get_processing()
     grid = grid_cells(p)
@@ -182,14 +213,15 @@ def build(out=OUT, params=None):
         i = cells.index[cells["cell_id"] == cell_id(lat, lon, p)][0]     # the cell CONTAINING the site
         units[i], unit_names[i] = "clay_sulfate_site", f"{name} (hand-tagged clay/sulfate site)"
     slope, rough = mola_terrain(cells)
+    ice_frac, ice_quality, vapour = mars_extras(cells)
 
     df = cells.assign(
         thermal_inertia=tes_thermal_inertia(cells),
-        ice_frac=ice_by_latitude(cells["lat"]),
-        ice_quality="modelled",
+        ice_frac=ice_frac,
+        ice_quality=ice_quality,
         unit=units.to_numpy(), unit_name=unit_names.to_numpy(),
         slope_deg=slope, roughness_m=rough,
-        water_vapour_pr_um=np.nan,
+        water_vapour_pr_um=vapour,
     )
     if out is not None:
         out.parent.mkdir(parents=True, exist_ok=True)
