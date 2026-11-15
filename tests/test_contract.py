@@ -44,7 +44,7 @@ def check_conditions(m):
 @pytest.mark.parametrize("band", BANDS)
 def test_grid(band):
     d = load("grid", f"{band}.json")
-    assert d["band"] == band and d["fake"] is True and d["matcher"] in {"knn", "deep", "hybrid"}
+    assert d["band"] == band and isinstance(d["fake"], bool) and d["matcher"] in {"knn", "deep", "hybrid"}
     assert d["cells"]
     levels = set()
     for c in d["cells"]:
@@ -63,7 +63,7 @@ def test_new_sites_present():
 
 def test_showcase():
     d = load("showcase.json")
-    assert d["fake"] is True and d["sites"]
+    assert isinstance(d["fake"], bool) and d["sites"]
     for s in d["sites"]:
         assert set(s["bands"]) == set(BANDS)
         for b in s["bands"].values():
@@ -76,7 +76,7 @@ def test_showcase():
 
 def test_earth_library_shape():
     d = load("earth_library.json")
-    assert d["fake"] is True and set(d["levels"]) == {"excellent", "good", "fair", "poor"}
+    assert isinstance(d["fake"], bool) and set(d["levels"]) == {"excellent", "good", "fair", "poor"}
     assert 0 < d["min_coverage"] <= 1 and d["spacing_km"] > 0
     assert set(d["bands"]) == set(BANDS)
     for band in d["bands"].values():
@@ -92,7 +92,7 @@ def test_earth_library_shape():
 
 def test_validation_shape():
     d = load("validation.json")
-    assert d["fake"] is True
+    assert isinstance(d["fake"], bool)
     assert {"matcher", "recall_at_10", "recall_at_20", "random_recall_at_20", "per_band", "n_pairs",
             "notes", "overall", "n_regions", "ablation_mean_rank_change"} <= set(d)
     assert isinstance(d["notes"], list) and all(isinstance(n, str) for n in d["notes"])

@@ -1,5 +1,5 @@
 """Earth source layers: regions + sample points with climate, terrain, geology, labels.
-Real layers come from data/earth/layers.parquet (same columns as common/synthetic.earth_layers);
+Layers come from the configured sources (common/sources.py, config processing.sources);
 otherwise synthetic layers are used (printed warning). GLiM class -> rock via glim_lookup.csv.
 Step 7; plan s5-s6.
 """
@@ -33,6 +33,6 @@ def load_layers(params=None):
     p = params or get_processing()
     layers = read_layers("earth")
     if layers is None:
-        print("WARNING: data/earth/layers.parquet missing; using synthetic Earth layers")
+        print("WARNING: all Earth sources are synthetic (config processing.sources); using synthetic Earth layers")
         layers = earth_layers(load_regions(), params=p)
     return layers

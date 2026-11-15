@@ -17,6 +17,7 @@ NUMERIC = ["mean_temp_k", "annual_range_k", "elevation_m", "slope_deg", "lat", "
 
 def _features(df):
     X = df[NUMERIC].copy()
+    X = X.loc[:, X.notna().any()]          # drop all-missing predictors (e.g. no bedrock dataset)
     X["glim"] = df["glim_class"].astype("category").cat.codes
     return X
 
