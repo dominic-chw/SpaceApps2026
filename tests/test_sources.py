@@ -1,4 +1,7 @@
 """Pluggable source loaders (pipeline/common/sources.py) on tiny fake arrays and tables. No downloads."""
+import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -109,9 +112,11 @@ def test_earth_grid_cells_include_regions_with_region_id():
     p = p_with({"earth": {"cells": {"source": "grid", "deg": 30, "lat_limit": 60}}}, earth_grid_deg=30)
     cells = sources._cells("earth", sources.source_specs("earth", p)["cells"], p)
     assert {"dry_valleys", "atacama_high"} <= set(cells["cell_id"])          # known analogs keep region_id
+    geo = Path(__file__).resolve().parents[1] / "pipeline" / "earth_library" / "regions.geojson"
+    n_regions = len(json.loads(geo.read_text(encoding="utf-8"))["features"])   # follows the regions file
     named = cells[cells["name"] != ""]
-    assert len(named) == 20 and cells["cell_id"].is_unique
-    assert len(cells) == 20 + 4 * 12                                          # regions + 30 deg grid in +-60
+    assert len(named) == n_regions and cells["cell_id"].is_unique
+    assert len(cells) == n_regions + 4 * 12                                   # regions + 30 deg grid in +-60
 
 
 def test_unknown_source_rejected():

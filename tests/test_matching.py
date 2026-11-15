@@ -244,17 +244,18 @@ def test_match_band_end_to_end():
 
 def test_unnamed_cells_become_labelled_new_sites():
     earth = pd.DataFrame({
-        "region_id": ["devon", None, None],
-        "name": ["Devon Island", None, None],
-        "cell_id": [None, "e_1", None],
-        "lat": [75.4, 74.5, -23.5],
-        "lon": [-89.8, -89.8, -69.0],
+        "region_id": ["devon", None, None, None],
+        "name": ["Devon Island", None, None, None],
+        "cell_id": [None, "e_1", None, "e_2"],
+        "lat": [75.4, 73.9, -23.5, 75.0],
+        "lon": [-89.8, -89.8, -69.0, -89.8],
     })
     ids, names, new = match.site_labels(earth)
-    assert ids.tolist() == ["devon", "e_1", "earth_-23.50_-69.00"]
-    assert new.tolist() == [False, True, True]
-    assert names[1].startswith("New site, ") and "Devon Island" in names[1]  # ~100 km away
+    assert ids.tolist() == ["devon", "e_1", "earth_-23.50_-69.00", "e_2"]
+    assert new.tolist() == [False, True, True, False]
+    assert names[1].startswith("New site, ") and "Devon Island" in names[1]  # ~170 km away
     assert names[2] == "New site (23.5°S, 69.0°W)"                          # far from known
+    assert names[3] == "Devon Island"                                        # ~45 km away: part of Devon
 
 
 def test_new_sites_show_up_as_twins():

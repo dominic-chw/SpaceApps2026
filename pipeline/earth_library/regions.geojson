@@ -280,6 +280,118 @@
      43.4
     ]
    }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "tuktoyaktuk",
+    "name": "Tuktoyaktuk coast"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -133.03,
+     69.44
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "herschel_island",
+    "name": "Herschel Island / Yukon coast"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -139.0,
+     69.3
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "dhofar",
+    "name": "Dhofar desert (AMADEE-18)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     54.0,
+     18.9
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "ramon_crater",
+    "name": "Ramon Crater (AMADEE-20)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     34.8,
+     30.6
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "qaidam_dalangtan",
+    "name": "Qaidam Basin (Dalangtan)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     91.9,
+     38.55
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "arkaroola",
+    "name": "Arkaroola"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     139.3,
+     -30.3
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "lonar_crater",
+    "name": "Lonar Crater"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     76.51,
+     19.98
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "dallol",
+    "name": "Danakil / Dallol"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     40.3,
+     14.24
+    ]
+   }
   }
  ]
 }
