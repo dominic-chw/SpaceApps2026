@@ -1,10 +1,55 @@
-unit,rock
-Noachian_highland,impact_mixed
-Hesperian_volcanic,volcanic
-Amazonian_volcanic,volcanic
-Noachian_clay,clay_sulfate
-Hesperian_sulfate,clay_sulfate
-Sedimentary_plains,sedimentary
-Polar_layered,icy
-Polar_cap,icy
-Impact_ejecta,impact_mixed
+unit,rock,notes
+AHv,volcanic,Amazonian-Hesperian volcanic
+Av,volcanic,Amazonian volcanic
+Ave,volcanic,Amazonian volcanic edifice
+Hve,volcanic,Hesperian volcanic edifice
+Nve,volcanic,Noachian volcanic edifice
+eHv,volcanic,early Hesperian volcanic
+lAv,volcanic,late Amazonian volcanic
+lAvf,volcanic,late Amazonian volcanic field
+lHv,volcanic,late Hesperian volcanic
+lHvf,volcanic,late Hesperian volcanic field
+lNv,volcanic,late Noachian volcanic
+AHi,impact_mixed,Amazonian-Hesperian impact
+eNh,impact_mixed,early Noachian highland (impact-processed crust)
+mNh,impact_mixed,middle Noachian highland
+lNh,impact_mixed,late Noachian highland
+Nhe,impact_mixed,Noachian highland edifice
+Nhu,impact_mixed,Noachian highland undivided
+HNhu,impact_mixed,Hesperian-Noachian highland undivided
+eHh,impact_mixed,early Hesperian highland
+HNt,impact_mixed,Hesperian-Noachian transition (UNSURE: could be sedimentary)
+eNhm,impact_mixed,early Noachian highland massif
+mNhm,impact_mixed,middle Noachian highland massif
+lHl,sedimentary,late Hesperian lowland
+mAl,sedimentary,middle Amazonian lowland
+eHt,sedimentary,early Hesperian transition
+lHt,sedimentary,late Hesperian transition
+Ht,sedimentary,Hesperian transition
+Hto,sedimentary,Hesperian transition outflow
+Htu,sedimentary,Hesperian transition undivided
+AHtu,sedimentary,Amazonian-Hesperian transition undivided
+Aa,sedimentary,Amazonian apron
+lAa,sedimentary,late Amazonian apron
+ANa,sedimentary,Amazonian-Noachian apron (UNSURE: mass-wasting debris)
+HNb,sedimentary,Hesperian-Noachian basin
+eHb,sedimentary,early Hesperian basin
+lHb,sedimentary,late Hesperian basin
+eAb,sedimentary,early Amazonian basin
+Ap,icy,Amazonian polar
+Apu,icy,Amazonian polar undivided
+lApc,icy,late Amazonian polar cap
+lApd,icy,late Amazonian polar dunes (UNSURE: dunes on ice)
+Hp,icy,Hesperian polar
+Hpe,icy,Hesperian polar edifice
+Hpu,icy,Hesperian polar undivided (Dorsa Argentea; ice-rich)
+clay_sulfate_site,clay_sulfate,hand-tagged known clay/sulfate site (Meridiani; Mawrth; Gale; VM ILDs; Jezero)
+Noachian_highland,impact_mixed,synthetic test layers (common/synthetic.py)
+Hesperian_volcanic,volcanic,synthetic test layers
+Amazonian_volcanic,volcanic,synthetic test layers
+Noachian_clay,clay_sulfate,synthetic test layers
+Hesperian_sulfate,clay_sulfate,synthetic test layers
+Sedimentary_plains,sedimentary,synthetic test layers
+Polar_layered,icy,synthetic test layers
+Polar_cap,icy,synthetic test layers
+Impact_ejecta,impact_mixed,synthetic test layers

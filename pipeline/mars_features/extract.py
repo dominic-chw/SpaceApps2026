@@ -16,14 +16,30 @@ from ..physics.heat_model import band_top_m, mars_band_temps, mars_frozen_fracti
 UNIT_LOOKUP = Path(__file__).with_name("unit_lookup.csv")
 
 
+def load_unit_lookup():
+    """{geologic unit: rock word} from unit_lookup.csv (columns unit, rock, notes)."""
+    t = pd.read_csv(UNIT_LOOKUP)
+    return dict(zip(t["unit"], t["rock"]))
+
+
 def unit_to_rock(unit, lookup=None):
-    lookup = lookup if lookup is not None else dict(pd.read_csv(UNIT_LOOKUP).values)
-    return lookup.get(unit, "impact_mixed")
+    """Rock word for a unit; unknown / missing unit -> None (left out, lowers confidence)."""
+    lookup = lookup if lookup is not None else load_unit_lookup()
+    return lookup.get(unit)
 
 
 def ice_table_depth_m(lat, params=None):
-    r = (params or get_processing())["ground_rules"]
-    return max(0.0, (r["ice_table_lat"] - abs(lat)) * r["ice_table_m_per_deg"])
+    """Depth (m) to the top of ground ice by latitude (where ice exists, see build_layers.ice_by_latitude).
+
+    Poleward of 65 deg: ~5 cm (Phoenix, 68 N); 55-65 deg: deepening to ~0.5 m;
+    35-55 deg (buried mid-latitude excess ice): ~1 m under a dry lag.
+    """
+    a = abs(lat)
+    if a >= 65:
+        return 0.05
+    if a >= 55:
+        return 0.05 + (65 - a) / 10 * 0.45
+    return 1.0
 
 
 def ground_for_band(ti, ice_frac, lat, band, params=None):
@@ -43,7 +59,7 @@ def extract_cell(rec, lookup=None, params=None):
         mean, swing = mars_band_temps(rec["lat"], rec["thermal_inertia"], band, p)
         ground, ice = ground_for_band(rec["thermal_inertia"], rec["ice_frac"], rec["lat"], band, p)
         # SWIM/neutron ice is measured only for the shallow bands; deeper is extrapolated
-        q_ice = "measured" if band in ("skin", "upper_metre") else "modelled"
+        q_ice = rec.get("ice_quality") or ("measured" if band in ("skin", "upper_metre") else "modelled")
         frozen = mars_frozen_fraction(rec["lat"], rec["thermal_inertia"], band, p)
         vals = [("temp_mean", mean, "modelled"), ("frozen_fraction", frozen, "modelled"),
                 ("temp_swing", swing, "modelled"),
@@ -54,12 +70,17 @@ def extract_cell(rec, lookup=None, params=None):
                 ("dryness", rec["water_vapour_pr_um"], "modelled")]
         rows += [feature_row("mars", rec["cell_id"], rec["lat"], rec["lon"], band, f, v, q)
                  for f, v, q in vals]
-    return [r for r in rows if r]
+    # leave out unknown values (None / NaN), e.g. no TES data or no geologic unit
+    def known(r):
+        if r["value_cat"] is not None:
+            return r["value_cat"] not in ("None", "nan")
+        return r["value_num"] is not None and r["value_num"] == r["value_num"]
+    return [r for r in rows if r and known(r)]
 
 
 def extract_all(layers, params=None):
     p = params or get_processing()
-    lookup = dict(pd.read_csv(UNIT_LOOKUP).values)
+    lookup = load_unit_lookup()
     rows = []
     for rec in layers.to_dict("records"):
         rows += extract_cell(rec, lookup, p)

@@ -253,10 +253,24 @@ def cell_distances(prepared, m):
 
     Returns (distances, differences): one distance per Earth place, and the
     per-feature differences behind them.
+
+    Earth places where under `min_coverage` of the weight could be compared get NaN
+    (they are never ranked): skipping missing values would otherwise make an almost
+    empty place (e.g. a region whose cell is ocean) look like a perfect match.
+    If that would leave nothing (the Mars cell itself has too little data), all
+    places are kept and the twins come out as insufficient_data instead.
     """
     differences = feature_differences(prepared["mars_grid"][m], prepared["earth_grid"],
                                       prepared["scales"], prepared["is_category"])
-    return gower_distance(differences, prepared["weights"]), differences
+    distances = gower_distance(differences, prepared["weights"])
+    weights = prepared["weights"]
+    total = weights[weights > 0].sum()
+    if total > 0:
+        coverage = ((~np.isnan(differences)) * weights).sum(axis=1) / total
+        enough = coverage >= prepared["confidence_settings"]["min_coverage"]
+        if enough.any():
+            distances = np.where(enough, distances, np.nan)
+    return distances, differences
 
 
 def match_band(mars, earth, band, how_many=3, spacing_km=200, levels=None,
