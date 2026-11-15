@@ -26,7 +26,8 @@ def load_regions(path=REGIONS):
 
 def glim_to_rock(glim_class, lookup=None):
     lookup = lookup if lookup is not None else dict(pd.read_csv(GLIM_LOOKUP).values)
-    return lookup.get(glim_class, "sedimentary")
+    rock = lookup.get(glim_class)      # wb (water), nd (no data) or unknown -> None (missing)
+    return rock if isinstance(rock, str) and rock else None
 
 
 def load_layers(params=None):
