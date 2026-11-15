@@ -12,17 +12,18 @@ Plain maths, no AI model: normalize -> weighted Gower distance -> nearest Earth 
 | `../../weights/default.json` | How much each feature counts per depth band (placeholders for now). |
 
 ## Feature tables (handoff from the data side)
-One CSV per planet per band, e.g. `mars_upper_metre.csv`, `earth_upper_metre.csv`.
+The data side writes one LONG table per planet (`pipeline/common/schema.py`):
+`data/features/{mars,earth}_cells.parquet` (CSV with the same columns also works), columns
+`planet, cell_id, lat, lon, band, feature, value_num, value_cat, data_quality`,
+one row per place x band x feature. `load_tables.py` reshapes it into one wide table per band.
 
-- **Mars columns:** `cell_id, lat, lon`, then the feature columns.
-- **Earth columns:** `cell_id, lat, lon, region_id, name`, then the feature columns.
-  Earth is a global grid (bare ground). `region_id` + `name` are filled only for cells inside
-  a known analog region (`regions.geojson`); leave them empty for every other cell.
-  Those become "new sites" in the app, labelled e.g. "New site, 120 km from Devon Island".
-- **Feature columns:** the `column` names in `features.yaml` (right now `temp_mean, frozen_fraction, temp_swing, ice, ground_class, hardness, rock, slope_deg, roughness_m, dryness`).
-- **Quality (optional, recommended):** `<column>_quality` = `measured`, `modelled` or `predicted`.
-- Leave a cell **empty** when the value is unknown. It is skipped and confidence goes down.
-- `lon` east-positive, -180..180. Temperatures in kelvin. `ice` = yes/no.
+- **`feature`** values = the `column` names in `features.yaml` (right now `temp_mean, frozen_fraction, temp_swing, ice, ground_class, hardness, rock, slope_deg, roughness_m, dryness`).
+- Numbers in `value_num`; words (`rock`, `ground_class`) in `value_cat`. `ice` may be 0/1 (shown as no/yes).
+- **`data_quality`** = `measured`, `modelled` or `predicted` (drives confidence).
+- **Earth:** a cell whose `cell_id` is a region in `regions.geojson` (e.g. `dry_valleys`) is a known
+  analog and gets its name. Every other cell is a "new site", labelled e.g. "New site, 120 km from Devon Island".
+- Unknown value = leave the row out (or empty). It is skipped and confidence goes down.
+- `lon` east-positive, -180..180. Temperatures in kelvin.
 - `frozen_fraction` = share of the year (0-1) the ground at that band's depth is below 0 °C.
   Earth: count months below 0 °C in ERA5-Land soil temperature at that depth, divide by 12.
   Mars: from the heat model (close to 1 almost everywhere).
@@ -30,7 +31,9 @@ One CSV per planet per band, e.g. `mars_upper_metre.csv`, `earth_upper_metre.csv
 
 A column the code expects but the table lacks is treated as all-missing, so partial tables still run.
 
-## Try it
+## Run it
 ```
-python -m pytest tests/test_matching.py
+python -m pipeline.run_all            # score existing feature tables -> output/*.json
+python -m pipeline.run_all --build    # rebuild the feature tables first (data side)
+python -m pytest tests/
 ```
