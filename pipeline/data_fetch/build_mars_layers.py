@@ -94,7 +94,8 @@ def geology_units(cells):
     return hit["Unit"].map(umap).to_numpy()
 
 
-def ice_fraction(cells):
+def hydrogen(cells):
+    """Odyssey neutron suppression (0 = none, ~0.65 = polar ice) at each cell, nearest 5 deg bin."""
     h = pd.read_csv(MARS / "neutron" / "hydrogen_map_5deg.csv")
     lon360 = h["lon"].to_numpy()
     lat = h["lat"].to_numpy()
@@ -102,7 +103,11 @@ def ice_fraction(cells):
     for clat, clon in cells:
         d = (lat - clat) ** 2 + (((lon360 - clon % 360) + 180) % 360 - 180) ** 2
         out.append(h["h_suppression"].to_numpy()[np.argmin(d)])
-    return np.clip((np.array(out) - H_DRY) / (H_ICE - H_DRY), 0, 1)
+    return np.array(out)
+
+
+def ice_fraction(cells):
+    return np.clip((hydrogen(cells) - H_DRY) / (H_ICE - H_DRY), 0, 1)
 
 
 def read_mcd_ascii(path):
