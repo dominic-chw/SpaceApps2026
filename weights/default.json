@@ -1,1 +1,22 @@
-{"skin":{},"upper_metre":{},"drill_zone":{},"deep":{}}
+{
+  "skin": {
+    "temp_mean_rank": 0.5, "frozen_fraction": 1.0, "temp_swing": 1.0,
+    "ice": 1.5, "ground_class": 2.0, "hardness": 2.0, "rock": 1.0,
+    "slope_deg": 1.0, "roughness_m": 1.0, "dryness": 1.5
+  },
+  "upper_metre": {
+    "temp_mean_rank": 0.5, "frozen_fraction": 1.5, "temp_swing": 0.7,
+    "ice": 2.5, "ground_class": 2.5, "hardness": 2.0, "rock": 1.0,
+    "slope_deg": 0.7, "roughness_m": 0.5, "dryness": 1.0
+  },
+  "drill_zone": {
+    "temp_mean_rank": 0.7, "frozen_fraction": 2.0, "temp_swing": 0.3,
+    "ice": 3.0, "ground_class": 3.0, "hardness": 2.5, "rock": 1.5,
+    "slope_deg": 0.5, "roughness_m": 0.3
+  },
+  "deep": {
+    "temp_mean_rank": 0.7, "frozen_fraction": 2.0,
+    "ice": 3.0, "ground_class": 3.0, "hardness": 3.0, "rock": 2.0,
+    "slope_deg": 0.3, "roughness_m": 0.2
+  }
+}
