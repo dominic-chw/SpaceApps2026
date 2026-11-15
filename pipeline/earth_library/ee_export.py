@@ -122,11 +122,54 @@ def export_bare_grid(grid_deg=0.5, dry_run=False):
     return task
 
 
+def bare_cells(tif_path, grid_deg=0.5, min_fraction=None):
+    """Cell centres (lat, lon) whose WorldCover bare fraction is >= min_fraction, from the exported GeoTIFF."""
+    import numpy as np
+    import rasterio
+
+    from ..common.config import get_processing
+    min_fraction = get_processing()["bare_ground_min_fraction"] if min_fraction is None else min_fraction
+    with rasterio.open(tif_path) as src:
+        a = src.read(1)
+        t = src.transform
+    rows, cols = np.where(a >= min_fraction)
+    return [(t.f + (r + 0.5) * t.e, t.c + (c + 0.5) * t.a) for r, c in zip(rows, cols)]
+
+
+def export_grid_samples(tif_path, grid_deg=0.5, chunk=5000, start="2015-01-01", end="2023-01-01", dry_run=False):
+    """Layers for every bare-ground 0.5 deg cell (cell mean at 5 km), chunked into several Drive CSVs.
+    Run after export_bare_grid finished and its GeoTIFF is in data/earth/ee/."""
+    cells = bare_cells(tif_path, grid_deg)
+    print(f"grid samples: {len(cells)} bare cells, {-(-len(cells) // chunk)} chunks of {chunk}")
+    if dry_run:
+        return []
+    ee = init_ee()
+    stack = ee.Image.cat([era5_stats(ee, start, end), modis_stats(ee, start, end), terrain_stats(ee),
+                          worldcover_bare(ee), soilgrids_0_2m(ee)])
+    h = grid_deg / 2
+    tasks = []
+    for i in range(0, len(cells), chunk):
+        feats = [ee.Feature(ee.Geometry.Rectangle([lon - h, lat - h, lon + h, lat + h], "EPSG:4326", False),
+                            {"cell_id": f"{lat:+07.2f}_{lon:+07.2f}", "lat": lat, "lon": lon})
+                 for lat, lon in cells[i:i + chunk]]
+        out = stack.reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 5000)
+        task = ee.batch.Export.table.toDrive(out, description=f"earth_layers_grid_{i // chunk:03d}",
+                                             folder=FOLDER, fileFormat="CSV")
+        task.start()
+        tasks.append(task)
+        print("started", task.id)
+    return tasks
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--only", choices=["atacama"])
+    ap.add_argument("--grid-from", help="path to worldcover_bare_grid.tif; exports layers for its bare cells")
     a = ap.parse_args()
-    export_regions(dry_run=a.dry_run, only=a.only)
-    if not a.only:
-        export_bare_grid(dry_run=a.dry_run)
+    if a.grid_from:
+        export_grid_samples(a.grid_from, dry_run=a.dry_run)
+    else:
+        export_regions(dry_run=a.dry_run, only=a.only)
+        if not a.only:
+            export_bare_grid(dry_run=a.dry_run)
