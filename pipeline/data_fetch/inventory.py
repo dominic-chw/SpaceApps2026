@@ -8,6 +8,7 @@ from datetime import date
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from .fetch import ROOT, load_sources
 
@@ -92,7 +93,48 @@ def check_glim(d):
             f"polygon map, ~1:3.75M, {len(z.namelist())} files in zip", "lithology classes (16 first-level)", "n/a")
 
 
-CHECKS = {"glim": check_glim, "geologic_map_sim3292": check_geology, "mola_megdr_16ppd": check_mola,
+def check_mola463(d):
+    import rasterio
+    with rasterio.open(d / "Mars_MGS_MOLA_DEM_mosaic_global_463m.tif") as s:
+        b = s.bounds
+        sample = s.read(1, out_shape=(s.height // 64, s.width // 64))
+        return ("opens", (s.crs.to_string() if s.crs else "none")[:70], f"x {b.left:.0f}..{b.right:.0f} m (centred on 0, = -180..180 east)",
+                f"{abs(s.transform.a):.0f} m/px, {s.width}x{s.height}", f"{sample.min()}..{sample.max()} m (decimated read)",
+                str(s.nodata))
+
+
+def check_neutron(d):
+    h = pd.read_csv(d / "hydrogen_map_5deg.csv")
+    return ("opens (built)", "Mars lat/lon, 5 deg cells", "0..360 east", "5 deg (2592 cells)",
+            f"epithermal flux {h.epithermal_flux.min():.3f}..{h.epithermal_flux.max():.3f} n/cm2/s; h_suppression 0..{h.h_suppression.max():.2f}",
+            f"none ({int(h.epithermal_flux.isna().sum())} empty cells)")
+
+
+def check_mcd(d):
+    from .build_mars_layers import read_mcd_ascii
+    fs = sorted(d.glob("*.txt"))
+    fs = [f for f in fs if f.name != "manifest.txt"]
+    la, lo, g = read_mcd_ascii(fs[0])
+    return ("opens", "Mars lat/lon (MCD v6.2)", f"{lo.min():.0f}..{lo.max():.0f} east", f"{len(lo)} lon x {len(la)} lat (~5.6 x 3.8 deg), {len(fs)} files",
+            "tsurf K; h2o column kg/m2 (x1000 = pr-um)", "none")
+
+
+def check_nsidc(d):
+    import geopandas as gpd
+    g = gpd.read_file(d / "permaice.shp")
+    return ("opens", g.crs.name if g.crs else "?", "polar projection (metres)", f"{len(g)} polygons",
+            "EXTENT C/D/S/I, CONTENT h/m/l, COMBO ld = no permafrost", "n/a (outside 20-90 N not mapped)")
+
+
+def check_ee(d):
+    fs = sorted(d.glob("earth_layers_*.csv"))
+    n = sum(len(pd.read_csv(f)) for f in fs)
+    return ("opens", "WGS84 (EPSG:4326) means over 2.5 km buffers / 0.5 deg cells", "-180..180 east",
+            f"{len(fs)} CSVs, {n} rows (terrain at 500 m)", "see columns", "empty cell = no data")
+
+
+CHECKS = {"glim": check_glim, "mola_dem_463m": check_mola463, "odyssey_neutron_weh": check_neutron,
+          "mars_climate_database": check_mcd, "nsidc_circumarctic_ground_ice": check_nsidc, "geologic_map_sim3292": check_geology, "mola_megdr_16ppd": check_mola,
           "tes_thermal_inertia_day_2007": check_tes, "esa_cci_permafrost": check_cci}
 
 
@@ -105,10 +147,12 @@ def row(e):
             return ("present", *res, feats)
         except Exception as exc:
             return ("present", f"OPEN FAILED: {exc}", "", "", "", "", "", feats)
-    if e["id"] == "mars_climate_database":
-        got = list(d.glob("*.nc")) if d and d.exists() else []
-        st = "present" if got else "missing (manual export; manifest only)"
-        return (st, "opens" if got else "-", "-", "-", "-", "-", "-", feats)
+    ee_dir = ROOT / "data" / "earth" / "ee"
+    if e.get("access") == "earthengine" and e.get("status") == "ready" and list(ee_dir.glob("earth_layers_*.csv")):
+        try:
+            return ("present (in EE CSVs)", *check_ee(ROOT / "data" / "earth" / "ee"), feats)
+        except Exception as exc:
+            return ("present", f"OPEN FAILED: {exc}", "", "", "", "", "", feats)
     if e.get("access") == "earthengine" and e.get("status") == "ready":
         x = EXPECTED.get(e["id"], ("-",) * 5)
         return ("missing (Earth Engine export not run yet)", "n/a", *x, feats)

@@ -60,9 +60,10 @@ def showcase_sites():
 
 
 def using_synthetic_data():
-    """True while the data side has no real source layers (so outputs are placeholders)."""
-    return not ((ROOT / "data" / "mars" / "layers.parquet").exists()
-                and (ROOT / "data" / "earth" / "layers.parquet").exists())
+    """True while any source variable (config processing.sources) is still synthetic -> outputs are placeholders."""
+    from pipeline.common.sources import VARIABLES, source_specs
+    return any(s.get("source", "synthetic") == "synthetic"
+               for planet in VARIABLES for s in source_specs(planet).values())
 
 
 def nearest_row(table, lat, lon):

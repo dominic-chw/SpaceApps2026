@@ -24,6 +24,8 @@ SOIL_DEPTHS_CM = [(0, 5), (5, 15), (15, 30), (30, 60), (60, 100), (100, 200)]   
 ARIDITY = "projects/sat-io/open-datasets/global_ai/global_ai_yearly"   # AI x 10000 (community catalog)
 TERRAIN_M = 500                              # config processing.terrain_resolution_m
 FOLDER = "spaceapps_ee"
+from pathlib import Path
+ROOT_EE = Path(__file__).resolve().parents[2] / "data" / "earth" / "ee"
 POINT_BUFFER_M = 2500
 
 
@@ -149,6 +151,56 @@ def bare_cells(tif_path, grid_deg=0.5, min_fraction=None):
     return [(t.f + (r + 0.5) * t.e, t.c + (c + 0.5) * t.a) for r, c in zip(rows, cols)]
 
 
+def land_cells(grid_deg=0.5, min_lat=-60, max_lat=85):
+    """Cell centres of 0.5 deg land cells (ERA5-Land mask, saved by `--land-mask`) between min_lat and max_lat.
+    WorldCover has no Antarctica, so cells south of 60 S are skipped."""
+    import numpy as np
+    a = np.load(ROOT_EE / "land_mask_0p5.npy")
+    rows, cols = np.where(a > 0.5)
+    lat = 85 - (rows + 0.5) * grid_deg
+    lon = -180 + (cols + 0.5) * grid_deg
+    keep = (lat >= min_lat) & (lat <= max_lat)
+    return list(zip(lat[keep].round(3), lon[keep].round(3)))
+
+
+def save_land_mask(grid_deg=0.5):
+    import numpy as np
+    ee = init_ee()
+    img = ee.ImageCollection(ERA5).first().select("skin_temperature")
+    land = img.mask().gt(0).unmask(0).reduceResolution(ee.Reducer.mean(), maxPixels=1024).reproject(
+        crs="EPSG:4326", crsTransform=[grid_deg, 0, -180, 0, -grid_deg, 85])
+    region = ee.Geometry.Rectangle([-180, -85, 180, 85], "EPSG:4326", False)
+    a = np.array(land.rename("land").sampleRectangle(region=region, defaultValue=0).get("land").getInfo())
+    ROOT_EE.mkdir(parents=True, exist_ok=True)
+    np.save(ROOT_EE / "land_mask_0p5.npy", a)
+    print("land cells", int((a > 0.5).sum()))
+
+
+def export_land_grid(grid_deg=0.5, chunk=5000, start="2015-01-01", end="2023-01-01", dry_run=False):
+    """Layers (incl. sampled WorldCover bare_fraction) for every land cell; build_grid applies the bare filter.
+    Faster than waiting for the global bare-fraction GeoTIFF."""
+    cells = land_cells(grid_deg)
+    print(f"land grid: {len(cells)} cells, {-(-len(cells) // chunk)} chunks of {chunk}")
+    if dry_run:
+        return []
+    ee = init_ee()
+    stack = ee.Image.cat([era5_stats(ee, start, end), modis_stats(ee, start, end), terrain_stats(ee),
+                          worldcover_bare(ee), soilgrids_0_2m(ee), aridity(ee)])
+    h = grid_deg / 2
+    tasks = []
+    for i in range(0, len(cells), chunk):
+        feats = [ee.Feature(ee.Geometry.Rectangle([lon - h, lat - h, lon + h, lat + h], "EPSG:4326", False),
+                            {"cell_id": f"{lat:+07.2f}_{lon:+07.2f}", "lat": lat, "lon": lon})
+                 for lat, lon in cells[i:i + chunk]]
+        out = stack.reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 5000, tileScale=8)
+        task = ee.batch.Export.table.toDrive(out, description=f"earth_layers_grid_{i // chunk:03d}",
+                                             folder=FOLDER, fileFormat="CSV")
+        task.start()
+        tasks.append(task)
+        print("started", task.id)
+    return tasks
+
+
 def export_grid_samples(tif_path, grid_deg=0.5, chunk=5000, start="2015-01-01", end="2023-01-01", dry_run=False):
     """Layers for every bare-ground 0.5 deg cell (cell mean at 5 km), chunked into several Drive CSVs.
     Run after export_bare_grid finished and its GeoTIFF is in data/earth/ee/."""
@@ -179,9 +231,15 @@ if __name__ == "__main__":
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--only", choices=["atacama"])
     ap.add_argument("--bare-grid-only", action="store_true")
+    ap.add_argument("--land-mask", action="store_true", help="save the 0.5 deg ERA5-Land mask")
+    ap.add_argument("--land-grid", action="store_true", help="export layers for every land cell")
     ap.add_argument("--grid-from", help="path to worldcover_bare_grid.tif; exports layers for its bare cells")
     a = ap.parse_args()
-    if a.bare_grid_only:
+    if a.land_mask:
+        save_land_mask()
+    elif a.land_grid:
+        export_land_grid(dry_run=a.dry_run)
+    elif a.bare_grid_only:
         export_bare_grid(dry_run=a.dry_run)
     elif a.grid_from:
         export_grid_samples(a.grid_from, dry_run=a.dry_run)

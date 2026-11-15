@@ -68,15 +68,16 @@ mars:
     notes: Units J m-2 K-1 s-1/2 (SI TI). Mask marks interpolated pixels. Feeds the heat model (read by pipeline/physics/).
 
   - id: swim_ice
-    role: required
+    role: optional
     access: manual
-    status: unresolved
+    status: dropped
     title: SWIM subsurface water ice maps (GeoTIFFs for 0-1 m, 1-5 m, >5 m)
     local_dir: data/mars/swim
     url: null
     version: "SWIM Project, USGS Astropedia"
     licence: "USGS, public domain. Cite: Putzig et al. 2024 / SWIM Project (verify exact citation on the Astropedia page)"
     features: [ice]
+    dropped: "Not obtainable (astropedia unreachable). Mars ice comes from the Odyssey hydrogen map only."
     notes: "Hosted on astropedia.astrogeology.usgs.gov, which does not resolve from this network (DNS returns a dead address). No file URL was guessed. Download the three depth GeoTIFFs in a browser and put them in data/mars/swim/."
 
   - id: odyssey_neutron_weh

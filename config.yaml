@@ -54,3 +54,37 @@ processing:
     max_depth: 6
     learning_rate: 0.05
     cv_block_deg: 10
+
+  # Source of each layer variable (pipeline/common/sources.py). Default: synthetic everywhere, so
+  # `python -m pipeline.run_all --build` runs end to end before datasets are picked (outputs fake: true).
+  # Switch one variable at a time once it is in research/datasets.csv, e.g.
+  #   soil_temp: {source: ee, id: "ECMWF/ERA5_LAND/MONTHLY_AGGR", start: "2015-01-01", end: "2023-01-01",
+  #               path: data/earth/ee/soil_temp.csv,
+  #               outputs: {mean_temp_k: {band: skin_temperature, temporal: mean},
+  #                         annual_range_k: {band: skin_temperature, temporal: range}}}
+  #   lithology: {source: file, path: data/earth/glim_cells.csv, columns: {xx: glim_class}}
+  #   thermal_inertia: {source: raster, path: data/mars/tes_ti/ti_day.tif, reducer: median, nodata: 0}
+  # Earth cells: {source: synthetic} (regions + samples) or {source: grid} (global earth_grid_deg grid;
+  # regions.geojson regions are always added with region_id as cell_id = known analog).
+  # The layers already built from downloads stay usable: {source: file, path: data/<planet>/layers.parquet}.
+  sources:
+    mars:
+      cells: {source: synthetic}
+      thermal_inertia: {source: synthetic}
+      ice: {source: synthetic}
+      geology: {source: synthetic}
+      terrain: {source: synthetic}
+      water_vapour: {source: synthetic}
+    earth:
+      cells: {source: synthetic}
+      elevation: {source: synthetic}
+      terrain: {source: synthetic}
+      land_cover: {source: synthetic}
+      soil_temp: {source: synthetic}
+      surface_temp: {source: synthetic}
+      soil_properties: {source: synthetic}
+      aridity: {source: synthetic}
+      permafrost: {source: synthetic}
+      lithology: {source: synthetic}
+      bedrock: {source: synthetic}
+      labels: {source: synthetic}

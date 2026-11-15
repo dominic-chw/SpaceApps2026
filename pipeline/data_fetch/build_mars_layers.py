@@ -7,7 +7,8 @@ Per 2 deg cell (common/coords grid, lon -180..180 east):
   roughness_m         MOLA 463 m DEM, median std dev of elevation in 3x3 px        m
   unit                SIM 3292 unit at the cell centre -> unit_lookup.csv names (sim3292_unit_map.csv)
   ice_frac            hydrogen map (build_neutron_map.py): clip((h - 0.15) / 0.5, 0, 1)
-  water_vapour_pr_um  data/mars/mcd/water_vapour.csv (lat, lon, water_vapour_pr_um) if present, else NaN
+  water_vapour_pr_um  MCD v6.2 water vapour column (fetch_mcd.py output h2o_ls*_lt12.txt), mean of the
+                      4 seasons, kg/m2 x 1000 = precipitable microns; NaN if the files are missing
 Run: python -m pipeline.data_fetch.build_mars_layers
 """
 import glob
@@ -104,17 +105,36 @@ def ice_fraction(cells):
     return np.clip((np.array(out) - H_DRY) / (H_ICE - H_DRY), 0, 1)
 
 
+def read_mcd_ascii(path):
+    """MCD web ASCII map: '----' header row of latitudes, then rows 'lon || v1 v2 ...'. Returns lat, lon, grid."""
+    lat, lons, rows = None, [], []
+    for line in Path(path).read_text().splitlines():
+        if "||" not in line:
+            continue
+        head, vals = line.split("||", 1)
+        v = np.array(vals.split(), float)
+        if head.strip().startswith("----"):
+            lat = v
+        else:
+            lons.append(float(head))
+            rows.append(v)
+    return lat, np.array(lons), np.array(rows)            # rows: lon x lat
+
+
 def water_vapour(cells):
-    f = MARS / "mcd" / "water_vapour.csv"
-    if not f.exists():
-        print("NOTE: data/mars/mcd/water_vapour.csv missing; water_vapour_pr_um = NaN (dryness unknown)")
+    """Annual mean water vapour column (pr-um) from the MCD exports (Ls 0/90/180/270, 12:00)."""
+    files = sorted(glob.glob(str(MARS / "mcd" / "h2o_ls*_lt12.txt")))
+    if not files:
+        print("NOTE: no data/mars/mcd/h2o_ls*_lt12.txt; water_vapour_pr_um = NaN (dryness unknown)")
         return np.full(len(cells), np.nan)
-    w = pd.read_csv(f)
-    lon = ((w["lon"].to_numpy() + 180) % 360) - 180
+    maps = [read_mcd_ascii(f) for f in files]
+    lat, lon = maps[0][0], maps[0][1]
+    grid = np.mean([m[2] for m in maps], axis=0) * 1000.0     # kg/m2 -> precipitable microns
     out = []
     for clat, clon in cells:
-        d = (w["lat"].to_numpy() - clat) ** 2 + (((lon - clon) + 180) % 360 - 180) ** 2
-        out.append(w["water_vapour_pr_um"].to_numpy()[np.argmin(d)])
+        i = np.argmin(np.abs(((lon - clon) + 180) % 360 - 180))
+        j = np.argmin(np.abs(lat - clat))
+        out.append(grid[i, j])
     return np.array(out)
 
 
