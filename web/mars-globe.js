@@ -152,7 +152,7 @@
       }
       let animating = false;
       const pt = (now - s.pulse) / 700;
-      const marker = project(s.targetLat, s.targetLon);
+      const marker = s.hasTarget ? project(s.targetLat, s.targetLon) : null;   // no marker until a spot is picked
       if (marker && pt < 1) {
         animating = true;
         for (const k of [0, .25]) { const t = clamp(pt - k, 0, 1); ctx.strokeStyle = `rgba(232,150,110,${(1 - t) * .9})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(marker.x, marker.y, 10 + t * 46, 0, Math.PI * 2); ctx.stroke(); }
@@ -186,7 +186,7 @@
       canvas.width = s.width; canvas.height = s.height; schedule();
     }
     function target(lat, lon, focus = true) {
-      s.targetLat = clamp(lat, -70, 70); s.targetLon = wrap(lon); s.pulse = performance.now();
+      s.targetLat = clamp(lat, -70, 70); s.targetLon = wrap(lon); s.pulse = performance.now(); s.hasTarget = true;
       if (focus && !project(s.targetLat, s.targetLon)) { s.lat = s.targetLat; s.lon = s.targetLon; }
       schedule();
     }
