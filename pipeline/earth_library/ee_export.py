@@ -155,7 +155,11 @@ def land_cells(grid_deg=0.5, min_lat=-60, max_lat=85):
     """Cell centres of 0.5 deg land cells (ERA5-Land mask, saved by `--land-mask`) between min_lat and max_lat.
     WorldCover has no Antarctica, so cells south of 60 S are skipped."""
     import numpy as np
-    a = np.load(ROOT_EE / "land_mask_0p5.npy")
+    a = np.load(ROOT_EE / "land_mask_0p5.npy")              # 0.5 deg mask, rows from 85 N
+    k = int(round(grid_deg / 0.5))
+    if k > 1:                                                 # coarser grid: land if any 0.5 deg sub-cell is land
+        a = (a > 0.5)[: a.shape[0] // k * k, : a.shape[1] // k * k]
+        a = a.reshape(a.shape[0] // k, k, a.shape[1] // k, k).mean(axis=(1, 3)) * 2
     rows, cols = np.where(a > 0.5)
     lat = 85 - (rows + 0.5) * grid_deg
     lon = -180 + (cols + 0.5) * grid_deg
@@ -233,12 +237,13 @@ if __name__ == "__main__":
     ap.add_argument("--bare-grid-only", action="store_true")
     ap.add_argument("--land-mask", action="store_true", help="save the 0.5 deg ERA5-Land mask")
     ap.add_argument("--land-grid", action="store_true", help="export layers for every land cell")
+    ap.add_argument("--grid-deg", type=float, default=0.5)
     ap.add_argument("--grid-from", help="path to worldcover_bare_grid.tif; exports layers for its bare cells")
     a = ap.parse_args()
     if a.land_mask:
         save_land_mask()
     elif a.land_grid:
-        export_land_grid(dry_run=a.dry_run)
+        export_land_grid(grid_deg=a.grid_deg, dry_run=a.dry_run)
     elif a.bare_grid_only:
         export_bare_grid(dry_run=a.dry_run)
     elif a.grid_from:
