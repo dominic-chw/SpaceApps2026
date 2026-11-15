@@ -15,7 +15,7 @@
     return a * (1 - fy) + b * fy;
   }
   function texture() {
-    const w = 1024, h = 512, px = new Uint8ClampedArray(w * h * 4);
+    const w = 384, h = 192, px = new Uint8ClampedArray(w * h * 4);
     const basins = [
       [55, -13, 18, -0.55], [-45, 10, 15, -0.45], [135, 3, 21, -0.56],
       [-110, -37, 21, -0.33], [170, -25, 13, -0.34], [87, 25, 11, 0.45],
@@ -25,13 +25,14 @@
       const lat = 90 - y / (h - 1) * 180;
       for (let x = 0; x < w; x++) {
         const lon = x / w * 360 - 180;
-        let v = noise(x / 256, y / 256, 4) * .50 + noise(x / 75, y / 75, 14) * .28 + noise(x / 22, y / 22, 47) * .14 + noise(x / 5, y / 5, 205) * .08;
+        let v = noise(x / 96, y / 96, 4) * .50 + noise(x / 28, y / 28, 14) * .28 + noise(x / 8, y / 8, 47) * .14 + noise(x / 2, y / 2, 205) * .08;
         for (const [blon, blat, radius, strength] of basins) {
           let dlon = Math.abs(lon - blon); dlon = Math.min(dlon, 360 - dlon);
-          const d2 = Math.pow(dlon * Math.cos(lat * RAD), 2) + Math.pow(lat - blat, 2);
+          const dl = dlon * Math.cos(lat * RAD), db = lat - blat;
+          const d2 = dl * dl + db * db;
           v += strength * Math.exp(-d2 / (radius * radius));
         }
-        const crater = noise(x / 10, y / 10, 104) - .5;
+        const crater = noise(x / 4, y / 4, 104) - .5;
         v += crater * .07;
         const polar = clamp((Math.abs(lat) - 73) / 17, 0, 1);
         const pale = Math.pow(polar, 1.9) * .82;
