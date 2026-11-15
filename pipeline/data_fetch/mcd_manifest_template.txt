@@ -1,0 +1,17 @@
+# Mars Climate Database manual export manifest. One block per file saved in data/mars/mcd/.
+# Web interface: https://www-mars.lmd.jussieu.fr/mars/access.html
+# Required runs: surface temperature at Ls 0, 90, 180, 270 x local time 12:00 and 00:00,
+# plus water vapour column. Global lat/lon grid, scenario "climatology", dust "MY24" (or note otherwise).
+mcd_version:
+export_date:
+scenario:
+
+file: mcd_tsurf_ls000_1200.nc   variable: tsurf  ls: 0    local_time: 12:00
+file: mcd_tsurf_ls000_0000.nc   variable: tsurf  ls: 0    local_time: 00:00
+file: mcd_tsurf_ls090_1200.nc   variable: tsurf  ls: 90   local_time: 12:00
+file: mcd_tsurf_ls090_0000.nc   variable: tsurf  ls: 90   local_time: 00:00
+file: mcd_tsurf_ls180_1200.nc   variable: tsurf  ls: 180  local_time: 12:00
+file: mcd_tsurf_ls180_0000.nc   variable: tsurf  ls: 180  local_time: 00:00
+file: mcd_tsurf_ls270_1200.nc   variable: tsurf  ls: 270  local_time: 12:00
+file: mcd_tsurf_ls270_0000.nc   variable: tsurf  ls: 270  local_time: 00:00
+file: mcd_h2o_vapor.nc          variable: h2o_vap (column)  ls: 0/90/180/270

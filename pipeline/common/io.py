@@ -33,7 +33,8 @@ def read_features(planet, out_dir=None):
     return pd.read_parquet(Path(out_dir or FEATURES_DIR) / f"{planet}_cells.parquet")
 
 
-def read_layers(planet, name="layers"):
-    """Real source layers from data/<planet>/<name>.parquet if present, else None."""
-    p = DATA / planet / f"{name}.parquet"
-    return pd.read_parquet(p) if p.exists() else None
+def read_layers(planet, params=None):
+    """Source layers assembled from config `processing.sources` (common/sources.py), or None when every
+    variable is synthetic (callers then use the synthetic tables)."""
+    from .sources import assemble
+    return assemble(planet, params)

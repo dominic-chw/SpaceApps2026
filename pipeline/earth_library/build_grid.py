@@ -57,7 +57,11 @@ def extract_earth(layers, params=None):
 def build_earth(params=None, out_dir=None):
     p = params or get_processing()
     layers = load_layers(p)
-    layers = layers[layers["bare_fraction"] >= p["bare_ground_min_fraction"]].reset_index(drop=True)
+    # named analog regions are always kept (team-chosen sites; a region point can fall on a lake or ice
+    # sheet, and WorldCover has no Antarctica); grid cells must pass the bare-ground filter
+    named = layers["name"].fillna("").ne("")
+    bare = layers["bare_fraction"] >= p["bare_ground_min_fraction"]
+    layers = layers[named | bare].reset_index(drop=True)
     filled, cv = fill_gaps(layers, p)
     path = write_features(extract_earth(filled, p), "earth", out_dir)
     cv_path = path.parent / "gap_model_cv.json"
