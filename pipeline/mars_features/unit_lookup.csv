@@ -1,1 +1,10 @@
 unit,rock
+Noachian_highland,impact_mixed
+Hesperian_volcanic,volcanic
+Amazonian_volcanic,volcanic
+Noachian_clay,clay_sulfate
+Hesperian_sulfate,clay_sulfate
+Sedimentary_plains,sedimentary
+Polar_layered,icy
+Polar_cap,icy
+Impact_ejecta,impact_mixed
