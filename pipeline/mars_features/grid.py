@@ -8,9 +8,11 @@ from ..common.synthetic import mars_layers
 from .extract import extract_all
 
 
-def build_mars(params=None, out_dir=None):
+def build_mars(params=None, out_dir=None, layers=None):
+    """layers: optional ready-made layers table (e.g. the real data/mars/layers.parquet from
+    build_layers.py); default = whatever config processing.sources gives (synthetic in the repo)."""
     p = params or get_processing()
-    layers = read_layers("mars")
+    layers = read_layers("mars", p) if layers is None else layers
     if layers is None:
         print("WARNING: data/mars/layers.parquet missing; using synthetic Mars layers")
         layers = mars_layers(p)
