@@ -2,6 +2,7 @@
 
 Usage: p = get_processing(); p["grid_deg"]. Override per call: get_processing({"grid_deg": 5}).
 """
+import os
 from pathlib import Path
 
 import yaml
@@ -49,8 +50,15 @@ def _merge(base, over):
 
 
 def load_config(path=CONFIG_PATH):
+    """config.yaml, with the optional overlay named by env SPACEAPPS_CONFIG (e.g. config.demo.yaml)
+    merged on top (only for the default path, so explicit paths in tests stay untouched)."""
     p = Path(path)
-    return yaml.safe_load(p.read_text()) or {} if p.exists() else {}
+    cfg = (yaml.safe_load(p.read_text()) or {}) if p.exists() else {}
+    overlay = os.environ.get("SPACEAPPS_CONFIG")
+    if overlay and Path(path) == CONFIG_PATH:
+        o = Path(overlay) if Path(overlay).is_absolute() else CONFIG_PATH.parent / overlay
+        cfg = _merge(cfg, yaml.safe_load(o.read_text()) or {})
+    return cfg
 
 
 def get_processing(overrides=None, path=CONFIG_PATH):
