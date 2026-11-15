@@ -155,6 +155,7 @@ def pelletier_grid():
 # ---------------------------------------------------------------------------
 
 WARM_K = 278.0   # ground averaging above +5 C can't hold permafrost ice (Dominic's rule)
+COLD_K = 271.15  # ground averaging below -2 C is permafrost where no map covers it (Dominic, PR #12)
 
 
 def labels(lat, perm, ice_frac, glim, bare, slope, bedrock_depth, mean_temp_k=None):
@@ -172,7 +173,9 @@ def labels(lat, perm, ice_frac, glim, bare, slope, bedrock_depth, mean_temp_k=No
     ice = np.full(len(lat), np.nan)
     ice[(perm < 0.1) & (ice_frac0 < 0.1)] = 0.0
     if mean_temp_k is not None:
-        ice[np.isnan(ice) & (np.asarray(mean_temp_k, float) > WARM_K)] = 0.0
+        t = np.asarray(mean_temp_k, float)
+        ice[np.isnan(ice) & (t > WARM_K)] = 0.0
+        ice[np.isnan(ice) & (t < COLD_K)] = 1.0
     ice[(ice_frac0 >= 0.5) | (perm >= 0.5) | antarctic] = 1.0
 
     has_data = np.isfinite(perm) | np.isfinite(ice_frac) | pd.notna(glim)

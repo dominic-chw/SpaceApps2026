@@ -20,6 +20,7 @@ Switching a variable from synthetic to real = one config line (+ a small loader 
 assemble(planet) -> layers DataFrame, or None when every variable is synthetic (callers then use the
 synthetic tables directly, unchanged behaviour). io.read_layers() calls this.
 """
+import os
 from pathlib import Path
 
 import numpy as np
@@ -64,6 +65,8 @@ def earth_grid_deg(params=None):
 def source_specs(planet, params=None):
     """{variable: spec} with every variable present (missing ones default to synthetic)."""
     p = params or get_processing()
+    if os.environ.get("SPACEAPPS_SOURCES") == "synthetic" and not (params or {}).get("sources_force"):
+        return {v: {"source": "synthetic"} for v in VARIABLES[planet]}   # tests / runs without data/
     cfg = (p.get("sources") or {}).get(planet) or {}
     unknown = set(cfg) - set(VARIABLES[planet])
     if unknown:
@@ -119,7 +122,8 @@ def load_file(spec, columns, cells, planet, params):
     if missing:
         raise ValueError(f"{spec['path']} lacks columns {missing}")
     if cells is None:                                # this is the `cells` variable itself
-        return t[[c for c in KEY + columns if c in t]].drop_duplicates("cell_id")
+        cols = list(dict.fromkeys(c for c in KEY + columns if c in t))     # unique, keep order
+        return t[cols].drop_duplicates("cell_id")
     if "cell_id" in t and spec.get("match", "cell_id") == "cell_id":
         vals = t[["cell_id"] + [c for c in columns if c not in KEY]].drop_duplicates("cell_id")
         return cells[KEY].merge(vals, on="cell_id", how="left")

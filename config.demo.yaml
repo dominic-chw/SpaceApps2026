@@ -1,0 +1,32 @@
+# Demo overlay: real source layers instead of synthetic. Used only when SPACEAPPS_CONFIG=config.demo.yaml
+# (pipeline/common/config.py merges this file's `processing:` over config.yaml). Needs data/ from Drive.
+#   PowerShell:  $env:SPACEAPPS_CONFIG="config.demo.yaml"; python -m pipeline.run_all --build
+#   bash:        SPACEAPPS_CONFIG=config.demo.yaml python -m pipeline.run_all --build
+# Earth: data/earth/layers.parquet is the interface Jad's Earth side produces (columns of
+# common/synthetic.earth_layers). Until his global grid lands it holds the 20 named regions.
+processing:
+  sources:
+    # DEMO: real layers built from the downloads (data/ is gitignored; copy it from Drive to rebuild).
+    # Mars: TES TI, MOLA 463 m, SIM 3292, Odyssey hydrogen map, MCD vapour (pipeline/data_fetch/build_mars_layers.py)
+    # Earth: Earth Engine + GLiM + CCI + NSIDC (pipeline/earth_library/build_layers.py)
+    # Set any variable back to {source: synthetic} to run without the data.
+    mars:
+      cells: {source: file, path: data/mars/layers.parquet}
+      thermal_inertia: {source: file, path: data/mars/layers.parquet}
+      ice: {source: file, path: data/mars/layers.parquet}
+      geology: {source: file, path: data/mars/layers.parquet}
+      terrain: {source: file, path: data/mars/layers.parquet}
+      water_vapour: {source: file, path: data/mars/layers.parquet}
+    earth:
+      cells: {source: file, path: data/earth/layers.parquet}
+      elevation: {source: file, path: data/earth/layers.parquet}
+      terrain: {source: file, path: data/earth/layers.parquet}
+      land_cover: {source: file, path: data/earth/layers.parquet}
+      soil_temp: {source: file, path: data/earth/layers.parquet}
+      surface_temp: {source: file, path: data/earth/layers.parquet}
+      soil_properties: {source: file, path: data/earth/layers.parquet}
+      aridity: {source: file, path: data/earth/layers.parquet}
+      permafrost: {source: file, path: data/earth/layers.parquet}
+      lithology: {source: file, path: data/earth/layers.parquet}
+      bedrock: {source: file, path: data/earth/layers.parquet}
+      labels: {source: file, path: data/earth/layers.parquet}
