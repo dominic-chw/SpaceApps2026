@@ -30,11 +30,12 @@ def load_env(path=ROOT / ".env"):
                 os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 
-def download(url, dest, auth=None, chunk=1 << 20):
+def download(url, dest, auth=None, chunk=1 << 20, session=None):
     """Stream url to dest with resume. Returns 'skipped' | 'done'."""
     dest = Path(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)
-    head = requests.head(url, allow_redirects=True, timeout=60, headers=UA, auth=auth)
+    http = session or requests
+    head = http.head(url, allow_redirects=True, timeout=60, headers=UA, auth=auth)
     total = int(head.headers.get("content-length", 0)) if head.ok else 0
     have = dest.stat().st_size if dest.exists() else 0
     if total and have == total:
@@ -44,7 +45,7 @@ def download(url, dest, auth=None, chunk=1 << 20):
     if have and total and have < total:
         headers["Range"] = f"bytes={have}-"
         mode = "ab"
-    with requests.get(url, stream=True, timeout=120, headers=headers, auth=auth) as r:
+    with http.get(url, stream=True, timeout=120, headers=headers, auth=auth) as r:
         r.raise_for_status()
         if mode == "ab" and r.status_code != 206:
             mode = "wb"
@@ -58,15 +59,16 @@ def fetch_http(only=None):
     src = load_sources()
     for planet in ("mars", "earth"):
         for e in src[planet]:
-            if e.get("access") != "http" or e.get("status") != "ready" or "files" not in e:
+            if e.get("access") not in ("http", "earthdata") or e.get("status") != "ready" or "files" not in e:
                 continue
             if only and e["id"] not in only:
                 continue
+            session = earthdata_session() if e["access"] == "earthdata" else None
             for f in e["files"]:
                 dest = ROOT / e["local_dir"] / f["name"]
                 try:
                     print(f"{e['id']}: {f['name']} ... ", end="", flush=True)
-                    print(download(f["url"], dest))
+                    print(download(f["url"], dest, session=session))
                 except Exception as exc:  # keep going; report at the end
                     print(f"FAILED ({exc})")
 
@@ -87,17 +89,40 @@ def earthdata_auth():
     return (u, p) if u and p else None
 
 
-def fetch_earthdata():
+class EarthdataSession(requests.Session):
+    """Keeps the Earthdata login on redirects to urs.earthdata.nasa.gov only (never other hosts)."""
+    AUTH_HOST = "urs.earthdata.nasa.gov"
+
+    def rebuild_auth(self, prepared_request, response):
+        from urllib.parse import urlparse
+        super().rebuild_auth(prepared_request, response)
+        if urlparse(prepared_request.url).hostname == self.AUTH_HOST and self.auth:
+            prepared_request.prepare_auth(self.auth)
+
+
+def earthdata_session():
     load_env()
+    s = EarthdataSession()
+    s.headers.update(UA)
     auth = earthdata_auth()
-    if auth is None and not (Path.home() / ".netrc").exists() and not (Path.home() / "_netrc").exists():
+    if auth:
+        s.auth = auth                      # else requests falls back to ~/.netrc
+    elif not (Path.home() / ".netrc").exists() and not (Path.home() / "_netrc").exists():
         raise SystemExit("No Earthdata login: set EARTHDATA_USERNAME/PASSWORD in .env or add "
                          "urs.earthdata.nasa.gov to ~/.netrc")
+    return s
+
+
+def fetch_earthdata():
+    s = earthdata_session()
     entry = next(e for e in load_sources()["earth"] if e["id"] == "nsidc_circumarctic_ground_ice")
-    r = requests.get(entry["data_url"], auth=auth, headers=UA, timeout=60)
+    r = s.get(entry["data_url"], timeout=60)
     print(r.status_code, entry["data_url"])
-    print("Directory listing needs the login; pick the files from it, add them to the yaml "
-          "`files:` list, set status: ready and re-run.")
+    if r.ok:
+        import re
+        names = sorted(set(re.findall(r'href="([^"?/][^"]*)"', r.text)))
+        print(chr(10).join(names[:60]))
+    return s, r
 
 
 if __name__ == "__main__":

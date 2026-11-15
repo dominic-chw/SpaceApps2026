@@ -21,6 +21,8 @@ WORLDCOVER = "ESA/WorldCover/v200"          # class 60 = bare / sparse vegetatio
 SOILGRIDS = ["projects/soilgrids-isric/sand_mean", "projects/soilgrids-isric/clay_mean",
              "projects/soilgrids-isric/bdod_mean"]
 SOIL_DEPTHS_CM = [(0, 5), (5, 15), (15, 30), (30, 60), (60, 100), (100, 200)]   # to 2 m
+ARIDITY = "projects/sat-io/open-datasets/global_ai/global_ai_yearly"   # AI x 10000 (community catalog)
+TERRAIN_M = 500                              # config processing.terrain_resolution_m
 FOLDER = "spaceapps_ee"
 POINT_BUFFER_M = 2500
 
@@ -49,12 +51,18 @@ def modis_stats(ee, start, end):
 
 
 def terrain_stats(ee):
+    """Elevation, slope and roughness at ~500 m, the same scale as the Mars MOLA 463 m DEM."""
     col = ee.ImageCollection(DEM).select("DEM")
-    dem = col.mosaic().setDefaultProjection(col.first().projection())
+    dem30 = col.mosaic().setDefaultProjection(col.first().projection())
+    dem = dem30.reduceResolution(ee.Reducer.mean(), maxPixels=1024).reproject("EPSG:4326", None, TERRAIN_M)
     slope = ee.Terrain.slope(dem).rename("slope_deg")
-    # std dev of elevation in a 17 x 17 pixel (~500 m) window
-    rough = dem.reduceNeighborhood(ee.Reducer.stdDev(), ee.Kernel.square(8, "pixels")).rename("roughness_m")
+    # std dev of elevation in a 3 x 3 window of 500 m pixels (Mars: same on the 463 m MOLA grid)
+    rough = dem.reduceNeighborhood(ee.Reducer.stdDev(), ee.Kernel.square(1, "pixels")).rename("roughness_m")
     return dem.rename("elevation_m").addBands(slope).addBands(rough)
+
+
+def aridity(ee):
+    return ee.Image(ARIDITY).select("b1").divide(10000).rename("aridity")
 
 
 def worldcover_bare(ee):
@@ -96,8 +104,8 @@ def export_regions(start="2015-01-01", end="2023-01-01", dry_run=False, only=Non
         if dry_run:
             continue
         stack = ee.Image.cat([era5_stats(ee, start, end), modis_stats(ee, start, end),
-                              terrain_stats(ee), worldcover_bare(ee), soilgrids_0_2m(ee)])
-        out = stack.reduceRegions(region_points(ee, reg), ee.Reducer.mean(), 1000)
+                              terrain_stats(ee), worldcover_bare(ee), soilgrids_0_2m(ee), aridity(ee)])
+        out = stack.reduceRegions(region_points(ee, reg), ee.Reducer.mean(), 1000, tileScale=8)
         task = ee.batch.Export.table.toDrive(out, description=f"earth_layers_{label}",
                                              folder=FOLDER, fileFormat="CSV")
         task.start()
@@ -112,13 +120,16 @@ def export_bare_grid(grid_deg=0.5, dry_run=False):
     if dry_run:
         return None
     ee = init_ee()
-    bare = worldcover_bare(ee).reproject("EPSG:4326", None, 100)
-    frac = bare.reduceResolution(ee.Reducer.mean(), maxPixels=65536).reproject(
+    # two-step mean: 10 m -> 500 m (50 x 50 px per cell), then 500 m -> grid_deg (~110 x 110 px per cell)
+    bare = worldcover_bare(ee)
+    bare_500 = bare.reduceResolution(ee.Reducer.mean(), maxPixels=4096).reproject("EPSG:4326", None, 500)
+    frac = bare_500.reduceResolution(ee.Reducer.mean(), maxPixels=65536).reproject(
         crs="EPSG:4326", crsTransform=[grid_deg, 0, -180, 0, -grid_deg, 85])
     region = ee.Geometry.Rectangle([-180, -85, 180, 85], "EPSG:4326", False)
     task = ee.batch.Export.image.toDrive(frac, description="worldcover_bare_grid", folder=FOLDER,
                                          region=region, crs="EPSG:4326",
-                                         crsTransform=[grid_deg, 0, -180, 0, -grid_deg, 85])
+                                         crsTransform=[grid_deg, 0, -180, 0, -grid_deg, 85],
+                                         maxPixels=1e9, shardSize=4, fileDimensions=[720, 340])
     task.start()
     print("started", task.id)
     return task
@@ -147,14 +158,14 @@ def export_grid_samples(tif_path, grid_deg=0.5, chunk=5000, start="2015-01-01", 
         return []
     ee = init_ee()
     stack = ee.Image.cat([era5_stats(ee, start, end), modis_stats(ee, start, end), terrain_stats(ee),
-                          worldcover_bare(ee), soilgrids_0_2m(ee)])
+                          worldcover_bare(ee), soilgrids_0_2m(ee), aridity(ee)])
     h = grid_deg / 2
     tasks = []
     for i in range(0, len(cells), chunk):
         feats = [ee.Feature(ee.Geometry.Rectangle([lon - h, lat - h, lon + h, lat + h], "EPSG:4326", False),
                             {"cell_id": f"{lat:+07.2f}_{lon:+07.2f}", "lat": lat, "lon": lon})
                  for lat, lon in cells[i:i + chunk]]
-        out = stack.reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 5000)
+        out = stack.reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 5000, tileScale=8)
         task = ee.batch.Export.table.toDrive(out, description=f"earth_layers_grid_{i // chunk:03d}",
                                              folder=FOLDER, fileFormat="CSV")
         task.start()
@@ -167,9 +178,12 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--only", choices=["atacama"])
+    ap.add_argument("--bare-grid-only", action="store_true")
     ap.add_argument("--grid-from", help="path to worldcover_bare_grid.tif; exports layers for its bare cells")
     a = ap.parse_args()
-    if a.grid_from:
+    if a.bare_grid_only:
+        export_bare_grid(dry_run=a.dry_run)
+    elif a.grid_from:
         export_grid_samples(a.grid_from, dry_run=a.dry_run)
     else:
         export_regions(dry_run=a.dry_run, only=a.only)

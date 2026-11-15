@@ -37,6 +37,19 @@ mars:
     features: [slope_deg, roughness_m]
     notes: Elevation in metres (16-bit signed, big-endian), 5760 x 2880, longitudes 0-360 east. Plan says 463 m; 16 ppd is about 3.7 km, so slope is coarse. A 463 m GeoTIFF mosaic (2.1 GB) exists at https://planetarymaps.usgs.gov/mosaic/Mars_MGS_MOLA_DEM_mosaic_global_463m.tif if finer terrain is needed.
 
+  - id: mola_dem_463m
+    role: required
+    access: http
+    status: ready
+    title: MGS MOLA global DEM mosaic, 463 m (GeoTIFF), for slope and roughness at the config 500 m scale
+    local_dir: data/mars/mola
+    files:
+      - {url: "https://planetarymaps.usgs.gov/mosaic/Mars_MGS_MOLA_DEM_mosaic_global_463m.tif", name: Mars_MGS_MOLA_DEM_mosaic_global_463m.tif, size_mb: 2126}
+    version: "USGS Astrogeology MOLA 463 m mosaic"
+    licence: "USGS / NASA, public domain. Cite: Smith et al. 2001, JGR 106; USGS Astrogeology mosaic"
+    features: [slope_deg, roughness_m]
+    notes: "Used instead of the 16 px/deg MEGDR for terrain so Mars and Earth (Copernicus DEM averaged to 500 m) use the same scale (config processing.terrain_resolution_m = 500). Redirects to the USGS S3 bucket."
+
   - id: tes_thermal_inertia_day_2007
     role: required
     access: http
@@ -68,15 +81,17 @@ mars:
 
   - id: odyssey_neutron_weh
     role: required
-    access: manual
-    status: unresolved
-    title: Mars Odyssey GRS neutron water-equivalent hydrogen map (map + label)
+    access: http
+    status: built
+    title: Mars Odyssey GRS/HEND hydrogen map, built from the AHD time slices (relative hydrogen indicator)
     local_dir: data/mars/neutron
-    url: null
-    version: "ODY-M-GRS-5-AHD-V1.0 (verified archive root below)"
-    licence: "NASA PDS, open. Cite: Feldman et al. 2004 / Boynton et al. 2007 (verify)"
+    url: "https://pds-geosciences.wustl.edu/ody/ody-m-grs-5-ahd-v1/odgh1_xxxx/"
+    build: "python -m pipeline.data_fetch.build_neutron_map"
+    outputs: [hydrogen_map_5deg.csv, hydrogen_map_5deg.txt]
+    version: "ODY-M-GRS-5-AHD-V1.0, 294 slices (15 deg Ls each)"
+    licence: "NASA PDS, open. Cite: Mitrofanov et al. (HEND) / ODY-M-GRS-5-AHD-V1.0"
     features: [ice]
-    notes: "The verified PDS archive https://pds-geosciences.wustl.edu/ody/ody-m-grs-5-ahd-v1/odgh1_xxxx/ holds 15-degree-Ls time slices (yrNN/ahd_NN_LLL_LLL), not one global map. A single WEH map file was not found, so none is downloaded. Pick the global WEH product in a browser (or build one from the AHD slices) and put map + label in data/mars/neutron/."
+    notes: "No single WEH map exists in the archive, so the script averages EPITHERMAL_FLUX1 (100 eV-10 keV) over all slices on the 5 deg grid (lon 0..360 east). h_suppression = 1 - flux / dry reference (90th pct within +-40 deg), 0..1. Relative indicator only, NOT calibrated water-equivalent hydrogen."
 
   - id: mars_climate_database
     role: required
@@ -236,15 +251,22 @@ earth:
   - id: nsidc_circumarctic_ground_ice
     role: required
     access: earthdata
-    status: login
+    status: ready
     title: Circum-Arctic Map of Permafrost and Ground-Ice Conditions, v2 (GGD318)
     url: "https://nsidc.org/data/ggd318/versions/2"
+    files:
+      - {url: "https://daacdata.apps.nsidc.org/pub/DATASETS/fgdc/ggd318_map_circumarctic/README.txt", name: README.txt}
+      - {url: "https://daacdata.apps.nsidc.org/pub/DATASETS/fgdc/ggd318_map_circumarctic/permaice.shp", name: permaice.shp}
+      - {url: "https://daacdata.apps.nsidc.org/pub/DATASETS/fgdc/ggd318_map_circumarctic/permaice.dbf", name: permaice.dbf}
+      - {url: "https://daacdata.apps.nsidc.org/pub/DATASETS/fgdc/ggd318_map_circumarctic/permaice.shx", name: permaice.shx}
+      - {url: "https://daacdata.apps.nsidc.org/pub/DATASETS/fgdc/ggd318_map_circumarctic/permaice.prj", name: permaice.prj}
+      - {url: "https://daacdata.apps.nsidc.org/pub/DATASETS/fgdc/ggd318_map_circumarctic/permaice.avl", name: permaice.avl}
     data_url: "https://daacdata.apps.nsidc.org/pub/DATASETS/fgdc/ggd318_map_circumarctic/"
     local_dir: data/earth/nsidc_ggd318
     version: "v2"
     licence: "NSIDC, free with Earthdata login; cite Brown et al. 2002"
     features: [ice]
-    notes: "Directory answers 401 without login. Needs EARTHDATA_USERNAME / EARTHDATA_PASSWORD in .env or a ~/.netrc entry for urs.earthdata.nasa.gov; then run `python -m pipeline.data_fetch.fetch --earthdata`."
+    notes: "Needs EARTHDATA_USERNAME / EARTHDATA_PASSWORD in .env or ~/.netrc. permaice.shp = permafrost extent and ground-ice content polygons (names verified from the directory listing after login). Downloaded by fetch.py (login kept for urs.earthdata.nasa.gov only)."
 
   - id: esa_cci_permafrost
     role: required
@@ -263,17 +285,17 @@ earth:
 
   - id: global_aridity_index
     role: required
-    access: manual
-    status: manual
-    title: Global Aridity Index and PET Database v3.1 (annual AI/ET0)
+    access: earthengine
+    status: ready
+    title: Global Aridity Index (Zomer et al.), yearly, Earth Engine community catalog
+    ee_asset: "projects/sat-io/open-datasets/global_ai/global_ai_yearly"
+    docs: "https://gee-community-catalog.org/projects/ai0/"
     url: "https://figshare.com/articles/dataset/7504448"
-    file: "Global-AI_ET0__annual_v3_1.zip"
-    local_dir: data/earth/aridity
-    size_mb: 645
-    version: "v3.1"
-    licence: "CC BY 4.0; cite Zomer et al. 2022, Sci Data 9, 409"
+    local_dir: data/earth/ee
+    version: "as hosted in the sat-io community catalog (check docs page for the version); band b1 = AI x 10000, ~1 km"
+    licence: "CC BY 4.0; cite Zomer et al. 2022, Sci Data 9, 409, and the GEE community catalog"
     features: [dryness]
-    notes: "Direct figshare file link (https://ndownloader.figshare.com/files/56300327) answers 403 to scripts. Download in a browser."
+    notes: "Exported by ee_export.py as `aridity` (b1 / 10000). Figshare direct download blocks scripts, so the EE copy is used. Checked: Atacama 0.02, Amazon 1.80."
 
   # ---- optional ----
   - id: depth_to_bedrock
