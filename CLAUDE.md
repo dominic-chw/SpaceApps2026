@@ -1,7 +1,7 @@
 # CLAUDE.md
 - Session start: read `docs/plan.md` once; don't re-read unless asked. Ask which folder the user owns; edit only that folder.
 - Project: Mars Drill-Site Analog Finder. Click Mars + pick depth → matching Earth drill-test sites. Mars only. Default matcher `knn`; deep is optional, never required.
-- Ownership: jadmwehbi-design (scoring + Earth grid) `pipeline/matching/ pipeline/validation/ pipeline/earth_library/ weights/ tests/test_matching*.py tests/test_validation*.py tests/test_earth_library*.py`; Dominic (data acquisition) `data_sources.yaml pipeline/data_fetch/ pipeline/earth_ml/ data/` plus `output/ tests/ models/ notebooks/`; coworker `pipeline/mars_features/ pipeline/physics/` (read from `data/mars/`); team `sites/ research/ web/ functions/ pitch/`. Shared (PR only): `CLAUDE.md README.md config.yaml docs/plan.md`.
+- Ownership: jadmwehbi-design (scoring + Earth grid + Mars grid) `pipeline/matching/ pipeline/validation/ pipeline/earth_library/ pipeline/mars_features/ pipeline/physics/ weights/ tests/test_matching*.py tests/test_validation*.py tests/test_earth_library*.py`; Dominic (data acquisition) `data_sources.yaml pipeline/data_fetch/ pipeline/earth_ml/ data/` plus `output/ tests/ models/ notebooks/`; team `sites/ research/ web/ functions/ pitch/`. Shared (PR only): `CLAUDE.md README.md config.yaml docs/plan.md`.
 - Contract: plan.md section 3. Don't change formats, column names or vocabularies.
 - Bands `skin upper_metre drill_zone deep`; rock `volcanic sedimentary clay_sulfate icy impact_mixed`; ground `dry_regolith ice_cemented massive_ice bedrock`; hardness 0–3.
 - Rules: never commit `data/ models/ .env`; logic in `.py`; clear notebooks; `pytest tests/` before PRs; branch `owner/task`, PRs to `main`.
