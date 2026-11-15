@@ -1,0 +1,374 @@
+# Data sources for the Mars Drill-Site Analog Finder (owner: Dominic, data acquisition).
+# Every URL / Earth Engine asset below was checked on 2026-11-15; entries marked `unresolved`
+# could not be resolved to a real file and are NOT guessed.
+#
+# role:    required | optional | display | live | skip
+# access:  http (pipeline/data_fetch/fetch.py) | earthengine (pipeline/earth_library/ee_export.py)
+#          | earthdata (login: EARTHDATA_USERNAME/PASSWORD in .env or ~/.netrc) | manual
+# status:  ready | manual | login | unresolved | not_downloaded | skip
+# `files` paths are relative to local_dir (data/ is gitignored; copy it to Drive).
+
+mars:
+  - id: geologic_map_sim3292
+    role: required
+    access: http
+    status: ready
+    title: USGS Geologic Map of Mars, SIM 3292 (database ZIP)
+    local_dir: data/mars/geology
+    files:
+      - {url: "https://pubs.usgs.gov/sim/3292/downloads/sim3292_database.zip", name: sim3292_database.zip, size_mb: 809}
+      - {url: "https://pubs.usgs.gov/sim/3292/downloads/sim3292_readme.txt", name: sim3292_readme.txt}
+    version: "SIM 3292 (Tanaka et al., 2014)"
+    licence: "USGS, public domain. Cite: Tanaka et al. 2014, USGS SIM 3292, doi:10.3133/sim3292"
+    features: [rock]
+    notes: Geologic units map to the 5 rock classes through pipeline/mars_features/unit_lookup.csv.
+
+  - id: mola_megdr_16ppd
+    role: required
+    access: http
+    status: ready
+    title: MGS MOLA MEGDR topography, 16 pixel/degree (IMG + LBL, not browse)
+    local_dir: data/mars/mola
+    files:
+      - {url: "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg016/megt90n000eb.img", name: megt90n000eb.img}
+      - {url: "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg016/megt90n000eb.lbl", name: megt90n000eb.lbl}
+    version: "MGS-M-MOLA-5-MEGDR-L3-V1.0"
+    licence: "NASA PDS, open. Cite: Smith et al. 2003, MGS MOLA Gridded Data Records, NASA PDS"
+    features: [slope_deg, roughness_m]
+    notes: Elevation in metres (16-bit signed, big-endian), 5760 x 2880, longitudes 0-360 east. Plan says 463 m; 16 ppd is about 3.7 km, so slope is coarse. A 463 m GeoTIFF mosaic (2.1 GB) exists at https://planetarymaps.usgs.gov/mosaic/Mars_MGS_MOLA_DEM_mosaic_global_463m.tif if finer terrain is needed.
+
+  - id: tes_thermal_inertia_day_2007
+    role: required
+    access: http
+    status: ready
+    title: TES global thermal inertia, daytime, Putzig and Mellon 2007 (IMG + LBL + interpolation mask)
+    local_dir: data/mars/tes_ti
+    files:
+      - {url: "https://pds-geosciences.wustl.edu/mgs/mgs-m-tes-5-timap-v1/mgst_9001/data/global_ti_day_2007.img", name: global_ti_day_2007.img}
+      - {url: "https://pds-geosciences.wustl.edu/mgs/mgs-m-tes-5-timap-v1/mgst_9001/data/global_ti_day_2007.lbl", name: global_ti_day_2007.lbl}
+      - {url: "https://pds-geosciences.wustl.edu/mgs/mgs-m-tes-5-timap-v1/mgst_9001/data/global_ti_msk_day_2007.img", name: global_ti_msk_day_2007.img}
+      - {url: "https://pds-geosciences.wustl.edu/mgs/mgs-m-tes-5-timap-v1/mgst_9001/data/global_ti_msk_day_2007.lbl", name: global_ti_msk_day_2007.lbl}
+      - {url: "https://pds-geosciences.wustl.edu/mgs/mgs-m-tes-5-timap-v1/mgst_9001/data/datainfo.txt", name: datainfo.txt}
+    version: "MGS-M-TES-5-TIMAP-V1.0 (volume mgst_9001)"
+    licence: "NASA PDS, open. Cite: Putzig and Mellon 2007, Icarus 191, 68-94"
+    features: [ground_class, temp_mean, temp_swing]
+    notes: Units J m-2 K-1 s-1/2 (SI TI). Mask marks interpolated pixels. Feeds the heat model (read by pipeline/physics/).
+
+  - id: swim_ice
+    role: required
+    access: manual
+    status: unresolved
+    title: SWIM subsurface water ice maps (GeoTIFFs for 0-1 m, 1-5 m, >5 m)
+    local_dir: data/mars/swim
+    url: null
+    version: "SWIM Project, USGS Astropedia"
+    licence: "USGS, public domain. Cite: Putzig et al. 2024 / SWIM Project (verify exact citation on the Astropedia page)"
+    features: [ice]
+    notes: "Hosted on astropedia.astrogeology.usgs.gov, which does not resolve from this network (DNS returns a dead address). No file URL was guessed. Download the three depth GeoTIFFs in a browser and put them in data/mars/swim/."
+
+  - id: odyssey_neutron_weh
+    role: required
+    access: manual
+    status: unresolved
+    title: Mars Odyssey GRS neutron water-equivalent hydrogen map (map + label)
+    local_dir: data/mars/neutron
+    url: null
+    version: "ODY-M-GRS-5-AHD-V1.0 (verified archive root below)"
+    licence: "NASA PDS, open. Cite: Feldman et al. 2004 / Boynton et al. 2007 (verify)"
+    features: [ice]
+    notes: "The verified PDS archive https://pds-geosciences.wustl.edu/ody/ody-m-grs-5-ahd-v1/odgh1_xxxx/ holds 15-degree-Ls time slices (yrNN/ahd_NN_LLL_LLL), not one global map. A single WEH map file was not found, so none is downloaded. Pick the global WEH product in a browser (or build one from the AHD slices) and put map + label in data/mars/neutron/."
+
+  - id: mars_climate_database
+    role: required
+    access: manual
+    status: manual
+    title: Mars Climate Database web export (surface temperature + water vapour)
+    local_dir: data/mars/mcd
+    url: "https://www-mars.lmd.jussieu.fr/mars/access.html"
+    manifest: data/mars/mcd/manifest.txt
+    version: "MCD (record the version shown on the web interface in manifest.txt)"
+    licence: "LMD / Open University / ESA; cite Millour et al., Mars Climate Database"
+    features: [temp_mean, temp_swing, dryness]
+    notes: "Export surface temperature at Ls 0/90/180/270 x 12:00 and 00:00 local time, plus water vapour column, on a global grid. Record every export in manifest.txt (template: pipeline/data_fetch/mcd_manifest_template.txt; `python -m pipeline.data_fetch.fetch --init-mcd` copies it)."
+
+  # ---- optional (not downloaded unless asked) ----
+  - id: crism_summary_products
+    role: optional
+    access: manual
+    status: not_downloaded
+    title: CRISM summary parameter products (clay and sulfate detections)
+    url: "https://pds-geosciences.wustl.edu/missions/mro/crism.htm"
+    local_dir: data/mars/crism
+    licence: "NASA PDS, open"
+    features: [rock]
+    notes: Would refine clay_sulfate rock class. Not downloaded.
+
+  - id: sharad_radargrams
+    role: optional
+    access: manual
+    status: not_downloaded
+    title: MRO SHARAD radargrams
+    url: "https://pds-geosciences.wustl.edu/missions/mro/sharad.htm"
+    local_dir: data/mars/sharad
+    licence: "NASA PDS, open"
+    features: [ice]
+    notes: Deep band only (>3 m). Not downloaded.
+
+  - id: themis_day_ir_100m
+    role: optional
+    access: http
+    status: not_downloaded
+    title: THEMIS daytime IR mosaic 100 m v12 (thermal checks)
+    url: "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Mars_MO_THEMIS-IR-Day_mosaic_global_100m_v12.tif"
+    local_dir: data/mars/themis
+    size_mb: 22769
+    licence: "NASA/USGS, open"
+    features: [temp_mean]
+    notes: 22.8 GB. Not downloaded.
+
+  - id: hirise_dtms
+    role: optional
+    access: manual
+    status: not_downloaded
+    title: HiRISE digital terrain models (showcase terrain)
+    url: "https://www.uahirise.org/dtm/"
+    local_dir: data/mars/hirise
+    licence: "NASA/UA, open"
+    features: [slope_deg, roughness_m]
+    notes: Showcase sites only. Not downloaded.
+
+  - id: mars_ground_truth
+    role: optional
+    access: manual
+    status: not_downloaded
+    title: "Phoenix / Curiosity (MSL) / Perseverance (Mars 2020) / InSight ground truth"
+    urls:
+      phoenix: "https://pds-geosciences.wustl.edu/missions/phoenix/"
+      msl: "https://pds-geosciences.wustl.edu/missions/msl/"
+      mars2020: "https://pds-geosciences.wustl.edu/missions/mars2020/"
+      insight: "https://pds-geosciences.wustl.edu/missions/insight/"
+    local_dir: data/mars/ground_truth
+    licence: "NASA PDS, open"
+    features: [validation]
+    notes: Used to check heat model and ice (Phoenix shallow ice, rover drill holes, InSight HP3). Not downloaded.
+
+earth:
+  - id: era5_land_monthly
+    role: required
+    access: earthengine
+    status: ready
+    title: ERA5-Land monthly aggregated, soil temperature levels 1-4 (to about 2.9 m)
+    ee_asset: "ECMWF/ERA5_LAND/MONTHLY_AGGR"
+    bands: [soil_temperature_level_1, soil_temperature_level_2, soil_temperature_level_3, soil_temperature_level_4, skin_temperature]
+    local_dir: data/earth/ee
+    version: "ERA5-Land monthly aggregates, 2015-2022 export window"
+    licence: "Copernicus licence; cite Munoz-Sabater et al. 2021, ESSD 13, 4349"
+    features: [temp_mean, temp_swing]
+    notes: Exported by pipeline/earth_library/ee_export.py.
+
+  - id: modis_lst
+    role: required
+    access: earthengine
+    status: ready
+    title: MODIS Land Surface Temperature day/night, 8-day, 1 km
+    ee_asset: "MODIS/061/MOD11A2"
+    bands: [LST_Day_1km, LST_Night_1km]
+    local_dir: data/earth/ee
+    version: "MOD11A2 collection 061"
+    licence: "NASA LP DAAC, open; cite Wan et al. MOD11A2.061"
+    features: [temp_mean, temp_swing]
+    notes: Skin temperature.
+
+  - id: copernicus_dem
+    role: required
+    access: earthengine
+    status: ready
+    title: Copernicus DEM GLO-30
+    ee_asset: "COPERNICUS/DEM/GLO30"
+    bands: [DEM]
+    local_dir: data/earth/ee
+    version: "GLO-30"
+    licence: "Copernicus DEM licence (free, attribution)"
+    features: [slope_deg, roughness_m]
+
+  - id: esa_worldcover
+    role: required
+    access: earthengine
+    status: ready
+    title: ESA WorldCover 10 m v200 (2021), bare / sparse vegetation filter
+    ee_asset: "ESA/WorldCover/v200"
+    bands: [Map]
+    local_dir: data/earth/ee
+    version: "v200, 2021"
+    licence: "CC BY 4.0; cite Zanaga et al. 2022"
+    features: [bare_fraction]
+    notes: Class 60 (bare / sparse vegetation) is the bare-ground filter for the global grid.
+
+  - id: soilgrids
+    role: required
+    access: earthengine
+    status: ready
+    title: SoilGrids 2.0 sand, clay, bulk density, 0-2 m (EE community catalog)
+    ee_assets:
+      - "projects/soilgrids-isric/sand_mean"
+      - "projects/soilgrids-isric/clay_mean"
+      - "projects/soilgrids-isric/bdod_mean"
+    local_dir: data/earth/ee
+    version: "SoilGrids 2.0"
+    licence: "CC BY 4.0; cite Poggio et al. 2021, SOIL 7, 217"
+    features: [ground_class, hardness]
+    notes: Depth layers 0-5, 5-15, 15-30, 30-60, 60-100, 100-200 cm.
+
+  - id: glim
+    role: required
+    access: manual
+    status: manual
+    title: GLiM global lithological map (Hartmann and Moosdorf 2012)
+    url: "https://www.dropbox.com/s/9vuowtebp9f1iud/LiMW_GIS%202015.gdb.zip?dl=0"
+    landing: "https://www.geo.uni-hamburg.de/en/geologie/forschung/aquatische-geochemie/glim.html"
+    local_dir: data/earth/glim
+    version: "LiMW GIS 2015"
+    licence: "Free for research; cite Hartmann and Moosdorf 2012, G-cubed 13, Q12004"
+    features: [rock]
+    notes: Download link taken from the University of Hamburg page. Classes map to rock via pipeline/earth_library/glim_lookup.csv.
+
+  - id: nsidc_circumarctic_ground_ice
+    role: required
+    access: earthdata
+    status: login
+    title: Circum-Arctic Map of Permafrost and Ground-Ice Conditions, v2 (GGD318)
+    url: "https://nsidc.org/data/ggd318/versions/2"
+    data_url: "https://daacdata.apps.nsidc.org/pub/DATASETS/fgdc/ggd318_map_circumarctic/"
+    local_dir: data/earth/nsidc_ggd318
+    version: "v2"
+    licence: "NSIDC, free with Earthdata login; cite Brown et al. 2002"
+    features: [ice]
+    notes: "Directory answers 401 without login. Needs EARTHDATA_USERNAME / EARTHDATA_PASSWORD in .env or a ~/.netrc entry for urs.earthdata.nasa.gov; then run `python -m pipeline.data_fetch.fetch --earthdata`."
+
+  - id: esa_cci_permafrost
+    role: required
+    access: http
+    status: ready
+    title: "ESA CCI Permafrost v4.0 (CEDA, open), ground temperature at depth, active layer thickness, extent"
+    local_dir: data/earth/cci_permafrost
+    files:
+      - {url: "https://dap.ceda.ac.uk/neodc/esacci/permafrost/data/ground_temperature/L4/area4/pp/v04.0/ESACCI-PERMAFROST-L4-GTD-MODISLST_CRYOGRID-AREA4_PP-2021-fv04.0.nc", name: GTD_2021.nc}
+      - {url: "https://dap.ceda.ac.uk/neodc/esacci/permafrost/data/active_layer_thickness/L4/area4/pp/v04.0/ESACCI-PERMAFROST-L4-ALT-MODISLST_CRYOGRID-AREA4_PP-2021-fv04.0.nc", name: ALT_2021.nc}
+      - {url: "https://dap.ceda.ac.uk/neodc/esacci/permafrost/data/permafrost_extent/L4/area4/pp/v04.0/ESACCI-PERMAFROST-L4-PFR-MODISLST_CRYOGRID-AREA4_PP-2021-fv04.0.nc", name: PFR_2021.nc}
+    version: "v04.0, 2021 (earlier years 1997-2020 in the same folders)"
+    licence: "Open (CEDA licence in 00README_catalogue_and_licence.txt); cite Obu et al. 2021 / ESA CCI Permafrost"
+    features: [ice, temp_mean]
+    notes: Northern hemisphere only (Antarctica and high mountains are not covered; gap model fills them). Files downloaded anonymously, no login needed.
+
+  - id: global_aridity_index
+    role: required
+    access: manual
+    status: manual
+    title: Global Aridity Index and PET Database v3.1 (annual AI/ET0)
+    url: "https://figshare.com/articles/dataset/7504448"
+    file: "Global-AI_ET0__annual_v3_1.zip"
+    local_dir: data/earth/aridity
+    size_mb: 645
+    version: "v3.1"
+    licence: "CC BY 4.0; cite Zomer et al. 2022, Sci Data 9, 409"
+    features: [dryness]
+    notes: "Direct figshare file link (https://ndownloader.figshare.com/files/56300327) answers 403 to scripts. Download in a browser."
+
+  # ---- optional ----
+  - id: depth_to_bedrock
+    role: optional
+    access: http
+    status: not_downloaded
+    title: SoilGrids 2017 absolute depth to bedrock (BDTICM, 250 m)
+    url: "https://files.isric.org/soilgrids/former/2017-03-10/data/BDTICM_M_250m_ll.tif"
+    local_dir: data/earth/bedrock
+    size_mb: 8480
+    licence: "CC BY 4.0; cite Hengl et al. 2017, PLoS ONE 12(2)"
+    features: [hardness, ground_class]
+    notes: 8.5 GB. Not downloaded.
+
+  - id: gtnp_boreholes
+    role: optional
+    access: manual
+    status: not_downloaded
+    title: GTN-P permafrost borehole temperatures (validation)
+    url: "https://gtnp.arcticportal.org/"
+    local_dir: data/earth/gtnp
+    licence: "GTN-P terms; cite per site"
+    features: [temp_mean]
+    notes: Validation of ground temperature. Not downloaded.
+
+  - id: smap_freeze_thaw
+    role: optional
+    access: earthdata
+    status: not_downloaded
+    title: SMAP L3 freeze/thaw state (SPL3FTP)
+    url: "https://nsidc.org/data/spl3ftp/versions/4"
+    local_dir: data/earth/smap
+    licence: "NSIDC, free with Earthdata login"
+    features: [ice]
+    notes: Cross-check for ice. Needs Earthdata login. No Earth Engine asset ID was verified, so none is listed.
+
+  - id: emit_l2b_minerals
+    role: optional
+    access: earthdata
+    status: not_downloaded
+    title: EMIT L2B estimated mineral identification (EMITL2BMIN)
+    url: "https://lpdaac.usgs.gov/products/emitl2bmin001/"
+    local_dir: data/earth/emit
+    licence: "NASA LP DAAC, open, Earthdata login"
+    features: [rock]
+    notes: Cross-check for clay_sulfate. Not downloaded.
+
+  - id: arcticdem
+    role: optional
+    access: earthengine
+    status: not_downloaded
+    title: ArcticDEM 2 m mosaic (showcase terrain)
+    ee_asset: "UMN/PGC/ArcticDEM/V3/2m_mosaic"
+    url: "https://www.pgc.umn.edu/data/arcticdem/"
+    local_dir: data/earth/ee
+    licence: "CC BY 4.0, Polar Geospatial Center"
+    features: [slope_deg, roughness_m]
+
+  - id: rema
+    role: optional
+    access: earthengine
+    status: not_downloaded
+    title: REMA 8 m mosaic, Antarctica (showcase terrain)
+    ee_asset: "UMN/PGC/REMA/V1_1/8m"
+    url: "https://www.pgc.umn.edu/data/rema/"
+    local_dir: data/earth/ee
+    licence: "CC BY 4.0, Polar Geospatial Center"
+    features: [slope_deg, roughness_m]
+
+display:
+  - id: mars_trek_tiles
+    role: display
+    access: web
+    status: not_downloaded
+    title: Mars Trek tiles (basemap, web team)
+    url: "https://trek.nasa.gov/mars/"
+    licence: "NASA, open"
+  - id: sentinel2
+    role: display
+    access: earthengine
+    status: not_downloaded
+    title: Sentinel-2 surface reflectance imagery (web team)
+    ee_asset: "COPERNICUS/S2_SR_HARMONIZED"
+    licence: "Copernicus, free and open"
+
+live:
+  - id: meteomatics
+    role: live
+    access: api
+    status: not_downloaded
+    title: Meteomatics live weather API (backend team, proxied by functions/)
+    url: "https://www.meteomatics.com/en/weather-api/"
+    credentials: "METEOMATICS_USER / METEOMATICS_PASSWORD in .env"
+
+skip:
+  - {id: gldas, status: skip, title: GLDAS, reason: "Coarser than ERA5-Land; duplicates soil temperature"}
+  - {id: merra2, status: skip, title: MERRA-2, reason: "Coarser than ERA5-Land; duplicates climate fields"}
+  - {id: usgs_national_geology, status: skip, title: USGS national geology, reason: "US only; GLiM is global"}
+  - {id: aster_gdem, status: skip, title: ASTER GDEM, reason: "Copernicus DEM is better and already used"}

@@ -1,35 +1,132 @@
-"""Earth Engine export of Earth layers at region points (run by you; needs `earthengine-api`
-and your EE project in .env as EARTHENGINE_PROJECT). Planetary Computer is the backup.
-Exports a CSV to Drive; convert it to data/earth/layers.parquet (columns in
-common/synthetic.earth_layers) once downloaded. Untested without EE access.
-Step 7; plan s5, s12. Run: python -m pipeline.earth_library.ee_export
+"""Earth Engine export of Earth layers (items 7-11 of data_sources.yaml) at the region points,
+plus the WorldCover bare-ground fraction on the global grid.
+Project id: EE_PROJECT in .env (EARTHENGINE_PROJECT also accepted). Needs a one-time
+`earthengine authenticate` (credentials in ~/.config/earthengine). Planetary Computer is the backup.
+Exports go to Google Drive folder `spaceapps_ee` as CSV/GeoTIFF; copy them into data/earth/ee/.
+Atacama regions run first, then all other regions, then the bare grid.
+Step 7; plan s5, s9, s12. Run: python -m pipeline.earth_library.ee_export [--dry-run] [--only atacama]
 """
+import argparse
 import os
 
+from ..data_fetch.fetch import load_env
 from .local_layers import load_regions
 
-# bands: soil temp layer 1-4 (to ~2.9 m), skin temperature, DEM
 ERA5 = "ECMWF/ERA5_LAND/MONTHLY_AGGR"
-BANDS = ["soil_temperature_level_1", "soil_temperature_level_4", "skin_temperature"]
+ERA5_BANDS = ["soil_temperature_level_1", "soil_temperature_level_2", "soil_temperature_level_3",
+              "soil_temperature_level_4", "skin_temperature"]
+MODIS = "MODIS/061/MOD11A2"
+DEM = "COPERNICUS/DEM/GLO30"
+WORLDCOVER = "ESA/WorldCover/v200"          # class 60 = bare / sparse vegetation
+SOILGRIDS = ["projects/soilgrids-isric/sand_mean", "projects/soilgrids-isric/clay_mean",
+             "projects/soilgrids-isric/bdod_mean"]
+SOIL_DEPTHS_CM = [(0, 5), (5, 15), (15, 30), (30, 60), (60, 100), (100, 200)]   # to 2 m
+FOLDER = "spaceapps_ee"
+POINT_BUFFER_M = 2500
 
 
-def export_regions(start="2015-01-01", end="2023-01-01", scale_m=11132):
-    import ee  # imported lazily so the rest of the pipeline needs no EE install
+def init_ee():
+    import ee  # lazy: the rest of the pipeline needs no EE install
+    load_env()
+    project = os.environ.get("EE_PROJECT") or os.environ.get("EARTHENGINE_PROJECT")
+    if not project:
+        raise SystemExit("Set EE_PROJECT=<your earth engine project id> in .env")
+    ee.Initialize(project=project)
+    return ee
 
-    ee.Initialize(project=os.environ.get("EARTHENGINE_PROJECT"))
-    regions = load_regions()
-    pts = ee.FeatureCollection([
-        ee.Feature(ee.Geometry.Point([r.lon, r.lat]), {"region_id": r.region_id})
+
+def era5_stats(ee, start, end):
+    img = ee.ImageCollection(ERA5).filterDate(start, end).select(ERA5_BANDS)
+    mean = img.mean().rename([b + "_mean" for b in ERA5_BANDS])
+    rng = img.max().subtract(img.min()).rename([b + "_range" for b in ERA5_BANDS])
+    return mean.addBands(rng)
+
+
+def modis_stats(ee, start, end):
+    col = ee.ImageCollection(MODIS).filterDate(start, end).select(["LST_Day_1km", "LST_Night_1km"])
+    k = 0.02   # scale factor -> kelvin
+    return col.mean().multiply(k).rename(["lst_day_k", "lst_night_k"])
+
+
+def terrain_stats(ee):
+    dem = ee.ImageCollection(DEM).select("DEM").mosaic().setDefaultProjection("EPSG:4326", None, 30)
+    slope = ee.Terrain.slope(dem).rename("slope_deg")
+    rough = dem.reduceNeighborhood(ee.Reducer.stdDev(), ee.Kernel.square(250, "meters")).rename("roughness_m")
+    return dem.rename("elevation_m").addBands(slope).addBands(rough)
+
+
+def worldcover_bare(ee):
+    wc = ee.Image(WORLDCOVER).select("Map")
+    return wc.eq(60).rename("bare_fraction")
+
+
+def soilgrids_0_2m(ee):
+    out = []
+    for asset in SOILGRIDS:
+        name = asset.split("/")[-1].replace("_mean", "")
+        bands = [f"{name}_{a}-{b}cm_mean" for a, b in SOIL_DEPTHS_CM]
+        weights = [b - a for a, b in SOIL_DEPTHS_CM]
+        img = ee.Image(asset).select(bands)
+        wsum = sum(weights)
+        parts = [img.select(b).multiply(w) for b, w in zip(bands, weights)]
+        total = parts[0]
+        for p in parts[1:]:
+            total = total.add(p)
+        out.append(total.divide(wsum).rename(name + "_0_2m"))
+    return ee.Image.cat(out)
+
+
+def region_points(ee, regions):
+    return ee.FeatureCollection([
+        ee.Feature(ee.Geometry.Point([r.lon, r.lat]).buffer(POINT_BUFFER_M), {"region_id": r.region_id})
         for r in regions.itertuples()])
-    img = ee.ImageCollection(ERA5).filterDate(start, end).select(BANDS)
-    stats = ee.Image.cat([img.mean().rename([b + "_mean" for b in BANDS]),
-                          img.reduce(ee.Reducer.max()).subtract(img.reduce(ee.Reducer.min()))
-                          .rename([b + "_range" for b in BANDS])])
-    out = stats.reduceRegions(pts, ee.Reducer.first(), scale_m)
-    task = ee.batch.Export.table.toDrive(out, description="earth_layers_regions", fileFormat="CSV")
+
+
+def export_regions(start="2015-01-01", end="2023-01-01", dry_run=False, only=None):
+    ee = init_ee() if not dry_run else None
+    regions = load_regions()
+    atacama = regions[regions.region_id.str.startswith("atacama")]
+    others = regions[~regions.region_id.str.startswith("atacama")]
+    batches = [("atacama", atacama)] + ([] if only == "atacama" else [("all_other_regions", others)])
+    tasks = []
+    for label, reg in batches:
+        print(f"{label}: {', '.join(reg.region_id)}")
+        if dry_run:
+            continue
+        stack = ee.Image.cat([era5_stats(ee, start, end), modis_stats(ee, start, end),
+                              terrain_stats(ee), worldcover_bare(ee), soilgrids_0_2m(ee)])
+        out = stack.reduceRegions(region_points(ee, reg), ee.Reducer.mean(), 1000)
+        task = ee.batch.Export.table.toDrive(out, description=f"earth_layers_{label}",
+                                             folder=FOLDER, fileFormat="CSV")
+        task.start()
+        tasks.append(task)
+        print("started", task.id)
+    return tasks
+
+
+def export_bare_grid(grid_deg=0.5, dry_run=False):
+    """WorldCover bare fraction per grid cell (global, lat +-85) as a GeoTIFF for the filtered grid."""
+    print(f"bare_grid: {grid_deg} deg, lat +-85")
+    if dry_run:
+        return None
+    ee = init_ee()
+    bare = worldcover_bare(ee).reproject("EPSG:4326", None, 100)
+    frac = bare.reduceResolution(ee.Reducer.mean(), maxPixels=65536).reproject(
+        crs="EPSG:4326", crsTransform=[grid_deg, 0, -180, 0, -grid_deg, 85])
+    region = ee.Geometry.Rectangle([-180, -85, 180, 85], "EPSG:4326", False)
+    task = ee.batch.Export.image.toDrive(frac, description="worldcover_bare_grid", folder=FOLDER,
+                                         region=region, crs="EPSG:4326",
+                                         crsTransform=[grid_deg, 0, -180, 0, -grid_deg, 85])
     task.start()
+    print("started", task.id)
     return task
 
 
 if __name__ == "__main__":
-    print(export_regions())
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--only", choices=["atacama"])
+    a = ap.parse_args()
+    export_regions(dry_run=a.dry_run, only=a.only)
+    if not a.only:
+        export_bare_grid(dry_run=a.dry_run)
