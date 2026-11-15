@@ -1,1 +1,2 @@
-"""explain: TODO (see docs/plan.md)."""
+"""OPTIONAL: explain deep matches by channel occlusion. Plan s10.
+"""
