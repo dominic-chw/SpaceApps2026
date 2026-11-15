@@ -207,6 +207,83 @@ def export_land_grid(grid_deg=0.5, chunk=5000, start="2015-01-01", end="2023-01-
     return tasks
 
 
+MCD12Q1 = "MODIS/061/MCD12Q1"   # NASA MODIS land cover; LC_Type1 16 = barren, 15 = snow/ice
+
+
+def modis_landcover(ee):
+    """NASA MODIS land cover (latest year): barren and snow/ice fractions.
+    Covers Antarctica, unlike ESA WorldCover, and is a NASA cross-check of bare_fraction."""
+    lc = ee.ImageCollection(MCD12Q1).sort("system:time_start", False).first().select("LC_Type1")
+    return lc.eq(16).rename("modis_barren").addBands(lc.eq(15).rename("modis_snow_ice"))
+
+
+def antarctic_cells(grid_deg=0.5, min_barren=0.02):
+    """0.5 deg cells south of 60 S with at least `min_barren` MODIS barren ground.
+    Ice-free Antarctica is under 1% of the continent, so this skips the ice sheet.
+    (A global raster reduction is "too large" for Earth Engine, so it asks per cell,
+    in batches of 4,000, at 1 km.)"""
+    ee = init_ee()
+    barren = modis_landcover(ee).select("modis_barren")
+    cells = land_cells(grid_deg, min_lat=-85, max_lat=-60)
+    h = grid_deg / 2
+    keep = []
+    for i in range(0, len(cells), 4000):
+        feats = [ee.Feature(ee.Geometry.Rectangle([lon - h, lat - h, lon + h, lat + h], "EPSG:4326", False),
+                            {"lat": lat, "lon": lon}) for lat, lon in cells[i:i + 4000]]
+        out = barren.reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 1000, tileScale=4)
+        out = out.filter(ee.Filter.gte("mean", min_barren))
+        for f in out.getInfo()["features"]:
+            keep.append((f["properties"]["lat"], f["properties"]["lon"]))
+    return keep
+
+
+def export_antarctica(grid_deg=0.5, start="2015-01-01", end="2023-01-01", dry_run=False):
+    """Layers for ice-free Antarctic cells (Dry Valleys etc.). WorldCover has no Antarctica,
+    so bare_fraction here = MODIS barren fraction. SoilGrids/aridity may be empty there."""
+    cells = antarctic_cells(grid_deg)
+    print(f"antarctica: {len(cells)} cells with bare ground")
+    if dry_run or not cells:
+        return []
+    ee = init_ee()
+    mlc = modis_landcover(ee)
+    stack = ee.Image.cat([era5_stats(ee, start, end), modis_stats(ee, start, end), terrain_stats(ee),
+                          mlc.select("modis_barren").rename("bare_fraction"), mlc,
+                          soilgrids_0_2m(ee), aridity(ee)])
+    h = grid_deg / 2
+    feats = [ee.Feature(ee.Geometry.Rectangle([lon - h, lat - h, lon + h, lat + h], "EPSG:4326", False),
+                        {"cell_id": f"{lat:+07.2f}_{lon:+07.2f}", "lat": lat, "lon": lon})
+             for lat, lon in cells]
+    out = stack.reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 5000, tileScale=8)
+    task = ee.batch.Export.table.toDrive(out, description="earth_layers_antarctica",
+                                         folder=FOLDER, fileFormat="CSV")
+    task.start()
+    print("started", task.id)
+    return [task]
+
+
+def export_modis_landcover(grid_deg=0.5, chunk=5000, dry_run=False):
+    """NASA MODIS barren / snow-ice fractions for every land cell (cross-check of WorldCover).
+    Small, separate export so the main land-grid export doesn't have to be redone."""
+    cells = land_cells(grid_deg)
+    if dry_run:
+        return []
+    ee = init_ee()
+    img = modis_landcover(ee)
+    h = grid_deg / 2
+    tasks = []
+    for i in range(0, len(cells), chunk):
+        feats = [ee.Feature(ee.Geometry.Rectangle([lon - h, lat - h, lon + h, lat + h], "EPSG:4326", False),
+                            {"cell_id": f"{lat:+07.2f}_{lon:+07.2f}"})
+                 for lat, lon in cells[i:i + chunk]]
+        out = img.reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 1000, tileScale=4)
+        task = ee.batch.Export.table.toDrive(out, description=f"earth_modis_lc_{i // chunk:03d}",
+                                             folder=FOLDER, fileFormat="CSV")
+        task.start()
+        tasks.append(task)
+    print(f"modis land cover: started {len(tasks)} tasks")
+    return tasks
+
+
 def export_grid_samples(tif_path, grid_deg=0.5, chunk=5000, start="2015-01-01", end="2023-01-01", dry_run=False):
     """Layers for every bare-ground 0.5 deg cell (cell mean at 5 km), chunked into several Drive CSVs.
     Run after export_bare_grid finished and its GeoTIFF is in data/earth/ee/."""
@@ -240,8 +317,14 @@ if __name__ == "__main__":
     ap.add_argument("--land-mask", action="store_true", help="save the 0.5 deg ERA5-Land mask")
     ap.add_argument("--land-grid", action="store_true", help="export layers for every land cell")
     ap.add_argument("--grid-from", help="path to worldcover_bare_grid.tif; exports layers for its bare cells")
+    ap.add_argument("--antarctica", action="store_true", help="export ice-free Antarctic cells (MODIS barren)")
+    ap.add_argument("--modis-lc", action="store_true", help="export NASA MODIS land cover for every land cell")
     a = ap.parse_args()
-    if a.land_mask:
+    if a.antarctica:
+        export_antarctica(dry_run=a.dry_run)
+    elif a.modis_lc:
+        export_modis_landcover(dry_run=a.dry_run)
+    elif a.land_mask:
         save_land_mask()
     elif a.land_grid:
         export_land_grid(dry_run=a.dry_run)
