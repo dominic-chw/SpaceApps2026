@@ -126,7 +126,11 @@ def gruber_grid():
 
 
 def pelletier_grid():
-    """Pelletier 2016 soil + sediment thickness (m), median per 0.5 deg cell (300 x 720, 90 N .. 60 S)."""
+    """Pelletier 2016 soil + sediment thickness (m), MEAN per 0.5 deg cell (300 x 720, 90 N .. 60 S).
+
+    Mean, not median: values are whole metres and the median is 0-1 m almost everywhere, which made
+    nearly every cell "bedrock" (e.g. Atacama). The mean keeps the deeper sediment pockets a
+    drill team would actually pick (Hanksville 3.9 m, Atacama high 2.5 m)."""
     tifs = glob.glob(str(RAW / "pelletier_dtb" / "**" / "average_soil_and_sedimentary-deposit_thickness.tif"),
                      recursive=True)
     if not tifs:
@@ -141,7 +145,7 @@ def pelletier_grid():
         block[block < 0] = np.nan          # nodata -1
         return block
     try:
-        return coarsen(rows, src.height, src.width, "median", RAW / "pelletier_dtb" / "dtb_0p5deg_median.npy")
+        return coarsen(rows, src.height, src.width, "mean", RAW / "pelletier_dtb" / "dtb_0p5deg_mean.npy")
     finally:
         src.close()
 
@@ -150,7 +154,10 @@ def pelletier_grid():
 # Rules (MANIFEST.md / ground_lookup.csv)
 # ---------------------------------------------------------------------------
 
-def labels(lat, perm, ice_frac, glim, bare, slope, bedrock_depth):
+WARM_K = 278.0   # ground averaging above +5 C can't hold permafrost ice (Dominic's rule)
+
+
+def labels(lat, perm, ice_frac, glim, bare, slope, bedrock_depth, mean_temp_k=None):
     """perm_prob is final here; returns (ice_label, ground_label, assumed_antarctic).
 
     ice_label:    1 if ice_frac >= 0.5, perm >= 0.5 or ice-free Antarctica;
@@ -164,6 +171,8 @@ def labels(lat, perm, ice_frac, glim, bare, slope, bedrock_depth):
     ice_frac0 = np.nan_to_num(ice_frac, nan=0.0)
     ice = np.full(len(lat), np.nan)
     ice[(perm < 0.1) & (ice_frac0 < 0.1)] = 0.0
+    if mean_temp_k is not None:
+        ice[np.isnan(ice) & (np.asarray(mean_temp_k, float) > WARM_K)] = 0.0
     ice[(ice_frac0 >= 0.5) | (perm >= 0.5) | antarctic] = 1.0
 
     has_data = np.isfinite(perm) | np.isfinite(ice_frac) | pd.notna(glim)
@@ -227,7 +236,7 @@ def build(ee_df=None, glim=None, gruber=None, pelletier=None, out=EARTH / "layer
     get = lambda c: ee_df[c].to_numpy(float) if c in ee_df else np.full(len(lat), np.nan)
     bare = get("bare_fraction")
     ice, ground, assumed = labels(lat, perm, get("modis_snow_ice"), glim_class, bare,
-                                  get("slope_deg"), depth)
+                                  get("slope_deg"), depth, get("skin_temperature_mean"))
     aridity = get("aridity")
     aridity = np.where(antarctic & np.isnan(aridity), 0.0, aridity)                 # assumed (MANIFEST)
 

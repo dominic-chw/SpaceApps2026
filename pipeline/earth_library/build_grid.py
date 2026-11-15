@@ -27,7 +27,11 @@ def ground_for_band(rec, band, p):
     ground = rec["ground_class"]
     if ground == "bedrock":                      # labelled bedrock but depth says deeper
         ground = "dry_regolith"
-    ice = bool(rec["ice"]) and top >= p["ground_rules"]["earth_active_layer_m"] - 1e-9
+    # Ice in this band if the cell has ground ice AND either the band is below the summer thaw
+    # (active layer) or ERA5-Land says this band stays frozen all year (e.g. Dry Valleys,
+    # where the top metre never thaws; MANIFEST rule for skin / upper_metre).
+    frozen_all_year = real_frozen_fraction(rec, band) >= 0.99
+    ice = bool(rec["ice"]) and (top >= p["ground_rules"]["earth_active_layer_m"] - 1e-9 or frozen_all_year)
     if not ice and ground in ("ice_cemented", "massive_ice"):
         ground = "dry_regolith"                  # active layer above the permafrost table
     return ground, ice
@@ -88,9 +92,11 @@ def extract_earth(layers, params=None):
     return rows
 
 
-def build_earth(params=None, out_dir=None):
+def build_earth(params=None, out_dir=None, layers=None):
+    """layers: optional ready-made layers table (e.g. the real data/earth/layers.parquet from
+    build_layers.py); default = whatever config processing.sources gives (synthetic in the repo)."""
     p = params or get_processing()
-    layers = load_layers(p)
+    layers = load_layers(p) if layers is None else layers
     layers = add_real_frozen(layers)
     # named analog regions are always kept (team-chosen sites; a region point can fall on a lake or ice
     # sheet, and WorldCover has no Antarctica); grid cells must pass the bare-ground filter

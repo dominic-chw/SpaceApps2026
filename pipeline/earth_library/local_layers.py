@@ -32,7 +32,7 @@ def glim_to_rock(glim_class, lookup=None):
 
 def load_layers(params=None):
     p = params or get_processing()
-    layers = read_layers("earth")
+    layers = read_layers("earth", p)
     if layers is None:
         print("WARNING: all Earth sources are synthetic (config processing.sources); using synthetic Earth layers")
         layers = earth_layers(load_regions(), params=p)
