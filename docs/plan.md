@@ -18,7 +18,8 @@ Click a spot on Mars, pick a depth; the app finds Earth places where the ground 
 ## 3. Contract and ownership
 | Area | Owner | Produces |
 |---|---|---|
-| `pipeline/`, `output/`, `weights/`, `tests/`, `models/`, `notebooks/` | Dominic | all `output/*.json` |
+| `pipeline/matching/`, `pipeline/validation/`, `weights/`, scoring tests | jadmwehbi-design (scoring) | match results, `validation.json`, `earth_library.json` |
+| rest of `pipeline/`, `output/`, `tests/`, `models/`, `notebooks/` | Dominic (data) | Mars/Earth feature tables (CSV), placeholder outputs |
 | `sites/`, `research/` | Team | showcase sites, analog pairs, Earth campaigns |
 | `web/` | Team | app (reads `output/*.json`) |
 | `functions/` | Team | Meteomatics proxy |
