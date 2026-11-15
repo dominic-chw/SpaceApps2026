@@ -24,7 +24,7 @@ Frontend reads, without modifying:
 
 Coordinates use ±70° latitude with east-positive longitudes, 2° grid snap matching `pipeline/common/coords.py`. Deep (>3 m) is marked experimental. Only backend-generated scores are shown. Synthetic data carries a conspicuous banner. Missing files display an honest empty state instead of invented predictions.
 
-The Mars surface is **procedural illustration, not orbital imagery**. The Earth diagram is an equirectangular coordinate plot, not a live basemap. Map tiles can be connected later without changing the output contract. Weather is labelled unavailable until `functions/` provides the Meteomatics proxy.
+The Mars explorer is now a **rotatable, zoomable, clickable orthographic globe** rendered with vanilla canvas JavaScript (`mars-globe.js`). Drag rotates, wheel zooms, click selects Mars coordinates, and keyboard arrows adjust the selected coordinate. The globe terrain is **procedural illustration, not orbital imagery**, and is not used for the matching model. The Earth diagram is an equirectangular coordinate plot, not a live basemap. Map tiles can be connected later without changing the output contract. Weather is labelled unavailable until `functions/` provides the Meteomatics proxy.
 
 ## Frontend files
 
