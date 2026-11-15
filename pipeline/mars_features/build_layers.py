@@ -98,11 +98,42 @@ def geologic_units(cells, per_side=5):
     return units, units.map(desc)
 
 
+OVERLAP_PX = 2   # extra pixels read around each strip so the 3 x 3 window and gradient see real neighbours
+
+
+def strip_terrain(z, lat_top, deg_per_px, px_m):
+    """Slope (deg) and roughness (m) for one strip of the DEM, all in float32.
+
+    z: float32 elevations (rows x cols), already padded by OVERLAP_PX on every side
+    (real rows above/below, wrapped columns across the 180 deg seam).
+    Returns arrays the same shape as z; the caller crops the overlap off.
+    """
+    from scipy.ndimage import uniform_filter
+    # East-west pixel size shrinks with latitude: one value per row.
+    row_lat = lat_top - (np.arange(z.shape[0], dtype=np.float32) + 0.5) * deg_per_px
+    dx = (px_m * np.cos(np.radians(row_lat))).astype(np.float32)[:, None]
+    gy = np.gradient(z, axis=0) / np.float32(px_m)
+    gx = np.gradient(z, axis=1) / dx
+    slope = np.degrees(np.arctan(np.hypot(gx, gy)))
+    del gx, gy
+    # Roughness = std. dev. in a 3 x 3 window = sqrt(mean(z^2) - mean(z)^2). Subtract the strip's
+    # mean first: elevations reach ~20 km, and squaring raw values in float32 would lose precision.
+    zc = z - np.float32(np.nanmean(z))
+    m1 = uniform_filter(zc, 3)
+    m2 = uniform_filter(zc * zc, 3)
+    rough = np.sqrt(np.clip(m2 - m1 * m1, 0, None))
+    return slope.astype(np.float32), rough.astype(np.float32)
+
+
 def mola_terrain(cells, scale_m=500.0):
     """Mean slope (deg) and roughness (m) per cell from the MOLA 463 m DEM.
 
     Same recipe as Earth (ee_export.terrain_stats): elevation at ~500 m, slope from the
     gradient, roughness = std. dev. of elevation in a 3 x 3 window, then the cell mean.
+
+    Memory: the 2 GB DEM is never loaded whole. It's read one 2 deg latitude row at a time
+    (a rasterio window, ~256 x 46,080 pixels) plus OVERLAP_PX rows above and below, in
+    float32 (~50 MB per array, a few hundred MB peak).
     """
     tif = next((RAW / "mola").glob("*.tif"), None)
     if tif is None or tif.stat().st_size < 2_000_000_000:
@@ -110,26 +141,33 @@ def mola_terrain(cells, scale_m=500.0):
         return np.full(len(cells), np.nan), np.full(len(cells), np.nan)
     import rasterio
     from rasterio.windows import Window
-    from scipy.ndimage import uniform_filter
     slope = np.full(len(cells), np.nan)
     rough = np.full(len(cells), np.nan)
-    with rasterio.open(tif) as src:
+    pad = OVERLAP_PX
+    # GDAL's block cache defaults to a share of system RAM and counts against our process;
+    # each strip is read exactly once, so a small cache is enough.
+    with rasterio.Env(GDAL_CACHEMAX=64), rasterio.open(tif) as src:
         rows, cols = src.height, src.width
+        nodata = src.nodata
         px_m = 2 * np.pi * MARS_RADIUS_M / cols                         # ~463 m at the equator
-        by_lat = cells.groupby("lat").groups
-        for lat, members in by_lat.items():
+        deg_per_px = 180.0 / rows
+        for lat, members in cells.groupby("lat").groups.items():
             rs, _ = cell_box_index(lat, 0.0, rows, cols)
-            z = src.read(1, window=Window(0, rs.start, cols, rs.stop - rs.start)).astype(float)
-            dx = px_m * np.cos(np.radians(lat))
-            gy, gx = np.gradient(z, px_m, dx)
-            s = np.degrees(np.arctan(np.hypot(gx, gy)))
-            m1 = uniform_filter(z, 3)
-            m2 = uniform_filter(z * z, 3)
-            r = np.sqrt(np.clip(m2 - m1 * m1, 0, None))
+            r0, r1 = max(rs.start - pad, 0), min(rs.stop + pad, rows)
+            z = src.read(1, window=Window(0, r0, cols, r1 - r0)).astype(np.float32)
+            if nodata is not None:
+                z[z == nodata] = np.nan
+            z = np.pad(z, ((0, 0), (pad, pad)), mode="wrap")         # wrap across the 180 deg seam
+            s, r = strip_terrain(z, 90.0 - r0 * deg_per_px, deg_per_px, px_m)
+            del z
+            top = rs.start - r0                                         # crop the overlap rows
+            s, r = s[top:top + (rs.stop - rs.start)], r[top:top + (rs.stop - rs.start)]
             for i in members:
                 _, cs = cell_box_index(lat, cells.at[i, "lon"], rows, cols)
-                slope[i] = s[:, cs].mean()
-                rough[i] = r[:, cs].mean()
+                cs = slice(cs.start + pad, cs.stop + pad)               # columns shifted by the wrap pad
+                slope[i] = np.nanmean(s[:, cs], dtype=np.float64)
+                rough[i] = np.nanmean(r[:, cs], dtype=np.float64)
+            del s, r
     return slope, rough
 
 
