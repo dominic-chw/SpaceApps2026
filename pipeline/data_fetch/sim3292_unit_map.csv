@@ -1,0 +1,45 @@
+unit_sim3292,unit,why
+eNh,Noachian_highland,Early Noachian highland
+mNh,Noachian_highland,Middle Noachian highland
+lNh,Noachian_highland,Late Noachian highland
+eNhm,Noachian_highland,Early Noachian highland massif
+mNhm,Noachian_highland,Middle Noachian highland massif
+Nhe,Noachian_highland,Noachian highland edifice
+Nhu,Noachian_highland,Noachian highland undivided
+HNhu,Noachian_highland,Hesperian-Noachian highland undivided
+eHh,Noachian_highland,Early Hesperian highland (cratered highland terrain)
+AHi,Impact_ejecta,Amazonian-Hesperian impact unit
+eHv,Hesperian_volcanic,Early Hesperian volcanic
+lHv,Hesperian_volcanic,Late Hesperian volcanic
+lHvf,Hesperian_volcanic,Late Hesperian volcanic field
+Hve,Hesperian_volcanic,Hesperian volcanic edifice
+lNv,Hesperian_volcanic,Late Noachian volcanic (no Noachian volcanic class in unit_lookup; same rock)
+Nve,Hesperian_volcanic,Noachian volcanic edifice (same rock class)
+AHv,Amazonian_volcanic,Amazonian-Hesperian volcanic
+lAv,Amazonian_volcanic,Late Amazonian volcanic
+lAvf,Amazonian_volcanic,Late Amazonian volcanic field
+Av,Amazonian_volcanic,Amazonian volcanic
+Ave,Amazonian_volcanic,Amazonian volcanic edifice
+HNt,Sedimentary_plains,Hesperian-Noachian transition
+eHt,Sedimentary_plains,Early Hesperian transition
+lHt,Sedimentary_plains,Late Hesperian transition
+Ht,Sedimentary_plains,Hesperian transition
+Htu,Sedimentary_plains,Hesperian transition undivided
+Hto,Sedimentary_plains,Hesperian transition outflow (channel deposits)
+AHtu,Sedimentary_plains,Amazonian-Hesperian transition undivided
+lHl,Sedimentary_plains,Late Hesperian lowland
+mAl,Sedimentary_plains,Middle Amazonian lowland
+ANa,Sedimentary_plains,Amazonian-Noachian apron (mass-wasted debris)
+Aa,Sedimentary_plains,Amazonian apron
+lAa,Sedimentary_plains,Late Amazonian apron
+eHb,Sedimentary_plains,Early Hesperian basin
+HNb,Sedimentary_plains,Hesperian-Noachian basin
+eAb,Sedimentary_plains,Early Amazonian basin
+lHb,Sedimentary_plains,Late Hesperian basin
+Hp,Polar_layered,Hesperian polar
+Hpe,Polar_layered,Hesperian polar edifice
+Hpu,Polar_layered,Hesperian polar undivided
+Ap,Polar_layered,Amazonian polar
+Apu,Polar_layered,Amazonian polar undivided
+lApd,Polar_layered,Late Amazonian polar dunes
+lApc,Polar_cap,Late Amazonian polar cap

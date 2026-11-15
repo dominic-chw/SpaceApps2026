@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#090e1a" />
+  <title>About the Mission | PLANETARY TWIN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<header class="topbar">
+    <a class="identity" href="./index.html" aria-label="Planetary Twin home"><span class="mark">◉</span><span><strong>PLANETARY TWIN</strong><small>MARS DRILL-SITE ANALOG FINDER</small></span></a>
+    <div class="top-actions">
+      <a class="nav-about" href="./index.html">Explorer</a>
+      <a class="nav-about active" href="./about.html" aria-current="page">About</a>
+      <span class="pill"><span class="pulse"></span> NASA SPACE APPS 2026</span>
+      <a class="ghost-link" href="https://github.com/dominic-chw/SpaceApps2026" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </div>
+  </header>
+  <main class="shell">
+    <div class="eyebrow">THE PLANETARY TWIN MISSION</div>
+    <section class="about-intro">
+      <h1>From Mars to Earth.<br><em>One geological twin at a time.</em></h1>
+      <p>Understand how the Mars Drill-Site Analog Finder helps connect Martian terrain and subsurface conditions to potential Earth field-testing regions.</p>
+      <a class="about-return" href="./index.html">← Back to Mars Explorer</a>
+    </section>
+    <section id="about" class="about-section about-standalone" aria-labelledby="about-title">
+      <div class="about-heading">
+        <div><div class="eyebrow">03 / BEHIND THE MISSION</div><h2 id="about-title">Why find Earth's twin for Mars?</h2></div>
+        <p>A Mars drill cannot be tested everywhere on Mars. Planetary Twin helps researchers identify places on Earth with comparable ground conditions, so they can investigate promising locations for field testing.</p>
+      </div>
+      <div class="about-cards">
+        <article class="about-card"><span class="about-index">01 / SELECT</span><div class="about-glyph" aria-hidden="true">◎</div><h3>Pick a spot on Mars</h3><p>Choose coordinates on the globe and select one of four depth bands, from surface skin (0–10 cm) to experimental deep drilling (&gt;3 m). The location snaps to a 2° grid.</p></article>
+        <article class="about-card"><span class="about-index">02 / COMPARE</span><div class="about-glyph" aria-hidden="true">≋</div><h3>Compare ground conditions</h3><p>The matching pipeline compares factors such as temperature, ice, ground class, hardness, rock type and terrain. Its default method is k-nearest neighbours (kNN).</p></article>
+        <article class="about-card"><span class="about-index">03 / EXPLORE</span><div class="about-glyph" aria-hidden="true">↗</div><h3>Explore Earth analogs</h3><p>See ranked Earth regions, match scores, key similarities and differences, and any available field-campaign references. Results depend on backend data availability.</p></article>
+      </div>
+      <div class="about-bottom">
+        <div><span class="about-kicker">BUILT FOR RESEARCH</span><strong>NASA Space Apps Challenge 2026</strong><p>Planetary Twin is a collaborative Mars drill-site analog finder.</p></div>
+        <div class="about-disclaimer"><span class="about-kicker">SCIENTIFIC TRANSPARENCY</span><p>Matches are <strong>research leads, not drilling safety certifications.</strong> Deeper subsurface estimates may be modelled or predicted; synthetic demo outputs are labelled as such.</p></div>
+      </div>
+    </section>
+  </main>
+  <footer><span>PLANETARY TWIN / NASA SPACE APPS 2026</span><span>Earth analogs are research leads, not drill safety certifications.</span></footer>
+</body>
+</html>

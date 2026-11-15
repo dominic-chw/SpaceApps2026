@@ -11,7 +11,7 @@ from ..common.config import get_processing
 from ..common.ground import hardness
 from ..common.io import feature_row
 from ..common.schema import BANDS
-from ..physics.heat_model import band_top_m, mars_band_temps
+from ..physics.heat_model import band_top_m, mars_band_temps, mars_frozen_fraction
 
 UNIT_LOOKUP = Path(__file__).with_name("unit_lookup.csv")
 
@@ -44,7 +44,9 @@ def extract_cell(rec, lookup=None, params=None):
         ground, ice = ground_for_band(rec["thermal_inertia"], rec["ice_frac"], rec["lat"], band, p)
         # SWIM/neutron ice is measured only for the shallow bands; deeper is extrapolated
         q_ice = "measured" if band in ("skin", "upper_metre") else "modelled"
-        vals = [("temp_mean", mean, "modelled"), ("temp_swing", swing, "modelled"),
+        frozen = mars_frozen_fraction(rec["lat"], rec["thermal_inertia"], band, p)
+        vals = [("temp_mean", mean, "modelled"), ("frozen_fraction", frozen, "modelled"),
+                ("temp_swing", swing, "modelled"),
                 ("ice", int(ice), q_ice), ("ground_class", ground, "modelled"),
                 ("hardness", hardness(ground, rock, p), "modelled"), ("rock", rock, "measured"),
                 ("slope_deg", rec["slope_deg"], "measured"),

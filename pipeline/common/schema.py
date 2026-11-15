@@ -11,7 +11,7 @@ ROCK = ["volcanic", "sedimentary", "clay_sulfate", "icy", "impact_mixed"]
 GROUND = ["dry_regolith", "ice_cemented", "massive_ice", "bedrock"]
 QUALITY = ["measured", "modelled", "predicted"]
 CATEGORICAL = {"ground_class", "rock"}
-FEATURES = ["temp_mean", "temp_swing", "ice", "ground_class", "hardness", "rock",
+FEATURES = ["temp_mean", "frozen_fraction", "temp_swing", "ice", "ground_class", "hardness", "rock",
             "slope_deg", "roughness_m", "dryness"]
 # Bands each feature exists in (plan s6); others exist in all bands.
 FEATURE_BANDS = {"temp_swing": BANDS[:3], "dryness": BANDS[:2]}

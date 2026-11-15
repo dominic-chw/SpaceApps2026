@@ -56,3 +56,37 @@ def earth_band_temps(mean_k, annual_range_k, diurnal_amp_k, thermal_inertia, ban
     return temps_at_depth(mean_k, diurnal_amp_k, annual_range_k / 2, ti, band_mid_depth_m(band, p),
                           year_days=h["year_days"], day_hours=h["day_hours"],
                           vol_heat_cap=h["volumetric_heat_capacity"])
+
+
+def frozen_fraction(mean_k, annual_amp_k, thermal_inertia, depth_m, *, year_days, vol_heat_cap):
+    """Share of the year (0-1) the ground at `depth_m` is below 0 C (273.15 K).
+
+    The yearly temperature is a sine wave around the mean. Its swing shrinks with
+    depth (same skin-depth rule as above). Frozen share = part of the sine below 273.15 K.
+    """
+    amp = annual_amp_k * math.exp(-depth_m / skin_depth_m(thermal_inertia, year_days * 86400, vol_heat_cap))
+    if amp < 1e-9:
+        return 1.0 if mean_k < 273.15 else 0.0
+    c = (273.15 - mean_k) / amp            # where 0 C sits inside the swing (-1..1)
+    if c >= 1:
+        return 1.0
+    if c <= -1:
+        return 0.0
+    return 0.5 + math.asin(c) / math.pi
+
+
+def mars_frozen_fraction(lat, thermal_inertia, band, params=None):
+    p = params or get_processing()
+    h = p["heat_model"]
+    ti = thermal_inertia if thermal_inertia == thermal_inertia else h["default_thermal_inertia"]
+    mean, _, annual = mars_surface(lat, ti, p)
+    return frozen_fraction(mean, annual, ti, band_mid_depth_m(band, p),
+                           year_days=h["mars_year_days"], vol_heat_cap=h["volumetric_heat_capacity"])
+
+
+def earth_frozen_fraction(mean_k, annual_range_k, thermal_inertia, band, params=None):
+    p = params or get_processing()
+    h = p["earth_heat_model"]
+    ti = thermal_inertia if thermal_inertia == thermal_inertia else h["default_thermal_inertia"]
+    return frozen_fraction(mean_k, annual_range_k / 2, ti, band_mid_depth_m(band, p),
+                           year_days=h["year_days"], vol_heat_cap=h["volumetric_heat_capacity"])
