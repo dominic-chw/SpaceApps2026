@@ -19,7 +19,8 @@ Click a spot on Mars, pick a depth; the app finds Earth places where the ground 
 | Area | Owner | Produces |
 |---|---|---|
 | `pipeline/matching/`, `pipeline/validation/`, `weights/`, scoring tests | jadmwehbi-design (scoring) | match results, `validation.json`, `earth_library.json` |
-| rest of `pipeline/`, `output/`, `tests/`, `models/`, `notebooks/` | Dominic (data) | Mars/Earth feature tables (CSV), placeholder outputs |
+| `pipeline/earth_library/`, `tests/test_earth_library*.py` | jadmwehbi-design (Earth data) | real `data/earth/layers.parquet` (global 0.5° grid, columns as `common/synthetic.earth_layers`) and `data/features/earth_cells.parquet` |
+| rest of `pipeline/` (`common/`, `physics/`, `mars_features/`, `earth_ml/`), `output/`, `tests/`, `models/`, `notebooks/` | Dominic (Mars data, physics, shared code) | Mars feature table, heat model, gap model, placeholder outputs |
 | `sites/`, `research/` | Team | showcase sites, analog pairs, Earth campaigns |
 | `web/` | Team | app (reads `output/*.json`) |
 | `functions/` | Team | Meteomatics proxy |
