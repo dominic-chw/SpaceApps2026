@@ -1,0 +1,16 @@
+name: analog-finder
+channels: [conda-forge]
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - pyarrow
+  - geopandas
+  - rasterio
+  - rioxarray
+  - xarray
+  - scikit-learn
+  - xgboost
+  - lightgbm
+  - pyyaml
+  - pytest
