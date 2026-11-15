@@ -35,3 +35,7 @@ The Mars explorer is now a **rotatable, zoomable, clickable orthographic globe**
 ## Checks before PR
 
 Run `pytest tests/` if installed and review `git diff --name-only`: only `web/` files should appear. Use branch `owner/task` and open a PR to `main` as stated in `CLAUDE.md`.
+
+
+## About page
+The top navigation opens `web/about.html` as a separate page. Return to the Explorer using the Explorer tab or the back link. No backend files or data contracts were modified.
