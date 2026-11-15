@@ -13,12 +13,18 @@ def cells_df(points):
                          "lat": [p[0] for p in points], "lon": [p[1] for p in points]})
 
 
+ALL_SYNTHETIC = {pl: {v: {"source": "synthetic"} for v in vs} for pl, vs in sources.VARIABLES.items()}
+
+
 def p_with(sources_cfg, **extra):
-    return get_processing({"sources": sources_cfg, **extra})
+    """Params independent of the repo config.yaml: every variable synthetic, then `sources_cfg` on top."""
+    cfg = {pl: {**ALL_SYNTHETIC[pl], **(sources_cfg.get(pl) or {})} for pl in ALL_SYNTHETIC}
+    cfg.update({k: v for k, v in sources_cfg.items() if k not in ALL_SYNTHETIC})
+    return get_processing({"sources": cfg, "sources_force": True, **extra})
 
 
-def test_default_config_is_all_synthetic_and_assemble_returns_none():
-    p = get_processing()
+def test_all_synthetic_config_assemble_returns_none():
+    p = p_with({})
     for planet in sources.VARIABLES:
         assert sources.all_synthetic(planet, p)
         assert sources.assemble(planet, p) is None
@@ -74,8 +80,7 @@ def test_file_loader_missing_column_is_clear_error(tmp_path):
 
 
 def test_mixed_config_one_real_variable_rest_synthetic(tmp_path):
-    p = get_processing({"grid_deg": 30})
-    syn = mars_layers(p)
+    syn = mars_layers(get_processing({"grid_deg": 30}))
     f = tmp_path / "ti.parquet"
     syn[["cell_id"]].assign(thermal_inertia=123.0).to_parquet(f)
     p = p_with({"mars": {"thermal_inertia": {"source": "file", "path": str(f)}}}, grid_deg=30)
@@ -86,6 +91,18 @@ def test_mixed_config_one_real_variable_rest_synthetic(tmp_path):
     merged = layers.merge(syn, on="cell_id", suffixes=("", "_syn"))
     assert np.allclose(merged["slope_deg"], merged["slope_deg_syn"])
     assert set(sources.VARIABLES["mars"]["ice"]) <= set(layers.columns)
+
+
+def test_everything_from_one_layers_file(tmp_path):
+    """Real-data setup: cells and every variable read from one prebuilt layers table."""
+    syn = mars_layers(get_processing({"grid_deg": 30}))
+    f = tmp_path / "layers.parquet"
+    syn.to_parquet(f)
+    cfg = {v: {"source": "file", "path": str(f)} for v in sources.VARIABLES["mars"]}
+    layers = sources.assemble("mars", p_with({"mars": cfg}, grid_deg=30))
+    assert len(layers) == len(syn) and layers.columns.is_unique
+    pd.testing.assert_frame_equal(layers[syn.columns].reset_index(drop=True), syn.reset_index(drop=True),
+                                  check_like=True)
 
 
 def test_earth_grid_cells_include_regions_with_region_id():
