@@ -189,11 +189,18 @@ def site_labels(earth):
 
 
 def plain_value(value):
-    """Make a value safe for JSON (NaN -> None, numpy numbers -> normal numbers)."""
+    """Make a value safe and small for JSON.
+
+    NaN -> None, numpy numbers -> normal numbers, floats rounded to 3 decimals
+    (173.0292949836016 -> 173.029), whole-number floats -> int (2.0 -> 2).
+    """
+    if isinstance(value, np.generic):
+        value = value.item()
     if value is None or (isinstance(value, float) and math.isnan(value)):
         return None
-    if isinstance(value, np.generic):
-        return plain_value(value.item())
+    if isinstance(value, float):
+        value = round(value, 3)
+        return int(value) if value.is_integer() else value
     return value
 
 
@@ -253,12 +260,16 @@ def cell_distances(prepared, m):
 
 
 def match_band(mars, earth, band, how_many=3, spacing_km=200, levels=None,
-               feature_file=None, all_weights=None):
+               feature_file=None, all_weights=None, rows=None, steepness=None):
     """Find the top Earth twins for every Mars place in one depth band.
 
     mars:  DataFrame with cell_id, lat, lon + feature columns (+ optional <column>_quality).
     earth: DataFrame with region_id, name, lat, lon + the same feature columns.
            (Only rows for this band should be passed in; a `band` column is ignored.)
+    rows:  optional list of Mars row positions to match (default: all). The WHOLE Mars
+           table is still used for normalizing, so results equal a full run.
+    steepness: optional match % curve to reuse (e.g. the full grid's, for showcase sites);
+           default: calibrated from this run.
     Returns (cells, info): cells in the plan s3 grid format, and info about the run
     (normalization settings and curve steepness, for earth_library.json / debugging).
     """
@@ -273,22 +284,23 @@ def match_band(mars, earth, band, how_many=3, spacing_km=200, levels=None,
     settings = prepared["settings"]
 
     # Pass 1: find each Mars place's twins and remember their distances.
-    found = []  # per Mars place: list of (earth row, distance, differences)
-    for m in range(len(mars)):
+    found = []  # per Mars place: (Mars row, list of (earth row, distance, differences))
+    for m in (range(len(mars)) if rows is None else rows):
         distances, differences = cell_distances(prepared, m)
         twins = pick_twins(distances, prepared["earth_lats"], prepared["earth_lons"],
                            how_many, spacing_km)
-        found.append([(e, distances[e], differences[e]) for e in twins])
+        found.append((m, [(e, distances[e], differences[e]) for e in twins]))
 
     # Pass 2: now that we know what a typical best distance is, turn distances into %.
-    best_distances = np.array([twins[0][1] for twins in found if twins])
-    steepness = curve_steepness(best_distances)
+    if steepness is None:
+        best_distances = np.array([twins[0][1] for _, twins in found if twins])
+        steepness = curve_steepness(best_distances)
 
     # The raw Mars values to show in the app (each column once, in feature order).
     shown_columns = list(dict.fromkeys(f["column"] for f in features.values()))
 
     cells = []
-    for m, twins in enumerate(found):
+    for m, twins in found:
         row = mars.iloc[m]
         twin_list = []
         for e, distance, differences in twins:
