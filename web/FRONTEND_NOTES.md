@@ -1,41 +1,32 @@
 # Planetary Twin frontend
 
-This folder is the **only** change to the original SpaceApps2026 repository. The interface follows `docs/plan.md`, especially §§2–3, 6, 8, 15, and never writes to `pipeline/`, `output/`, `weights/`, `tests/`, `models/`, `notebooks/`, or shared files.
+Static site; reads `output/*.json` (docs/plan.md §3, §15a) and never writes to it.
 
-## Run (no venv and no package installation)
+## Run
+From the repo root: `py -m http.server 8000`, open http://localhost:8000/web/. Internet is needed for Leaflet (cdnjs), the Inter font and satellite tiles.
 
-From the repository root:
+## Files
+- `index.html`, `styles.css`, `app.js`: explorer. Click the globe, change depth or pick a landing site and results load immediately. State is in the URL hash (`#lat=18.4&lon=77.5&band=drill_zone`), so views can be shared.
+- `mars-globe.js` + `mars.jpg`: picker globe (Viking MDIM 2.1 texture).
+- `rescore.js`: in-browser kNN re-scoring for the weight sliders (same formula as `pipeline/matching/match.py`, §15a).
+- `about.html`: project summary.
 
-```powershell
-py -3.11 -m http.server 8000
-```
+## Satellite views
+- Mars: Esri OnMars `CTX1` (Murray Lab CTX mosaic, ~5 m/px) over `MDIM` (Viking colour), geographic 512 px tiles → Leaflet `EPSG4326`, `tileSize 512`, `zoomOffset -1`.
+- Earth: Esri World Imagery.
 
-Then open **http://localhost:8000/web/**. Any Python 3 installation works: `py -m http.server 8000`. Alternatively, serve the root folder using VS Code Live Server. Internet is needed only for the optional Google font; everything else is vanilla HTML, CSS, and JS.
+## Data handling
+- Grid lookups use the nearest cell in `output/grid/<band>.json`; coordinates within 0.06° of a showcase site use `output/showcase.json` (top 5 + data quality).
+- `validation.json` is only shown when `fake` is false; the placeholder file is hidden rather than shown with a warning.
+- `research/earth_campaigns.csv` is optional; when present, campaigns show under the selected Earth site.
 
-## Contract
+## Ground profile
+Side view of Mars vs the selected Earth site through all four bands (ground type pattern, rock colour, ice, hardness, frozen share). Mars values come from each band's grid file (loaded in the background) or showcase.json; Earth values are decoded from earth_library.json. The per-depth match % for non-selected bands is computed with `TwinRescore.scorePlaces` (same formula as the pipeline). Clicking a layer switches depth.
 
-Frontend reads, without modifying:
+## Ice rule (frontend)
+If the Mars cell has no ground ice at any loaded depth, Earth sites with permanent ground ice at any depth are dropped from the twins and the list is refilled from earth_library.json with the same formula. The UI names the sites it left out. This belongs in pipeline/matching long term.
 
-- `output/grid/<band>.json`: uses the exact `cells[].{cell_id,lat,lon,mars,twins}` shape, including `fake`.
-- `output/showcase.json`: optional richer showcase results (one of `sites[]`/`cells[]` or a single matching site; `bands[band]`/`site[band]`/`site.band`). The plan describes this less rigidly than the grid format. Confirm the concrete structure with Dominic if the display doesn't detect it.
-- `output/validation.json`: shows recall@10, recall@20, random baseline, and pair count without making up metrics.
-- `sites/showcase.csv`, `research/earth_campaigns.csv`: optional quick-jumps and sourced field campaign references.
-- `output/earth_library.json`: not yet used for rescoring. The plan requires the same normalized weighted-Gower formula as the backend, but the reference implementation and JSON shape were not in the uploaded repository. The advanced UI intentionally does **not** claim to re-score.
-
-Coordinates use ±70° latitude with east-positive longitudes, 2° grid snap matching `pipeline/common/coords.py`. Deep (>3 m) is marked experimental. Only backend-generated scores are shown. Synthetic data carries a conspicuous banner. Missing files display an honest empty state instead of invented predictions.
-
-The Mars explorer is now a **rotatable, zoomable, clickable orthographic globe** rendered with vanilla canvas JavaScript (`mars-globe.js`). Drag rotates, wheel zooms, click selects Mars coordinates, and keyboard arrows adjust the selected coordinate. The globe terrain is **procedural illustration, not orbital imagery**, and is not used for the matching model. The Earth diagram is an equirectangular coordinate plot, not a live basemap. Map tiles can be connected later without changing the output contract. Weather is labelled unavailable until `functions/` provides the Meteomatics proxy.
-
-## Frontend files
-
-- `index.html`: layout and accessible controls.
-- `styles.css`: responsive design.
-- `app.js`: input events, grid JSON lookup, output rendering, CSV export, and optional source loading.
-
-## Checks before PR
-
-Run `pytest tests/` if installed and review `git diff --name-only`: only `web/` files should appear. Use branch `owner/task` and open a PR to `main` as stated in `CLAUDE.md`.
-
-
-## About page
-The top navigation opens `web/about.html` as a separate page. Return to the Explorer using the Explorer tab or the back link. No backend files or data contracts were modified.
+## Untested sites, tooltips, globe highlight
+- Untested = `new_site` Earth places (outside the named analog regions). Cards tag them; when every card is a known (tested) site, a row below the cards lists up to 3 untested ones within 8 points of the lowest card (browser-scored, ice rule applied). Names come from OpenStreetMap Nominatim reverse geocoding (1 request/s, cached).
+- "Matched on / Differs on" chips show a tooltip: feature definition, data source, comparison method, and this pair's Mars/Earth values, distance and weight.
+- Globe highlight (`#...&hl=ice|sedimentary|volcanic|easy`, default off) colours drill-zone grid cells via `MarsGlobe.setOverlay`.

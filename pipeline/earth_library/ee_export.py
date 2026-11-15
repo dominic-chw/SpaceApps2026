@@ -205,6 +205,58 @@ def export_land_grid(grid_deg=0.5, chunk=5000, start="2015-01-01", end="2023-01-
     return tasks
 
 
+def fetch_land_grid(grid_deg=2.0, chunk=25, workers=8, min_bare=0.6, start="2015-01-01", end="2023-01-01"):
+    """Same layers as export_land_grid, fetched directly (no Drive round trip) into
+    data/earth/ee/earth_layers_grid_<deg>deg.csv. For coarse grids (1-2 deg): candidate Earth sites
+    outside the named analog regions (they become new_site in the matcher).
+    Pass 1 samples only the WorldCover bare fraction (fast) and keeps cells >= min_bare (build_grid
+    applies the stricter config filter later); pass 2 fetches the full stack in parallel. Resumable."""
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    import pandas as pd
+    cid = lambda la, lo: f"{la:+07.2f}_{lo:+07.2f}"
+    cells = land_cells(grid_deg)
+    out_path = ROOT_EE / f"earth_layers_grid_{str(grid_deg).replace('.', 'p')}deg.csv"
+    done = pd.read_csv(out_path) if out_path.exists() else pd.DataFrame()
+    have = set(done["cell_id"]) if len(done) else set()
+    ee = init_ee()
+    h = min(grid_deg, 0.5) / 2               # sample the central 0.5 deg of each cell
+    box = lambda la, lo: ee.Geometry.Rectangle([lo - h, la - h, lo + h, la + h], "EPSG:4326", False)
+
+    bare = {}
+    for i in range(0, len(cells), 500):
+        feats = [ee.Feature(box(la, lo), {"cell_id": cid(la, lo)}) for la, lo in cells[i:i + 500]]
+        fc = worldcover_bare(ee).reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 2000, tileScale=4)
+        bare.update({f["properties"]["cell_id"]: f["properties"].get("mean") or 0 for f in fc.getInfo()["features"]})
+    todo = [(la, lo) for la, lo in cells if bare.get(cid(la, lo), 0) >= min_bare and cid(la, lo) not in have]
+    print(f"land grid {grid_deg} deg: {len(cells)} land cells, {sum(v >= min_bare for v in bare.values())} bare, "
+          f"{len(todo)} to fetch")
+
+    stack = ee.Image.cat([era5_stats(ee, start, end), modis_stats(ee, start, end), terrain_stats(ee),
+                          worldcover_bare(ee), soilgrids_0_2m(ee), aridity(ee)])
+
+    def fetch(part):
+        feats = [ee.Feature(box(la, lo), {"cell_id": cid(la, lo), "lat": float(la), "lon": float(lo)}) for la, lo in part]
+        for attempt in range(3):
+            try:
+                fc = stack.reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 5000, tileScale=8)
+                return pd.DataFrame([f["properties"] for f in fc.getInfo()["features"]])
+            except Exception as err:                       # EE rate limits / transient errors
+                print("  retry:", str(err)[:120]); time.sleep(5 * (attempt + 1))
+        return pd.DataFrame()
+
+    frames = [done] if len(done) else []
+    parts = [todo[i:i + chunk] for i in range(0, len(todo), chunk)]
+    t0, n = time.time(), 0
+    with ThreadPoolExecutor(workers) as pool:
+        for df in pool.map(fetch, parts):
+            frames.append(df); n += len(df)
+            pd.concat(frames, ignore_index=True).to_csv(out_path, index=False)
+            print(f"  {n}/{len(todo)} ({time.time() - t0:.0f}s)")
+    return out_path
+
+
 def export_grid_samples(tif_path, grid_deg=0.5, chunk=5000, start="2015-01-01", end="2023-01-01", dry_run=False):
     """Layers for every bare-ground 0.5 deg cell (cell mean at 5 km), chunked into several Drive CSVs.
     Run after export_bare_grid finished and its GeoTIFF is in data/earth/ee/."""
@@ -238,10 +290,13 @@ if __name__ == "__main__":
     ap.add_argument("--land-mask", action="store_true", help="save the 0.5 deg ERA5-Land mask")
     ap.add_argument("--land-grid", action="store_true", help="export layers for every land cell")
     ap.add_argument("--grid-deg", type=float, default=0.5)
+    ap.add_argument("--fetch-grid", action="store_true", help="fetch layers for bare land cells directly (no Drive)")
     ap.add_argument("--grid-from", help="path to worldcover_bare_grid.tif; exports layers for its bare cells")
     a = ap.parse_args()
     if a.land_mask:
         save_land_mask()
+    elif a.fetch_grid:
+        print(fetch_land_grid(grid_deg=a.grid_deg))
     elif a.land_grid:
         export_land_grid(grid_deg=a.grid_deg, dry_run=a.dry_run)
     elif a.bare_grid_only:

@@ -3,45 +3,128 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#090e1a" />
-  <title>About the Mission | PLANETARY TWIN</title>
+  <meta name="theme-color" content="#101214" />
+  <title>About · Planetary Twin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-<header class="topbar">
-    <a class="identity" href="./index.html" aria-label="Planetary Twin home"><span class="mark">◉</span><span><strong>PLANETARY TWIN</strong><small>MARS DRILL-SITE ANALOG FINDER</small></span></a>
-    <div class="top-actions">
-      <a class="nav-about" href="./index.html">Explorer</a>
-      <a class="nav-about active" href="./about.html" aria-current="page">About</a>
-      <span class="pill"><span class="pulse"></span> NASA SPACE APPS 2026</span>
-      <a class="ghost-link" href="https://github.com/dominic-chw/SpaceApps2026" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
-    </div>
+  <header class="topbar">
+    <a class="brand" href="./index.html"><strong>Planetary Twin</strong><span>Mars drill-site analog finder</span></a>
+    <nav><a href="./index.html">Explorer</a><a href="./about.html" aria-current="page">About</a></nav>
   </header>
-  <main class="shell">
-    <div class="eyebrow">THE PLANETARY TWIN MISSION</div>
-    <section class="about-intro">
-      <h1>From Mars to Earth.<br><em>One geological twin at a time.</em></h1>
-      <p>Understand how the Mars Drill-Site Analog Finder helps connect Martian terrain and subsurface conditions to potential Earth field-testing regions.</p>
-      <a class="about-return" href="./index.html">← Back to Mars Explorer</a>
+
+  <main class="about">
+    <section class="about-hero">
+      <p class="kicker">About the project</p>
+      <h1>Test Mars drills where the ground behaves like Mars</h1>
+      <p class="lede">Every drill bound for Mars is tested on Earth first. Planetary Twin finds the places on Earth whose ground best matches a chosen spot on Mars, at the depth the drill will actually reach, and explains why.</p>
+      <a class="btn" href="./index.html">Open the explorer</a>
     </section>
-    <section id="about" class="about-section about-standalone" aria-labelledby="about-title">
-      <div class="about-heading">
-        <div><div class="eyebrow">03 / BEHIND THE MISSION</div><h2 id="about-title">Why find Earth's twin for Mars?</h2></div>
-        <p>A Mars drill cannot be tested everywhere on Mars. Planetary Twin helps researchers identify places on Earth with comparable ground conditions, so they can investigate promising locations for field testing.</p>
+
+    <nav class="toc" aria-label="On this page">
+      <a href="#how">How it works</a><a href="#maths">The maths</a><a href="#untested">Untested sites</a><a href="#data">Data</a><a href="#limits">Limits</a>
+    </nav>
+
+    <section id="how">
+      <h2>How it works</h2>
+      <ol class="steps">
+        <li><span class="step-n">1</span><h3>Pick a spot and a depth</h3><p>Anywhere within ±70° latitude on Mars, snapped to a 2° grid (about 120 km), at one of four depths: 0–10 cm, 10 cm–1 m, 1–3 m, or deeper than 3 m.</p></li>
+        <li><span class="step-n">2</span><h3>Describe the ground</h3><p>For that depth we estimate temperature, how much it swings, how much of the year it stays frozen, ground ice, ground type, hardness, rock type, slope and roughness.</p></li>
+        <li><span class="step-n">3</span><h3>Compare with Earth</h3><p>The same ten features are computed for bare ground on Earth. Each Earth place gets a distance from the Mars spot, and the closest ones become its twins.</p></li>
+        <li><span class="step-n">4</span><h3>Explain the result</h3><p>Every twin comes with a match percentage, the features that agree and differ, and a confidence level based on how much of the data was measured rather than modelled.</p></li>
+      </ol>
+    </section>
+
+    <section id="maths">
+      <h2>The maths, in plain English</h2>
+      <p>There are five steps, and none of them is a black box.</p>
+
+      <div class="math">
+        <h3><span>A</span>Working out conditions underground</h3>
+        <p>Nobody has measured the temperature 2 m below most of Mars, so we calculate it. The surface warms by day and cools by night, and warms in summer and cools in winter. Those swings travel down into the ground but shrink quickly: every extra <em>skin depth</em> cuts the swing to about a third of what it was above.</p>
+        <div class="formula">swing at depth = swing at surface × e<sup>−depth / skin depth</sup><span>skin depth = √(heat diffusivity × cycle length / π)</span></div>
+        <p>How fast heat moves through the ground comes from its <em>thermal inertia</em>, which orbiters measure from how quickly the surface heats up. For typical Martian soil the daily swing fades over about 4 cm and the yearly swing over about a metre. Below that, the ground sits close to its yearly average temperature. The same model runs on Earth, so both planets are treated the same way.</p>
       </div>
-      <div class="about-cards">
-        <article class="about-card"><span class="about-index">01 / SELECT</span><div class="about-glyph" aria-hidden="true">◎</div><h3>Pick a spot on Mars</h3><p>Choose coordinates on the globe and select one of four depth bands, from surface skin (0–10 cm) to experimental deep drilling (&gt;3 m). The location snaps to a 2° grid.</p></article>
-        <article class="about-card"><span class="about-index">02 / COMPARE</span><div class="about-glyph" aria-hidden="true">≋</div><h3>Compare ground conditions</h3><p>The matching pipeline compares factors such as temperature, ice, ground class, hardness, rock type and terrain. Its default method is k-nearest neighbours (kNN).</p></article>
-        <article class="about-card"><span class="about-index">03 / EXPLORE</span><div class="about-glyph" aria-hidden="true">↗</div><h3>Explore Earth analogs</h3><p>See ranked Earth regions, match scores, key similarities and differences, and any available field-campaign references. Results depend on backend data availability.</p></article>
+
+      <div class="math">
+        <h3><span>B</span>Putting two planets on the same scale</h3>
+        <p>Mars is 60–100 °C colder than Earth, so comparing raw temperatures would match nothing. Instead each place is ranked <em>within its own planet</em>: a spot in the coldest 10% of Mars is compared with places in the coldest 10% of Earth.</p>
+        <ul>
+          <li><strong>Ranked (percentile):</strong> temperature, temperature swing, dryness.</li>
+          <li><strong>Same or different:</strong> ground ice, ground type, rock type.</li>
+          <li><strong>Steps:</strong> hardness, from 0 (loose soil) to 3 (hard bedrock).</li>
+          <li><strong>Logarithmic:</strong> slope and roughness. Going from 1° to 2° matters more than going from 20° to 21°.</li>
+        </ul>
       </div>
-      <div class="about-bottom">
-        <div><span class="about-kicker">BUILT FOR RESEARCH</span><strong>NASA Space Apps Challenge 2026</strong><p>Planetary Twin is a collaborative Mars drill-site analog finder.</p></div>
-        <div class="about-disclaimer"><span class="about-kicker">SCIENTIFIC TRANSPARENCY</span><p>Matches are <strong>research leads, not drilling safety certifications.</strong> Deeper subsurface estimates may be modelled or predicted; synthetic demo outputs are labelled as such.</p></div>
+
+      <div class="math">
+        <h3><span>C</span>Measuring how different two places are</h3>
+        <p>For each feature we score the difference between 0 (identical) and 1 (as different as possible). The overall distance is a weighted average of those scores, a method known as the Gower distance. Features that matter most for drilling, like ground type and hardness, carry more weight. Features that are missing on either side are skipped rather than guessed.</p>
+        <table class="example">
+          <thead><tr><th>Feature</th><th>Mars</th><th>Earth</th><th>Difference</th><th>Weight</th></tr></thead>
+          <tbody>
+            <tr><td>Ground type</td><td>Dry regolith</td><td>Dry regolith</td><td>0</td><td>2</td></tr>
+            <tr><td>Ground ice</td><td>No</td><td>No</td><td>0</td><td>1.5</td></tr>
+            <tr><td>Rock type</td><td>Sedimentary</td><td>Volcanic</td><td>1</td><td>1</td></tr>
+            <tr><td>Slope</td><td>2°</td><td>4°</td><td>0.2</td><td>1</td></tr>
+          </tbody>
+          <tfoot><tr><td colspan="5">Distance = (2×0 + 1.5×0 + 1×1 + 1×0.2) ÷ (2 + 1.5 + 1 + 1) = 1.2 ÷ 5.5 = <strong>0.22</strong></td></tr></tfoot>
+        </table>
+      </div>
+
+      <div class="math">
+        <h3><span>D</span>Turning distance into a match percentage</h3>
+        <p>A distance of 0.22 is hard to read, so it becomes a percentage on a curve that falls off smoothly:</p>
+        <div class="formula">match % = 100 × e<sup>−distance / s</sup><span>s is set so that a typical best match on Mars scores about 75%</span></div>
+        <p>With s ≈ 0.56, the example above scores <strong>67.5%</strong>. The percentage is relative: 75% means "as good as a typical best match", not "75% identical". The labels are excellent (85+), good (70+), fair (50+), poor (30+) and no match. If less than half of the weighted features could be compared, the result shows "not enough data" instead of a number.</p>
+      </div>
+
+      <div class="math">
+        <h3><span>E</span>Picking the twins and setting confidence</h3>
+        <p>Earth places are sorted by distance and the closest are kept, as long as each one is at least 200 km from the twins already picked, so the list is not five neighbouring valleys. Two further rules apply:</p>
+        <ul>
+          <li><strong>Ice rule.</strong> If the Mars spot has no ground ice at any depth, Earth sites with permanent ground ice or snow cover are left out, even when other features line up.</li>
+          <li><strong>Confidence.</strong> High when most values were measured. Lower when they came from the heat model or the Earth gap-filling model (a gradient-boosted classifier that predicts ground ice and ground type where maps have gaps), and lower again for the deepest layer.</li>
+        </ul>
       </div>
     </section>
+
+    <section id="untested">
+      <h2>Untested sites</h2>
+      <p>Most Mars analog work happens in a short list of famous places: the Atacama, Devon Island, the Dry Valleys, Rio Tinto, Svalbard, Utah. Planetary Twin also scores bare ground across the rest of Earth. Places outside those known analog regions are marked <span class="inline-tag">Untested</span>. The explorer lists them even when they fall a few points below the main cut-off, because a slightly weaker match nobody has tested may be more useful than another visit to a well-worn site.</p>
+    </section>
+
+    <section id="data">
+      <h2>Data</h2>
+      <div class="data-grid">
+        <div><h3>Mars</h3><ul>
+          <li>MOLA elevation, 463 m (slope, roughness)</li>
+          <li>TES thermal inertia (heat model, ground type)</li>
+          <li>Mars Odyssey neutron hydrogen (ground ice)</li>
+          <li>USGS geologic map SIM 3292 (rock type)</li>
+          <li>Mars Climate Database (dryness)</li>
+          <li>Imagery: CTX global mosaic (~5 m/pixel), Viking MDIM 2.1 colour</li>
+        </ul></div>
+        <div><h3>Earth</h3><ul>
+          <li>ERA5-Land soil temperature, MODIS land surface temperature</li>
+          <li>ESA CCI permafrost, NSIDC circum-Arctic ground ice</li>
+          <li>SoilGrids texture and density, GLiM lithology</li>
+          <li>Copernicus DEM, ESA WorldCover (bare ground)</li>
+          <li>Global Aridity Index</li>
+          <li>Imagery: Esri World Imagery</li>
+        </ul></div>
+      </div>
+    </section>
+
+    <section id="limits">
+      <h2>Limits</h2>
+      <p>Matches are research leads for choosing field-test sites, not drilling safety certifications. Subsurface values on both planets are partly modelled, the Mars grid is coarse (2°), and confidence falls with depth. Rock classes come from geologic maps, not mineral spectra, so the app cannot yet point to specific clays or sulfates.</p>
+    </section>
+
+    <p class="about-foot muted">Built for the NASA Space Apps Challenge 2026 · <a href="https://github.com/dominic-chw/SpaceApps2026" target="_blank" rel="noopener noreferrer">Source on GitHub</a></p>
   </main>
-  <footer><span>PLANETARY TWIN / NASA SPACE APPS 2026</span><span>Earth analogs are research leads, not drill safety certifications.</span></footer>
 </body>
 </html>

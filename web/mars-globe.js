@@ -1,5 +1,5 @@
-/* Interactive Mars globe. Purely illustrative terrain: not NASA imagery or geological evidence.
-   No dependencies and no changes to the matching / pipeline contracts. */
+/* Interactive Mars globe used to pick a location. Texture: NASA Viking MDIM 2.1 colour mosaic (mars.jpg),
+   with a procedural fallback until the image loads. Display only; matching comes from output/grid. */
 (() => {
   'use strict';
   const BASE = (document.currentScript && document.currentScript.src) || location.href;
@@ -56,10 +56,9 @@
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return null;
     const stage = canvas.parentElement;
-    const s = { lon: 77.5, lat: 18.4, targetLon: 77.5, targetLat: 18.4, zoom: 1, width: 720, height: 425, dragging: null, scheduled: false, hover: null, pulse: 0, zoomAt: 0 };
-    const rand = (seed => () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; })(23);
-    const stars = Array.from({ length: 140 }, () => ({ x: rand(), y: rand(), r: .4 + rand() * 1.1, a: .16 + rand() * .46 }));
-    const orbit = () => ({ cx: s.width / 2, cy: s.height / 2, r: Math.min(s.width * .34, s.height * .435) * s.zoom });
+    let overlay = null;
+    const s = { lon: 77.5, lat: 18.4, targetLon: 77.5, targetLat: 18.4, zoom: 1, width: 400, height: 360, dragging: null, scheduled: false, hover: null, pulse: 0, zoomAt: 0 };
+    const orbit = () => ({ cx: s.width / 2, cy: s.height / 2, r: Math.min(s.width, s.height) * .44 * s.zoom });
     function point(x, y) {
       const { cx, cy, r } = orbit();
       const u = (x - cx) / r, v = (cy - y) / r;
@@ -81,15 +80,8 @@
     function frame() {
       s.scheduled = false;
       const { width: w, height: h } = s;
-      const back = ctx.createLinearGradient(0, 0, w, h);
-      back.addColorStop(0, '#070c18'); back.addColorStop(.55, '#141526'); back.addColorStop(1, '#090d1b');
-      ctx.fillStyle = back; ctx.fillRect(0, 0, w, h);
-      for (const star of stars) { ctx.globalAlpha = star.a; ctx.fillStyle = '#e0e5ff'; ctx.beginPath(); ctx.arc(star.x * w, star.y * h, star.r, 0, Math.PI * 2); ctx.fill(); }
-      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#101214'; ctx.fillRect(0, 0, w, h);
       const { cx, cy, r } = orbit();
-      const glow = ctx.createRadialGradient(cx, cy, r * .63, cx, cy, r * 1.45);
-      glow.addColorStop(0, '#a850271e'); glow.addColorStop(.6, '#d8722930'); glow.addColorStop(1, '#d8722900');
-      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(cx, cy, r * 1.45, 0, Math.PI * 2); ctx.fill();
       // Render the orthographic sphere using inverse projection, with a fixed upper-left light source.
       const x0 = Math.max(0, Math.floor(cx - r - 1)), y0 = Math.max(0, Math.floor(cy - r - 1));
       const x1 = Math.min(w, Math.ceil(cx + r + 1)), y1 = Math.min(h, Math.ceil(cy + r + 1));
@@ -110,9 +102,16 @@
           const normalLight = Math.max(0, u * -.47 + v * .33 + z * .81);
           const illum = .23 + normalLight * .88;
           const rim = Math.pow(1 - z, 4) * .14;
-          image.data[di]     = surface.px[si] * illum + rim * 235;
-          image.data[di + 1] = surface.px[si + 1] * illum + rim * 99;
-          image.data[di + 2] = surface.px[si + 2] * illum + rim * 55;
+          let r0 = surface.px[si], g0 = surface.px[si + 1], b0 = surface.px[si + 2];
+          if (overlay) {   // highlight layer: per-cell RGBA on an equirectangular grid
+            const oi = (clamp(Math.floor((.5 - lat / Math.PI) * overlay.h), 0, overlay.h - 1) * overlay.w + Math.min(overlay.w - 1, Math.floor(tx * overlay.w))) * 4;
+            const a = overlay.px[oi + 3] / 255;
+            if (a > 0) { r0 = r0 * (1 - a) + overlay.px[oi] * a; g0 = g0 * (1 - a) + overlay.px[oi + 1] * a; b0 = b0 * (1 - a) + overlay.px[oi + 2] * a; }
+            else { r0 *= .55; g0 *= .55; b0 *= .55; }
+          }
+          image.data[di]     = r0 * illum + rim * 235;
+          image.data[di + 1] = g0 * illum + rim * 99;
+          image.data[di + 2] = b0 * illum + rim * 55;
           image.data[di + 3] = 255;
         }
       }
@@ -122,10 +121,10 @@
       }
       const disk = s.disk.getContext('2d'); disk.putImageData(image, 0, 0);
       ctx.drawImage(s.disk, x0, y0);
-      ctx.strokeStyle = '#ef9d6d66'; ctx.lineWidth = 1.1;
+      ctx.strokeStyle = '#ffffff22'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
       // Visible globe graticule, kept subtle to avoid obscuring terrain.
-      ctx.lineWidth = .6; ctx.strokeStyle = '#f5bc9760';
+      ctx.lineWidth = .5; ctx.strokeStyle = '#ffffff24';
       const line = points => { let active = false; ctx.beginPath(); for (const [lat, lon] of points) { const p = project(lat, lon); if (!p) {active = false;continue;} if (!active) ctx.moveTo(p.x, p.y);else ctx.lineTo(p.x, p.y);active = true; } ctx.stroke(); };
       for (let lat = -60; lat <= 60; lat += 30) line(Array.from({length:181}, (_, i) => [lat, i * 2 - 180]));
       for (let lon = -180; lon < 180; lon += 30) line(Array.from({length:89}, (_, i) => [i * 2 - 88, lon]));
@@ -143,12 +142,12 @@
           ctx.beginPath(); ctx.arc(hp.x, hp.y, 16, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
           ctx.fillStyle = '#ffd3b8'; ctx.beginPath(); ctx.arc(hp.x, hp.y, 2, 0, Math.PI * 2); ctx.fill();
           const out = Math.abs(s.hover.lat) > 70;
-          const txt = out ? `${Math.abs(s.hover.lat).toFixed(1)}° ${s.hover.lat >= 0 ? 'N' : 'S'} · SELECTS ${s.hover.lat >= 0 ? '70° N' : '70° S'} (DATA LIMIT)` : `${Math.abs(s.hover.lat).toFixed(1)}° ${s.hover.lat >= 0 ? 'N' : 'S'} · ${Math.abs(s.hover.lon).toFixed(1)}° ${s.hover.lon >= 0 ? 'E' : 'W'}`;
-          ctx.font = '500 11px "JetBrains Mono", monospace';
+          const txt = out ? `${Math.abs(s.hover.lat).toFixed(1)}° ${s.hover.lat >= 0 ? 'N' : 'S'} · outside data (±70°)` : `${Math.abs(s.hover.lat).toFixed(1)}° ${s.hover.lat >= 0 ? 'N' : 'S'} · ${Math.abs(s.hover.lon).toFixed(1)}° ${s.hover.lon >= 0 ? 'E' : 'W'}`;
+          ctx.font = '500 11px Inter, system-ui, sans-serif';
           const tw = ctx.measureText(txt).width + 18, bx = Math.min(w - tw - 8, hp.x + 22), by = Math.max(8, hp.y - 34);
-          ctx.fillStyle = 'rgba(10,12,20,.82)'; ctx.strokeStyle = '#ff7a5288'; ctx.lineWidth = 1;
+          ctx.fillStyle = 'rgba(16,18,20,.9)'; ctx.strokeStyle = '#ffffff30'; ctx.lineWidth = 1;
           ctx.beginPath(); ctx.roundRect(bx, by, tw, 24, 12); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = '#ffe6d6'; ctx.fillText(txt, bx + 9, by + 16);
+          ctx.fillStyle = '#e8e6e3'; ctx.fillText(txt, bx + 9, by + 16);
         }
       }
       let animating = false;
@@ -156,23 +155,23 @@
       const marker = project(s.targetLat, s.targetLon);
       if (marker && pt < 1) {
         animating = true;
-        for (const k of [0, .25]) { const t = clamp(pt - k, 0, 1); ctx.strokeStyle = `rgba(255,140,100,${(1 - t) * .9})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(marker.x, marker.y, 10 + t * 46, 0, Math.PI * 2); ctx.stroke(); }
+        for (const k of [0, .25]) { const t = clamp(pt - k, 0, 1); ctx.strokeStyle = `rgba(232,150,110,${(1 - t) * .9})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(marker.x, marker.y, 10 + t * 46, 0, Math.PI * 2); ctx.stroke(); }
       }
       const zt = (now - s.zoomAt) / 1100;
       if (zt < 1) {
         animating = true;
         ctx.globalAlpha = zt < .7 ? 1 : (1 - zt) / .3;
-        const label = `ZOOM ${s.zoom.toFixed(2)}×`, bw2 = 150, bx2 = w / 2 - bw2 / 2, by2 = h - 84;
+        const label = `${s.zoom.toFixed(1)}×`, bw2 = 150, bx2 = w / 2 - bw2 / 2, by2 = h - 84;
         ctx.fillStyle = 'rgba(10,12,20,.8)'; ctx.beginPath(); ctx.roundRect(bx2, by2, bw2, 26, 13); ctx.fill();
         const f = (s.zoom - .75) / (3.5 - .75);
         ctx.fillStyle = '#ffffff22'; ctx.fillRect(bx2 + 82, by2 + 12, 56, 2);
-        ctx.fillStyle = '#ff7a52'; ctx.fillRect(bx2 + 82, by2 + 12, 56 * f, 2);
-        ctx.font = '500 10px "JetBrains Mono", monospace'; ctx.fillStyle = '#ffe6d6'; ctx.fillText(label, bx2 + 12, by2 + 17);
+        ctx.fillStyle = '#c8714c'; ctx.fillRect(bx2 + 82, by2 + 12, 56 * f, 2);
+        ctx.font = '500 10px Inter, system-ui, sans-serif'; ctx.fillStyle = '#ffe6d6'; ctx.fillText(label, bx2 + 12, by2 + 17);
         ctx.globalAlpha = 1;
       }
       if (animating) schedule();
       if (marker) {
-        ctx.strokeStyle = '#ffffff';ctx.fillStyle = '#ffc7a1';ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#ffffff';ctx.fillStyle = '#ffffff';ctx.lineWidth = 1.5;
         ctx.beginPath();ctx.arc(marker.x,marker.y,11,0,Math.PI*2);ctx.stroke();
         ctx.beginPath();ctx.arc(marker.x,marker.y,3,0,Math.PI*2);ctx.fill();
         ctx.beginPath();ctx.moveTo(marker.x-18,marker.y);ctx.lineTo(marker.x-7,marker.y);ctx.moveTo(marker.x+7,marker.y);ctx.lineTo(marker.x+18,marker.y);ctx.moveTo(marker.x,marker.y-18);ctx.lineTo(marker.x,marker.y-7);ctx.moveTo(marker.x,marker.y+7);ctx.lineTo(marker.x,marker.y+18);ctx.stroke();
@@ -217,7 +216,9 @@
     if ('ResizeObserver' in window) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
     redraws.push(schedule);
     resize();
-    return { setTarget: target, centerOnTarget() {s.lat=s.targetLat;s.lon=s.targetLon;schedule();} };
+    return { setTarget: target, centerOnTarget() {s.lat=s.targetLat;s.lon=s.targetLon;schedule();},
+      /* o = {w, h, px: Uint8ClampedArray RGBA} covering 180°W–180°E, 90°N–90°S; null clears it */
+      setOverlay(o) { overlay = o; schedule(); } };
   }
   window.MarsGlobe = { create };
 })();
