@@ -1,0 +1,1506 @@
+{
+ "fake": true,
+ "matcher": "knn",
+ "sites": [
+  {
+   "site_id": "jezero",
+   "name": "Jezero crater",
+   "lat": 18.4,
+   "lon": 77.5,
+   "bands": {
+    "skin": {
+     "mars": {
+      "temp_mean": 203.9,
+      "frozen_fraction": 1.0,
+      "temp_swing": 10.7,
+      "ice": "no",
+      "ground_class": "dry_regolith",
+      "hardness": 1,
+      "rock": "clay_sulfate",
+      "slope_deg": 13.6,
+      "roughness_m": 2.04,
+      "dryness": 0.62
+     },
+     "data_quality": {
+      "temp_mean": "measured",
+      "frozen_fraction": "measured",
+      "temp_swing": "predicted",
+      "ice": "modelled",
+      "ground_class": "measured",
+      "hardness": "measured",
+      "rock": "modelled",
+      "slope_deg": "modelled",
+      "roughness_m": "predicted",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "svalbard",
+       "name": "Svalbard",
+       "lat": 78.2,
+       "lon": 15.6,
+       "match_pct": 94.5,
+       "level": "excellent",
+       "best": [
+        "dryness",
+        "ground_class",
+        "slope_deg"
+       ],
+       "worst": [
+        "temp_mean",
+        "temp_swing",
+        "ice"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "namib",
+       "name": "Namib",
+       "lat": -24.5,
+       "lon": 15.5,
+       "match_pct": 81.1,
+       "level": "good",
+       "best": [
+        "dryness",
+        "slope_deg",
+        "temp_mean"
+       ],
+       "worst": [
+        "rock",
+        "ground_class",
+        "hardness"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "tibetan_plateau",
+       "name": "Tibetan Plateau",
+       "lat": 33.0,
+       "lon": 88.0,
+       "match_pct": 68.2,
+       "level": "fair",
+       "best": [
+        "ground_class",
+        "roughness_m",
+        "slope_deg"
+       ],
+       "worst": [
+        "temp_mean",
+        "ice",
+        "hardness"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "hanksville",
+       "name": "Hanksville UT",
+       "lat": 38.4,
+       "lon": -110.7,
+       "match_pct": 39.9,
+       "level": "poor",
+       "best": [
+        "hardness",
+        "slope_deg",
+        "roughness_m"
+       ],
+       "worst": [
+        "rock",
+        "dryness",
+        "frozen_fraction"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "craters_moon",
+       "name": "Craters of the Moon ID",
+       "lat": 43.4,
+       "lon": -113.5,
+       "match_pct": 33.1,
+       "level": "poor",
+       "best": [
+        "temp_mean",
+        "temp_swing",
+        "dryness"
+       ],
+       "worst": [
+        "hardness",
+        "rock",
+        "frozen_fraction"
+       ],
+       "confidence": "medium"
+      }
+     ]
+    },
+    "upper_metre": {
+     "mars": {
+      "temp_mean": 198.1,
+      "frozen_fraction": 1.0,
+      "temp_swing": 5.2,
+      "ice": "yes",
+      "ground_class": "dry_regolith",
+      "hardness": 3,
+      "rock": "sedimentary",
+      "slope_deg": 5.5,
+      "roughness_m": 4.28,
+      "dryness": 0.1
+     },
+     "data_quality": {
+      "temp_mean": "modelled",
+      "frozen_fraction": "modelled",
+      "temp_swing": "measured",
+      "ice": "predicted",
+      "ground_class": "modelled",
+      "hardness": "measured",
+      "rock": "modelled",
+      "slope_deg": "measured",
+      "roughness_m": "measured",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "dry_valleys",
+       "name": "Dry Valleys (University Valley)",
+       "lat": -77.87,
+       "lon": 160.73,
+       "match_pct": 63.1,
+       "level": "fair",
+       "best": [
+        "dryness",
+        "temp_mean",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "hardness",
+        "rock",
+        "roughness_m"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "pilbara",
+       "name": "Pilbara",
+       "lat": -21.5,
+       "lon": 119.0,
+       "match_pct": 52.6,
+       "level": "fair",
+       "best": [
+        "temp_mean",
+        "temp_swing",
+        "dryness"
+       ],
+       "worst": [
+        "hardness",
+        "roughness_m",
+        "frozen_fraction"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "death_valley",
+       "name": "Death Valley",
+       "lat": 36.5,
+       "lon": -117.1,
+       "match_pct": 42.9,
+       "level": "poor",
+       "best": [
+        "ground_class",
+        "temp_mean",
+        "dryness"
+       ],
+       "worst": [
+        "ice",
+        "hardness",
+        "frozen_fraction"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "mojave",
+       "name": "Mojave",
+       "lat": 35.0,
+       "lon": -116.0,
+       "match_pct": 33.8,
+       "level": "poor",
+       "best": [
+        "hardness",
+        "ice",
+        "ground_class"
+       ],
+       "worst": [
+        "dryness",
+        "slope_deg",
+        "temp_mean"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "lanzarote",
+       "name": "Lanzarote",
+       "lat": 29.0,
+       "lon": -13.6,
+       "match_pct": 31.8,
+       "level": "poor",
+       "best": [
+        "hardness",
+        "temp_mean",
+        "dryness"
+       ],
+       "worst": [
+        "roughness_m",
+        "rock",
+        "ground_class"
+       ],
+       "confidence": "low"
+      }
+     ]
+    },
+    "drill_zone": {
+     "mars": {
+      "temp_mean": 195.9,
+      "frozen_fraction": 1.0,
+      "temp_swing": 15.6,
+      "ice": "yes",
+      "ground_class": "ice_cemented",
+      "hardness": 3,
+      "rock": "sedimentary",
+      "slope_deg": 5.3,
+      "roughness_m": 0.27,
+      "dryness": 0.11
+     },
+     "data_quality": {
+      "temp_mean": "predicted",
+      "frozen_fraction": "predicted",
+      "temp_swing": "predicted",
+      "ice": "measured",
+      "ground_class": "predicted",
+      "hardness": "predicted",
+      "rock": "measured",
+      "slope_deg": "predicted",
+      "roughness_m": "measured",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "pilbara",
+       "name": "Pilbara",
+       "lat": -21.5,
+       "lon": 119.0,
+       "match_pct": 89.7,
+       "level": "excellent",
+       "best": [
+        "ground_class",
+        "temp_swing",
+        "roughness_m"
+       ],
+       "worst": [
+        "temp_mean",
+        "hardness",
+        "dryness"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "greenland_margin",
+       "name": "Greenland margin",
+       "lat": 67.1,
+       "lon": -50.0,
+       "match_pct": 63.4,
+       "level": "fair",
+       "best": [
+        "rock",
+        "roughness_m",
+        "temp_mean"
+       ],
+       "worst": [
+        "ice",
+        "ground_class",
+        "dryness"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "craters_moon",
+       "name": "Craters of the Moon ID",
+       "lat": 43.4,
+       "lon": -113.5,
+       "match_pct": 57.7,
+       "level": "fair",
+       "best": [
+        "roughness_m",
+        "rock",
+        "ice"
+       ],
+       "worst": [
+        "dryness",
+        "hardness",
+        "temp_swing"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "lake_salda",
+       "name": "Lake Salda",
+       "lat": 37.55,
+       "lon": 29.68,
+       "match_pct": 35.6,
+       "level": "poor",
+       "best": [
+        "temp_mean",
+        "slope_deg",
+        "temp_swing"
+       ],
+       "worst": [
+        "rock",
+        "ground_class",
+        "ice"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "rio_tinto",
+       "name": "Rio Tinto",
+       "lat": 37.7,
+       "lon": -6.6,
+       "match_pct": 35.3,
+       "level": "poor",
+       "best": [
+        "temp_mean",
+        "ice",
+        "hardness"
+       ],
+       "worst": [
+        "dryness",
+        "slope_deg",
+        "ground_class"
+       ],
+       "confidence": "high"
+      }
+     ]
+    },
+    "deep": {
+     "mars": {
+      "temp_mean": 197.3,
+      "frozen_fraction": 1.0,
+      "temp_swing": 15.9,
+      "ice": "no",
+      "ground_class": "massive_ice",
+      "hardness": 1,
+      "rock": "volcanic",
+      "slope_deg": 6.4,
+      "roughness_m": 4.69,
+      "dryness": 0.79
+     },
+     "data_quality": {
+      "temp_mean": "modelled",
+      "frozen_fraction": "measured",
+      "temp_swing": "measured",
+      "ice": "modelled",
+      "ground_class": "measured",
+      "hardness": "measured",
+      "rock": "modelled",
+      "slope_deg": "predicted",
+      "roughness_m": "predicted",
+      "dryness": "predicted"
+     },
+     "twins": [
+      {
+       "region_id": "craters_moon",
+       "name": "Craters of the Moon ID",
+       "lat": 43.4,
+       "lon": -113.5,
+       "match_pct": 75.3,
+       "level": "good",
+       "best": [
+        "ground_class",
+        "temp_mean",
+        "rock"
+       ],
+       "worst": [
+        "ice",
+        "roughness_m",
+        "dryness"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "greenland_margin",
+       "name": "Greenland margin",
+       "lat": 67.1,
+       "lon": -50.0,
+       "match_pct": 72.6,
+       "level": "good",
+       "best": [
+        "ice",
+        "temp_swing",
+        "ground_class"
+       ],
+       "worst": [
+        "temp_mean",
+        "rock",
+        "slope_deg"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "atacama_high",
+       "name": "High Atacama",
+       "lat": -24.0,
+       "lon": -68.0,
+       "match_pct": 41.0,
+       "level": "poor",
+       "best": [
+        "roughness_m",
+        "dryness",
+        "rock"
+       ],
+       "worst": [
+        "ice",
+        "slope_deg",
+        "temp_swing"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "dry_valleys",
+       "name": "Dry Valleys (University Valley)",
+       "lat": -77.87,
+       "lon": 160.73,
+       "match_pct": 38.2,
+       "level": "poor",
+       "best": [
+        "dryness",
+        "hardness",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "rock",
+        "temp_swing",
+        "roughness_m"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "hawaii",
+       "name": "Hawaii",
+       "lat": 19.8,
+       "lon": -155.5,
+       "match_pct": 33.6,
+       "level": "poor",
+       "best": [
+        "rock",
+        "dryness",
+        "ground_class"
+       ],
+       "worst": [
+        "roughness_m",
+        "frozen_fraction",
+        "slope_deg"
+       ],
+       "confidence": "medium"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "site_id": "gale",
+   "name": "Gale crater",
+   "lat": -5.4,
+   "lon": 137.8,
+   "bands": {
+    "skin": {
+     "mars": {
+      "temp_mean": 206.6,
+      "frozen_fraction": 1.0,
+      "temp_swing": 25.3,
+      "ice": "no",
+      "ground_class": "massive_ice",
+      "hardness": 1,
+      "rock": "clay_sulfate",
+      "slope_deg": 8.1,
+      "roughness_m": 0.92,
+      "dryness": 0.04
+     },
+     "data_quality": {
+      "temp_mean": "predicted",
+      "frozen_fraction": "modelled",
+      "temp_swing": "predicted",
+      "ice": "modelled",
+      "ground_class": "predicted",
+      "hardness": "predicted",
+      "rock": "measured",
+      "slope_deg": "modelled",
+      "roughness_m": "modelled",
+      "dryness": "predicted"
+     },
+     "twins": [
+      {
+       "region_id": "tibetan_plateau",
+       "name": "Tibetan Plateau",
+       "lat": 33.0,
+       "lon": 88.0,
+       "match_pct": 87.0,
+       "level": "excellent",
+       "best": [
+        "rock",
+        "ice",
+        "temp_swing"
+       ],
+       "worst": [
+        "frozen_fraction",
+        "dryness",
+        "temp_mean"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "dry_valleys",
+       "name": "Dry Valleys (University Valley)",
+       "lat": -77.87,
+       "lon": 160.73,
+       "match_pct": 82.2,
+       "level": "good",
+       "best": [
+        "hardness",
+        "frozen_fraction",
+        "temp_mean"
+       ],
+       "worst": [
+        "dryness",
+        "rock",
+        "ground_class"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "namib",
+       "name": "Namib",
+       "lat": -24.5,
+       "lon": 15.5,
+       "match_pct": 73.3,
+       "level": "good",
+       "best": [
+        "ground_class",
+        "dryness",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "ice",
+        "slope_deg",
+        "temp_mean"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "rio_tinto",
+       "name": "Rio Tinto",
+       "lat": 37.7,
+       "lon": -6.6,
+       "match_pct": 47.0,
+       "level": "poor",
+       "best": [
+        "rock",
+        "slope_deg",
+        "ground_class"
+       ],
+       "worst": [
+        "roughness_m",
+        "frozen_fraction",
+        "dryness"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "svalbard",
+       "name": "Svalbard",
+       "lat": 78.2,
+       "lon": 15.6,
+       "match_pct": 38.4,
+       "level": "poor",
+       "best": [
+        "hardness",
+        "frozen_fraction",
+        "dryness"
+       ],
+       "worst": [
+        "rock",
+        "roughness_m",
+        "ice"
+       ],
+       "confidence": "high"
+      }
+     ]
+    },
+    "upper_metre": {
+     "mars": {
+      "temp_mean": 207.4,
+      "frozen_fraction": 1.0,
+      "temp_swing": 3.6,
+      "ice": "no",
+      "ground_class": "bedrock",
+      "hardness": 0,
+      "rock": "volcanic",
+      "slope_deg": 11.4,
+      "roughness_m": 3.42,
+      "dryness": 0.71
+     },
+     "data_quality": {
+      "temp_mean": "measured",
+      "frozen_fraction": "predicted",
+      "temp_swing": "modelled",
+      "ice": "measured",
+      "ground_class": "measured",
+      "hardness": "measured",
+      "rock": "predicted",
+      "slope_deg": "measured",
+      "roughness_m": "predicted",
+      "dryness": "predicted"
+     },
+     "twins": [
+      {
+       "region_id": "hawaii",
+       "name": "Hawaii",
+       "lat": 19.8,
+       "lon": -155.5,
+       "match_pct": 93.3,
+       "level": "excellent",
+       "best": [
+        "temp_mean",
+        "hardness",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "rock",
+        "temp_swing",
+        "ground_class"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "dry_valleys",
+       "name": "Dry Valleys (University Valley)",
+       "lat": -77.87,
+       "lon": 160.73,
+       "match_pct": 72.1,
+       "level": "good",
+       "best": [
+        "ice",
+        "frozen_fraction",
+        "ground_class"
+       ],
+       "worst": [
+        "temp_swing",
+        "roughness_m",
+        "hardness"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "namib",
+       "name": "Namib",
+       "lat": -24.5,
+       "lon": 15.5,
+       "match_pct": 44.7,
+       "level": "poor",
+       "best": [
+        "ice",
+        "hardness",
+        "temp_swing"
+       ],
+       "worst": [
+        "slope_deg",
+        "frozen_fraction",
+        "rock"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "lake_salda",
+       "name": "Lake Salda",
+       "lat": 37.55,
+       "lon": 29.68,
+       "match_pct": 28.2,
+       "level": "no_match",
+       "best": [
+        "slope_deg",
+        "rock",
+        "roughness_m"
+       ],
+       "worst": [
+        "dryness",
+        "temp_swing",
+        "temp_mean"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "greenland_margin",
+       "name": "Greenland margin",
+       "lat": 67.1,
+       "lon": -50.0,
+       "match_pct": 26.9,
+       "level": "no_match",
+       "best": [
+        "temp_swing",
+        "hardness",
+        "dryness"
+       ],
+       "worst": [
+        "rock",
+        "slope_deg",
+        "ice"
+       ],
+       "confidence": "high"
+      }
+     ]
+    },
+    "drill_zone": {
+     "mars": {
+      "temp_mean": 209.8,
+      "frozen_fraction": 1.0,
+      "temp_swing": 6.1,
+      "ice": "yes",
+      "ground_class": "bedrock",
+      "hardness": 0,
+      "rock": "icy",
+      "slope_deg": 6.4,
+      "roughness_m": 1.61,
+      "dryness": 0.65
+     },
+     "data_quality": {
+      "temp_mean": "predicted",
+      "frozen_fraction": "modelled",
+      "temp_swing": "modelled",
+      "ice": "measured",
+      "ground_class": "measured",
+      "hardness": "measured",
+      "rock": "predicted",
+      "slope_deg": "measured",
+      "roughness_m": "modelled",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "atacama_coastal",
+       "name": "Coastal Atacama",
+       "lat": -24.1,
+       "lon": -70.4,
+       "match_pct": 94.9,
+       "level": "excellent",
+       "best": [
+        "temp_mean",
+        "rock",
+        "temp_swing"
+       ],
+       "worst": [
+        "ice",
+        "roughness_m",
+        "hardness"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "atacama_high",
+       "name": "High Atacama",
+       "lat": -24.0,
+       "lon": -68.0,
+       "match_pct": 87.4,
+       "level": "excellent",
+       "best": [
+        "slope_deg",
+        "ground_class",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "roughness_m",
+        "rock",
+        "hardness"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "lava_beds",
+       "name": "Lava Beds CA",
+       "lat": 41.7,
+       "lon": -121.5,
+       "match_pct": 79.7,
+       "level": "good",
+       "best": [
+        "dryness",
+        "frozen_fraction",
+        "hardness"
+       ],
+       "worst": [
+        "ground_class",
+        "temp_swing",
+        "temp_mean"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "pilbara",
+       "name": "Pilbara",
+       "lat": -21.5,
+       "lon": 119.0,
+       "match_pct": 73.8,
+       "level": "good",
+       "best": [
+        "roughness_m",
+        "dryness",
+        "temp_swing"
+       ],
+       "worst": [
+        "ground_class",
+        "temp_mean",
+        "ice"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "axel_heiberg",
+       "name": "Axel Heiberg",
+       "lat": 79.4,
+       "lon": -90.8,
+       "match_pct": 31.9,
+       "level": "poor",
+       "best": [
+        "frozen_fraction",
+        "ice",
+        "hardness"
+       ],
+       "worst": [
+        "roughness_m",
+        "ground_class",
+        "temp_swing"
+       ],
+       "confidence": "low"
+      }
+     ]
+    },
+    "deep": {
+     "mars": {
+      "temp_mean": 203.7,
+      "frozen_fraction": 1.0,
+      "temp_swing": 18.1,
+      "ice": "no",
+      "ground_class": "ice_cemented",
+      "hardness": 1,
+      "rock": "volcanic",
+      "slope_deg": 11.1,
+      "roughness_m": 1.55,
+      "dryness": 0.32
+     },
+     "data_quality": {
+      "temp_mean": "modelled",
+      "frozen_fraction": "modelled",
+      "temp_swing": "predicted",
+      "ice": "measured",
+      "ground_class": "modelled",
+      "hardness": "modelled",
+      "rock": "measured",
+      "slope_deg": "measured",
+      "roughness_m": "modelled",
+      "dryness": "modelled"
+     },
+     "twins": [
+      {
+       "region_id": "mojave",
+       "name": "Mojave",
+       "lat": 35.0,
+       "lon": -116.0,
+       "match_pct": 73.5,
+       "level": "good",
+       "best": [
+        "slope_deg",
+        "temp_swing",
+        "rock"
+       ],
+       "worst": [
+        "roughness_m",
+        "ground_class",
+        "temp_mean"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "axel_heiberg",
+       "name": "Axel Heiberg",
+       "lat": 79.4,
+       "lon": -90.8,
+       "match_pct": 66.8,
+       "level": "fair",
+       "best": [
+        "temp_swing",
+        "rock",
+        "ground_class"
+       ],
+       "worst": [
+        "slope_deg",
+        "roughness_m",
+        "temp_mean"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "lanzarote",
+       "name": "Lanzarote",
+       "lat": 29.0,
+       "lon": -13.6,
+       "match_pct": 62.5,
+       "level": "fair",
+       "best": [
+        "dryness",
+        "slope_deg",
+        "temp_mean"
+       ],
+       "worst": [
+        "ice",
+        "temp_swing",
+        "ground_class"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "iceland_highlands",
+       "name": "Iceland highlands",
+       "lat": 64.7,
+       "lon": -18.5,
+       "match_pct": 45.8,
+       "level": "poor",
+       "best": [
+        "slope_deg",
+        "rock",
+        "roughness_m"
+       ],
+       "worst": [
+        "dryness",
+        "frozen_fraction",
+        "temp_mean"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "lake_salda",
+       "name": "Lake Salda",
+       "lat": 37.55,
+       "lon": 29.68,
+       "match_pct": 29.9,
+       "level": "no_match",
+       "best": [
+        "hardness",
+        "frozen_fraction",
+        "rock"
+       ],
+       "worst": [
+        "temp_mean",
+        "slope_deg",
+        "ice"
+       ],
+       "confidence": "high"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "site_id": "phoenix",
+   "name": "Phoenix landing site",
+   "lat": 68.2,
+   "lon": -125.7,
+   "bands": {
+    "skin": {
+     "mars": {
+      "temp_mean": 178.8,
+      "frozen_fraction": 1.0,
+      "temp_swing": 14.2,
+      "ice": "yes",
+      "ground_class": "massive_ice",
+      "hardness": 0,
+      "rock": "clay_sulfate",
+      "slope_deg": 0.5,
+      "roughness_m": 0.96,
+      "dryness": 0.37
+     },
+     "data_quality": {
+      "temp_mean": "predicted",
+      "frozen_fraction": "predicted",
+      "temp_swing": "measured",
+      "ice": "predicted",
+      "ground_class": "modelled",
+      "hardness": "modelled",
+      "rock": "measured",
+      "slope_deg": "predicted",
+      "roughness_m": "modelled",
+      "dryness": "modelled"
+     },
+     "twins": [
+      {
+       "region_id": "hawaii",
+       "name": "Hawaii",
+       "lat": 19.8,
+       "lon": -155.5,
+       "match_pct": 90.5,
+       "level": "excellent",
+       "best": [
+        "roughness_m",
+        "ground_class",
+        "temp_mean"
+       ],
+       "worst": [
+        "temp_swing",
+        "ice",
+        "dryness"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "lava_beds",
+       "name": "Lava Beds CA",
+       "lat": 41.7,
+       "lon": -121.5,
+       "match_pct": 89.9,
+       "level": "excellent",
+       "best": [
+        "temp_swing",
+        "temp_mean",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "roughness_m",
+        "hardness",
+        "rock"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "lanzarote",
+       "name": "Lanzarote",
+       "lat": 29.0,
+       "lon": -13.6,
+       "match_pct": 50.7,
+       "level": "fair",
+       "best": [
+        "ground_class",
+        "temp_swing",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "temp_mean",
+        "roughness_m",
+        "dryness"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "death_valley",
+       "name": "Death Valley",
+       "lat": 36.5,
+       "lon": -117.1,
+       "match_pct": 44.5,
+       "level": "poor",
+       "best": [
+        "hardness",
+        "ground_class",
+        "roughness_m"
+       ],
+       "worst": [
+        "rock",
+        "ice",
+        "temp_swing"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "svalbard",
+       "name": "Svalbard",
+       "lat": 78.2,
+       "lon": 15.6,
+       "match_pct": 40.6,
+       "level": "poor",
+       "best": [
+        "roughness_m",
+        "ground_class",
+        "rock"
+       ],
+       "worst": [
+        "dryness",
+        "frozen_fraction",
+        "hardness"
+       ],
+       "confidence": "low"
+      }
+     ]
+    },
+    "upper_metre": {
+     "mars": {
+      "temp_mean": 177.3,
+      "frozen_fraction": 1.0,
+      "temp_swing": 34.7,
+      "ice": "yes",
+      "ground_class": "ice_cemented",
+      "hardness": 3,
+      "rock": "clay_sulfate",
+      "slope_deg": 8.7,
+      "roughness_m": 2.71,
+      "dryness": 0.01
+     },
+     "data_quality": {
+      "temp_mean": "measured",
+      "frozen_fraction": "modelled",
+      "temp_swing": "modelled",
+      "ice": "measured",
+      "ground_class": "measured",
+      "hardness": "modelled",
+      "rock": "measured",
+      "slope_deg": "measured",
+      "roughness_m": "predicted",
+      "dryness": "predicted"
+     },
+     "twins": [
+      {
+       "region_id": "death_valley",
+       "name": "Death Valley",
+       "lat": 36.5,
+       "lon": -117.1,
+       "match_pct": 86.7,
+       "level": "excellent",
+       "best": [
+        "hardness",
+        "roughness_m",
+        "temp_swing"
+       ],
+       "worst": [
+        "slope_deg",
+        "rock",
+        "temp_mean"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "hanksville",
+       "name": "Hanksville UT",
+       "lat": 38.4,
+       "lon": -110.7,
+       "match_pct": 66.5,
+       "level": "fair",
+       "best": [
+        "rock",
+        "slope_deg",
+        "temp_swing"
+       ],
+       "worst": [
+        "ice",
+        "hardness",
+        "temp_mean"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "craters_moon",
+       "name": "Craters of the Moon ID",
+       "lat": 43.4,
+       "lon": -113.5,
+       "match_pct": 50.2,
+       "level": "fair",
+       "best": [
+        "temp_swing",
+        "rock",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "roughness_m",
+        "hardness",
+        "temp_mean"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "lanzarote",
+       "name": "Lanzarote",
+       "lat": 29.0,
+       "lon": -13.6,
+       "match_pct": 47.4,
+       "level": "poor",
+       "best": [
+        "ground_class",
+        "temp_mean",
+        "slope_deg"
+       ],
+       "worst": [
+        "roughness_m",
+        "hardness",
+        "temp_swing"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "lake_salda",
+       "name": "Lake Salda",
+       "lat": 37.55,
+       "lon": 29.68,
+       "match_pct": 40.2,
+       "level": "poor",
+       "best": [
+        "ice",
+        "rock",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "roughness_m",
+        "hardness",
+        "temp_swing"
+       ],
+       "confidence": "high"
+      }
+     ]
+    },
+    "drill_zone": {
+     "mars": {
+      "temp_mean": 178.0,
+      "frozen_fraction": 1.0,
+      "temp_swing": 18.5,
+      "ice": "no",
+      "ground_class": "massive_ice",
+      "hardness": 3,
+      "rock": "volcanic",
+      "slope_deg": 13.3,
+      "roughness_m": 1.59,
+      "dryness": 0.1
+     },
+     "data_quality": {
+      "temp_mean": "measured",
+      "frozen_fraction": "measured",
+      "temp_swing": "predicted",
+      "ice": "modelled",
+      "ground_class": "predicted",
+      "hardness": "measured",
+      "rock": "predicted",
+      "slope_deg": "predicted",
+      "roughness_m": "modelled",
+      "dryness": "predicted"
+     },
+     "twins": [
+      {
+       "region_id": "lanzarote",
+       "name": "Lanzarote",
+       "lat": 29.0,
+       "lon": -13.6,
+       "match_pct": 78.4,
+       "level": "good",
+       "best": [
+        "frozen_fraction",
+        "temp_mean",
+        "ground_class"
+       ],
+       "worst": [
+        "ice",
+        "hardness",
+        "rock"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "pilbara",
+       "name": "Pilbara",
+       "lat": -21.5,
+       "lon": 119.0,
+       "match_pct": 62.1,
+       "level": "fair",
+       "best": [
+        "hardness",
+        "dryness",
+        "ice"
+       ],
+       "worst": [
+        "roughness_m",
+        "slope_deg",
+        "frozen_fraction"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "dry_valleys",
+       "name": "Dry Valleys (University Valley)",
+       "lat": -77.87,
+       "lon": 160.73,
+       "match_pct": 60.0,
+       "level": "fair",
+       "best": [
+        "hardness",
+        "dryness",
+        "ground_class"
+       ],
+       "worst": [
+        "roughness_m",
+        "temp_mean",
+        "ice"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "namib",
+       "name": "Namib",
+       "lat": -24.5,
+       "lon": 15.5,
+       "match_pct": 55.5,
+       "level": "fair",
+       "best": [
+        "temp_swing",
+        "ground_class",
+        "dryness"
+       ],
+       "worst": [
+        "roughness_m",
+        "rock",
+        "temp_mean"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "devon_haughton",
+       "name": "Devon Island / Haughton",
+       "lat": 75.37,
+       "lon": -89.68,
+       "match_pct": 40.3,
+       "level": "poor",
+       "best": [
+        "ice",
+        "frozen_fraction",
+        "roughness_m"
+       ],
+       "worst": [
+        "temp_swing",
+        "rock",
+        "ground_class"
+       ],
+       "confidence": "low"
+      }
+     ]
+    },
+    "deep": {
+     "mars": {
+      "temp_mean": 176.3,
+      "frozen_fraction": 1.0,
+      "temp_swing": 33.8,
+      "ice": "no",
+      "ground_class": "ice_cemented",
+      "hardness": 0,
+      "rock": "icy",
+      "slope_deg": 10.7,
+      "roughness_m": 1.61,
+      "dryness": 0.99
+     },
+     "data_quality": {
+      "temp_mean": "modelled",
+      "frozen_fraction": "predicted",
+      "temp_swing": "modelled",
+      "ice": "measured",
+      "ground_class": "measured",
+      "hardness": "modelled",
+      "rock": "measured",
+      "slope_deg": "predicted",
+      "roughness_m": "modelled",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "hanksville",
+       "name": "Hanksville UT",
+       "lat": 38.4,
+       "lon": -110.7,
+       "match_pct": 90.8,
+       "level": "excellent",
+       "best": [
+        "roughness_m",
+        "hardness",
+        "slope_deg"
+       ],
+       "worst": [
+        "ground_class",
+        "temp_swing",
+        "frozen_fraction"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "iceland_highlands",
+       "name": "Iceland highlands",
+       "lat": 64.7,
+       "lon": -18.5,
+       "match_pct": 83.8,
+       "level": "good",
+       "best": [
+        "dryness",
+        "hardness",
+        "rock"
+       ],
+       "worst": [
+        "ice",
+        "roughness_m",
+        "ground_class"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "greenland_margin",
+       "name": "Greenland margin",
+       "lat": 67.1,
+       "lon": -50.0,
+       "match_pct": 79.4,
+       "level": "good",
+       "best": [
+        "hardness",
+        "temp_mean",
+        "slope_deg"
+       ],
+       "worst": [
+        "temp_swing",
+        "ice",
+        "roughness_m"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "lanzarote",
+       "name": "Lanzarote",
+       "lat": 29.0,
+       "lon": -13.6,
+       "match_pct": 60.0,
+       "level": "fair",
+       "best": [
+        "slope_deg",
+        "hardness",
+        "ice"
+       ],
+       "worst": [
+        "temp_mean",
+        "rock",
+        "ground_class"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "mojave",
+       "name": "Mojave",
+       "lat": 35.0,
+       "lon": -116.0,
+       "match_pct": 48.0,
+       "level": "poor",
+       "best": [
+        "hardness",
+        "slope_deg",
+        "roughness_m"
+       ],
+       "worst": [
+        "ground_class",
+        "temp_swing",
+        "temp_mean"
+       ],
+       "confidence": "low"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

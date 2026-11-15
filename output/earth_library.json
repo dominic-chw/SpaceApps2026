@@ -1,0 +1,366 @@
+{
+ "fake": true,
+ "normalization": {},
+ "regions": [
+  {
+   "region_id": "dry_valleys",
+   "name": "Dry Valleys (University Valley)",
+   "lon": 160.73,
+   "lat": -77.87,
+   "features": {
+    "temp_mean": 173.1,
+    "frozen_fraction": 1.0,
+    "temp_swing": 11.0,
+    "ice": "no",
+    "ground_class": "dry_regolith",
+    "hardness": 3,
+    "rock": "impact_mixed",
+    "slope_deg": 10.3,
+    "roughness_m": 0.12,
+    "dryness": 0.11
+   }
+  },
+  {
+   "region_id": "devon_haughton",
+   "name": "Devon Island / Haughton",
+   "lon": -89.68,
+   "lat": 75.37,
+   "features": {
+    "temp_mean": 177.0,
+    "frozen_fraction": 1.0,
+    "temp_swing": 16.4,
+    "ice": "yes",
+    "ground_class": "bedrock",
+    "hardness": 0,
+    "rock": "icy",
+    "slope_deg": 8.7,
+    "roughness_m": 4.35,
+    "dryness": 0.35
+   }
+  },
+  {
+   "region_id": "axel_heiberg",
+   "name": "Axel Heiberg",
+   "lon": -90.8,
+   "lat": 79.4,
+   "features": {
+    "temp_mean": 171.9,
+    "frozen_fraction": 1.0,
+    "temp_swing": 8.0,
+    "ice": "no",
+    "ground_class": "ice_cemented",
+    "hardness": 3,
+    "rock": "icy",
+    "slope_deg": 3.5,
+    "roughness_m": 0.38,
+    "dryness": 0.15
+   }
+  },
+  {
+   "region_id": "svalbard",
+   "name": "Svalbard",
+   "lon": 15.6,
+   "lat": 78.2,
+   "features": {
+    "temp_mean": 175.6,
+    "frozen_fraction": 1.0,
+    "temp_swing": 22.8,
+    "ice": "no",
+    "ground_class": "ice_cemented",
+    "hardness": 0,
+    "rock": "volcanic",
+    "slope_deg": 2.7,
+    "roughness_m": 4.52,
+    "dryness": 0.21
+   }
+  },
+  {
+   "region_id": "greenland_margin",
+   "name": "Greenland margin",
+   "lon": -50.0,
+   "lat": 67.1,
+   "features": {
+    "temp_mean": 175.2,
+    "frozen_fraction": 1.0,
+    "temp_swing": 9.3,
+    "ice": "no",
+    "ground_class": "ice_cemented",
+    "hardness": 0,
+    "rock": "impact_mixed",
+    "slope_deg": 7.5,
+    "roughness_m": 1.33,
+    "dryness": 0.19
+   }
+  },
+  {
+   "region_id": "atacama_high",
+   "name": "High Atacama",
+   "lon": -68.0,
+   "lat": -24.0,
+   "features": {
+    "temp_mean": 196.9,
+    "frozen_fraction": 1.0,
+    "temp_swing": 25.3,
+    "ice": "yes",
+    "ground_class": "bedrock",
+    "hardness": 3,
+    "rock": "icy",
+    "slope_deg": 12.5,
+    "roughness_m": 0.31,
+    "dryness": 0.4
+   }
+  },
+  {
+   "region_id": "atacama_coastal",
+   "name": "Coastal Atacama",
+   "lon": -70.4,
+   "lat": -24.1,
+   "features": {
+    "temp_mean": 201.7,
+    "frozen_fraction": 1.0,
+    "temp_swing": 39.2,
+    "ice": "no",
+    "ground_class": "ice_cemented",
+    "hardness": 2,
+    "rock": "icy",
+    "slope_deg": 4.7,
+    "roughness_m": 4.76,
+    "dryness": 0.08
+   }
+  },
+  {
+   "region_id": "iceland_highlands",
+   "name": "Iceland highlands",
+   "lon": -18.5,
+   "lat": 64.7,
+   "features": {
+    "temp_mean": 181.4,
+    "frozen_fraction": 1.0,
+    "temp_swing": 25.9,
+    "ice": "no",
+    "ground_class": "ice_cemented",
+    "hardness": 2,
+    "rock": "impact_mixed",
+    "slope_deg": 5.3,
+    "roughness_m": 2.92,
+    "dryness": 0.17
+   }
+  },
+  {
+   "region_id": "hawaii",
+   "name": "Hawaii",
+   "lon": -155.5,
+   "lat": 19.8,
+   "features": {
+    "temp_mean": 197.1,
+    "frozen_fraction": 1.0,
+    "temp_swing": 24.5,
+    "ice": "yes",
+    "ground_class": "bedrock",
+    "hardness": 2,
+    "rock": "volcanic",
+    "slope_deg": 13.8,
+    "roughness_m": 4.72,
+    "dryness": 0.98
+   }
+  },
+  {
+   "region_id": "lanzarote",
+   "name": "Lanzarote",
+   "lon": -13.6,
+   "lat": 29.0,
+   "features": {
+    "temp_mean": 198.2,
+    "frozen_fraction": 1.0,
+    "temp_swing": 11.0,
+    "ice": "no",
+    "ground_class": "ice_cemented",
+    "hardness": 0,
+    "rock": "clay_sulfate",
+    "slope_deg": 4.0,
+    "roughness_m": 1.23,
+    "dryness": 0.5
+   }
+  },
+  {
+   "region_id": "hanksville",
+   "name": "Hanksville UT",
+   "lon": -110.7,
+   "lat": 38.4,
+   "features": {
+    "temp_mean": 187.3,
+    "frozen_fraction": 1.0,
+    "temp_swing": 19.5,
+    "ice": "no",
+    "ground_class": "bedrock",
+    "hardness": 0,
+    "rock": "volcanic",
+    "slope_deg": 13.9,
+    "roughness_m": 3.55,
+    "dryness": 0.64
+   }
+  },
+  {
+   "region_id": "death_valley",
+   "name": "Death Valley",
+   "lon": -117.1,
+   "lat": 36.5,
+   "features": {
+    "temp_mean": 195.5,
+    "frozen_fraction": 1.0,
+    "temp_swing": 29.4,
+    "ice": "yes",
+    "ground_class": "bedrock",
+    "hardness": 2,
+    "rock": "icy",
+    "slope_deg": 3.5,
+    "roughness_m": 2.19,
+    "dryness": 0.16
+   }
+  },
+  {
+   "region_id": "mojave",
+   "name": "Mojave",
+   "lon": -116.0,
+   "lat": 35.0,
+   "features": {
+    "temp_mean": 192.1,
+    "frozen_fraction": 1.0,
+    "temp_swing": 34.7,
+    "ice": "no",
+    "ground_class": "ice_cemented",
+    "hardness": 0,
+    "rock": "icy",
+    "slope_deg": 9.5,
+    "roughness_m": 2.36,
+    "dryness": 0.11
+   }
+  },
+  {
+   "region_id": "rio_tinto",
+   "name": "Rio Tinto",
+   "lon": -6.6,
+   "lat": 37.7,
+   "features": {
+    "temp_mean": 188.3,
+    "frozen_fraction": 1.0,
+    "temp_swing": 3.8,
+    "ice": "no",
+    "ground_class": "dry_regolith",
+    "hardness": 0,
+    "rock": "clay_sulfate",
+    "slope_deg": 2.0,
+    "roughness_m": 2.17,
+    "dryness": 0.78
+   }
+  },
+  {
+   "region_id": "lake_salda",
+   "name": "Lake Salda",
+   "lon": 29.68,
+   "lat": 37.55,
+   "features": {
+    "temp_mean": 189.0,
+    "frozen_fraction": 1.0,
+    "temp_swing": 35.7,
+    "ice": "no",
+    "ground_class": "dry_regolith",
+    "hardness": 0,
+    "rock": "clay_sulfate",
+    "slope_deg": 1.0,
+    "roughness_m": 4.66,
+    "dryness": 0.66
+   }
+  },
+  {
+   "region_id": "pilbara",
+   "name": "Pilbara",
+   "lon": 119.0,
+   "lat": -21.5,
+   "features": {
+    "temp_mean": 198.5,
+    "frozen_fraction": 1.0,
+    "temp_swing": 14.5,
+    "ice": "yes",
+    "ground_class": "massive_ice",
+    "hardness": 3,
+    "rock": "clay_sulfate",
+    "slope_deg": 2.5,
+    "roughness_m": 1.62,
+    "dryness": 0.67
+   }
+  },
+  {
+   "region_id": "namib",
+   "name": "Namib",
+   "lon": 15.5,
+   "lat": -24.5,
+   "features": {
+    "temp_mean": 194.7,
+    "frozen_fraction": 1.0,
+    "temp_swing": 20.9,
+    "ice": "yes",
+    "ground_class": "ice_cemented",
+    "hardness": 0,
+    "rock": "icy",
+    "slope_deg": 8.6,
+    "roughness_m": 2.61,
+    "dryness": 0.07
+   }
+  },
+  {
+   "region_id": "tibetan_plateau",
+   "name": "Tibetan Plateau",
+   "lon": 88.0,
+   "lat": 33.0,
+   "features": {
+    "temp_mean": 192.0,
+    "frozen_fraction": 1.0,
+    "temp_swing": 24.2,
+    "ice": "yes",
+    "ground_class": "massive_ice",
+    "hardness": 1,
+    "rock": "volcanic",
+    "slope_deg": 0.4,
+    "roughness_m": 4.83,
+    "dryness": 0.09
+   }
+  },
+  {
+   "region_id": "lava_beds",
+   "name": "Lava Beds CA",
+   "lon": -121.5,
+   "lat": 41.7,
+   "features": {
+    "temp_mean": 188.0,
+    "frozen_fraction": 1.0,
+    "temp_swing": 27.4,
+    "ice": "no",
+    "ground_class": "massive_ice",
+    "hardness": 1,
+    "rock": "clay_sulfate",
+    "slope_deg": 0.8,
+    "roughness_m": 2.11,
+    "dryness": 0.89
+   }
+  },
+  {
+   "region_id": "craters_moon",
+   "name": "Craters of the Moon ID",
+   "lon": -113.5,
+   "lat": 43.4,
+   "features": {
+    "temp_mean": 188.4,
+    "frozen_fraction": 1.0,
+    "temp_swing": 6.6,
+    "ice": "yes",
+    "ground_class": "massive_ice",
+    "hardness": 2,
+    "rock": "impact_mixed",
+    "slope_deg": 4.0,
+    "roughness_m": 0.79,
+    "dryness": 0.0
+   }
+  }
+ ]
+}
