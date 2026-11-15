@@ -1,5 +1,6 @@
 matcher: knn          # knn | deep | hybrid
-grid_deg: 2
+grid_deg: 2            # Mars grid
+earth_grid_deg: 0.5    # Earth global grid (bare ground only); 1 if exports are too slow
 lat_limit: 70
 bands: [skin, upper_metre, drill_zone, deep]
 top_twins_grid: 3
@@ -9,6 +10,12 @@ paths:
   weights: weights/default.json
   output: output
   models: models
+# Match levels: lowest match_pct for each level (anything below "poor" is no_match)
+levels:
+  excellent: 85
+  good: 70
+  fair: 50
+  poor: 30
 
 # Data-processing tunables (Dominic). Ranking-only values stay at top level / weights/.
 processing:

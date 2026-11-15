@@ -12,7 +12,7 @@ from ..common.ground import hardness
 from ..common.io import FEATURES_DIR, feature_row, write_features
 from ..common.schema import BANDS
 from ..earth_ml.train_subsurface import fill_gaps
-from ..physics.heat_model import band_top_m, earth_band_temps
+from ..physics.heat_model import band_top_m, earth_band_temps, earth_frozen_fraction
 from .local_layers import GLIM_LOOKUP, glim_to_rock, load_layers
 
 
@@ -39,10 +39,12 @@ def extract_earth(layers, params=None):
         for band in BANDS:
             mean, swing = earth_band_temps(rec["mean_temp_k"], rec["annual_range_k"],
                                            rec["diurnal_amp_k"], rec["thermal_inertia"], band, p)
+            frozen = earth_frozen_fraction(rec["mean_temp_k"], rec["annual_range_k"],
+                                           rec["thermal_inertia"], band, p)
             ground, ice = ground_for_band(rec, band, p)
             q_ice, q_gc = rec["ice_q"], rec["ground_class_q"]
-            vals = [("temp_mean", mean, "modelled"), ("temp_swing", swing, "modelled"),
-                    ("ice", int(ice), q_ice), ("ground_class", ground, q_gc),
+            vals = [("temp_mean", mean, "modelled"), ("frozen_fraction", frozen, "modelled"),
+                    ("temp_swing", swing, "modelled"), ("ice", int(ice), q_ice), ("ground_class", ground, q_gc),
                     ("hardness", hardness(ground, rock, p), q_gc), ("rock", rock, "measured"),
                     ("slope_deg", rec["slope_deg"], "measured"),
                     ("roughness_m", rec["roughness_m"], "measured"),
