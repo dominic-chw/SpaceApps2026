@@ -85,7 +85,14 @@ def check_cci(d):
             "65535 (_FillValue); northern hemisphere 25-85 N only; " + " | ".join(out)[:200])
 
 
-CHECKS = {"geologic_map_sim3292": check_geology, "mola_megdr_16ppd": check_mola,
+def check_glim(d):
+    z = zipfile.ZipFile(d / "LiMW_GIS-2015.gdb.zip")
+    bad = z.testzip()
+    return ("opens" if bad is None else f"CORRUPT ({bad})", "file geodatabase (WGS84 polygons, see .gdb)", "-180..180 east",
+            f"polygon map, ~1:3.75M, {len(z.namelist())} files in zip", "lithology classes (16 first-level)", "n/a")
+
+
+CHECKS = {"glim": check_glim, "geologic_map_sim3292": check_geology, "mola_megdr_16ppd": check_mola,
           "tes_thermal_inertia_day_2007": check_tes, "esa_cci_permafrost": check_cci}
 
 
