@@ -36,7 +36,7 @@
 
   const $ = id => document.getElementById(id);
   const state = {
-    lat: 18.4, lon: 77.5, band: 'drill_zone',
+    lat: 18.4, lon: 77.5, band: 'drill_zone', picked: false,   // picked: no search until the user chooses a spot
     cell: null, nearest: null, column: {}, gridDeg: 2, twins: [], baseTwins: [], hiddenIcy: [], candidates: [], selected: 0, site: null, highlight: '',
     grids: {}, showcase: null, library: null, validation: null, campaigns: [], customWeights: null, token: 0
   };
@@ -599,6 +599,7 @@
   function setCoords(lat, lon, {fields = true} = {}) {
     state.lat = Math.min(70, Math.max(-70, lat));
     state.lon = wrapLon(lon);
+    state.picked = true;
     if (fields) { $('latitude').value = state.lat.toFixed(1); $('longitude').value = state.lon.toFixed(1); }
     globe?.setTarget(state.lat, state.lon);
   }
@@ -626,7 +627,7 @@
   function readHash() {
     const h = new URLSearchParams(location.hash.slice(1));
     const lat = num(h.get('lat')), lon = num(h.get('lon'));
-    if (lat !== null && lon !== null && Math.abs(lat) <= 70 && Math.abs(lon) <= 180) { state.lat = lat; state.lon = lon; }
+    if (lat !== null && lon !== null && Math.abs(lat) <= 70 && Math.abs(lon) <= 180) { state.lat = lat; state.lon = lon; state.picked = true; }
     if (BANDS[h.get('band')]) state.band = h.get('band');
     if (HIGHLIGHTS[h.get('hl')]) state.highlight = h.get('hl');
   }
@@ -655,7 +656,7 @@
     });
     $('depth').addEventListener('click', ev => {
       const b = ev.target.closest('[data-band]'); if (!b || b.dataset.band === state.band) return;
-      setBand(b.dataset.band); search();
+      setBand(b.dataset.band); if (state.picked) search();
     });
     $('showcase').addEventListener('change', ev => {
       const site = (state.showcase?.sites || []).find(s => s.site_id === ev.target.value);
@@ -669,7 +670,7 @@
       notice('Open this page through a local web server from the repository root (py -m http.server 8000, then /web/).', 'error');
       return;
     }
-    setCoords(state.lat, state.lon);
+    if (state.picked) setCoords(state.lat, state.lon);   // only a shared link (#lat=..&lon=..) opens on a spot
     // Library first: the ice rule and the ground profile both need it.
     Promise.all([optional('output/showcase.json'), optional('output/earth_library.json'), optional('output/validation.json'), optional('research/earth_campaigns.csv', true)])
       .then(([showcase, library, validation, campaigns]) => {
@@ -679,7 +680,7 @@
           $('showcase').append(new Option(s.name || s.site_id, s.site_id));
         }
         renderValidation();
-        search();
+        if (state.picked) search();
         if (state.highlight) setHighlight(state.highlight);
       });
   }
