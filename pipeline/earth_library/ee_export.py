@@ -16,7 +16,7 @@ ERA5 = "ECMWF/ERA5_LAND/MONTHLY_AGGR"
 ERA5_BANDS = ["soil_temperature_level_1", "soil_temperature_level_2", "soil_temperature_level_3",
               "soil_temperature_level_4", "skin_temperature"]
 MODIS = "MODIS/061/MOD11A2"
-DEM = "COPERNICUS/DEM/GLO30"
+DEM = "COPERNICUS/DEM/GLO30_2024_1"     # GLO30 is deprecated on EE
 WORLDCOVER = "ESA/WorldCover/v200"          # class 60 = bare / sparse vegetation
 SOILGRIDS = ["projects/soilgrids-isric/sand_mean", "projects/soilgrids-isric/clay_mean",
              "projects/soilgrids-isric/bdod_mean"]
@@ -49,14 +49,16 @@ def modis_stats(ee, start, end):
 
 
 def terrain_stats(ee):
-    dem = ee.ImageCollection(DEM).select("DEM").mosaic().setDefaultProjection("EPSG:4326", None, 30)
+    col = ee.ImageCollection(DEM).select("DEM")
+    dem = col.mosaic().setDefaultProjection(col.first().projection())
     slope = ee.Terrain.slope(dem).rename("slope_deg")
-    rough = dem.reduceNeighborhood(ee.Reducer.stdDev(), ee.Kernel.square(250, "meters")).rename("roughness_m")
+    # std dev of elevation in a 17 x 17 pixel (~500 m) window
+    rough = dem.reduceNeighborhood(ee.Reducer.stdDev(), ee.Kernel.square(8, "pixels")).rename("roughness_m")
     return dem.rename("elevation_m").addBands(slope).addBands(rough)
 
 
 def worldcover_bare(ee):
-    wc = ee.Image(WORLDCOVER).select("Map")
+    wc = ee.ImageCollection(WORLDCOVER).first().select("Map")
     return wc.eq(60).rename("bare_fraction")
 
 

@@ -183,8 +183,8 @@ earth:
     role: required
     access: earthengine
     status: ready
-    title: Copernicus DEM GLO-30
-    ee_asset: "COPERNICUS/DEM/GLO30"
+    title: Copernicus DEM GLO-30 (2024 release; the older COPERNICUS/DEM/GLO30 asset is deprecated)
+    ee_asset: "COPERNICUS/DEM/GLO30_2024_1"
     bands: [DEM]
     local_dir: data/earth/ee
     version: "GLO-30"
