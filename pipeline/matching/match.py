@@ -146,6 +146,53 @@ def plain_value(value):
 # Main entry point
 # ---------------------------------------------------------------------------
 
+def prepare_band(mars, earth, band, feature_file=None, all_weights=None):
+    """Do the set-up shared by matching and validation for one band.
+
+    Loads the feature list and weights, normalizes both tables and reads the
+    quality tags. Returns a dictionary ("prepared") used by cell_distances()
+    and match_band(). Validation passes its own weights here to test
+    "what if this feature group were switched off".
+    """
+    feature_file = feature_file or normalize.load_feature_file()
+    all_weights = all_weights or load_weights()
+    features = normalize.features_for_band(feature_file, band)
+    confidence_settings = feature_file["confidence"]
+    mars = mars.reset_index(drop=True)
+    earth = earth.reset_index(drop=True)
+    mars_grid, earth_grid, settings = normalize.normalize_pair(mars, earth, features)
+    scales, is_category = normalize.difference_scales(features)
+    return {
+        "band": band,
+        "mars": mars,
+        "earth": earth,
+        "features": features,
+        "names": list(features),
+        "weights": weights_for_band(all_weights, band, features),
+        "scales": scales,
+        "is_category": is_category,
+        "confidence_settings": confidence_settings,
+        "mars_grid": mars_grid,
+        "earth_grid": earth_grid,
+        "settings": settings,
+        "mars_quality": explain.quality_grid(mars, features, confidence_settings),
+        "earth_quality": explain.quality_grid(earth, features, confidence_settings),
+        "earth_lats": earth["lat"].to_numpy(dtype=float),
+        "earth_lons": earth["lon"].to_numpy(dtype=float),
+    }
+
+
+def cell_distances(prepared, m):
+    """Distance from Mars place number m to every Earth place.
+
+    Returns (distances, differences): one distance per Earth place, and the
+    per-feature differences behind them.
+    """
+    differences = feature_differences(prepared["mars_grid"][m], prepared["earth_grid"],
+                                      prepared["scales"], prepared["is_category"])
+    return gower_distance(differences, prepared["weights"]), differences
+
+
 def match_band(mars, earth, band, how_many=3, spacing_km=200, levels=None,
                feature_file=None, all_weights=None):
     """Find the top Earth twins for every Mars place in one depth band.
@@ -156,30 +203,22 @@ def match_band(mars, earth, band, how_many=3, spacing_km=200, levels=None,
     Returns (cells, info): cells in the plan s3 grid format, and info about the run
     (normalization settings and curve steepness, for earth_library.json / debugging).
     """
-    feature_file = feature_file or normalize.load_feature_file()
-    all_weights = all_weights or load_weights()
     levels = levels or DEFAULT_LEVELS
+    prepared = prepare_band(mars, earth, band, feature_file, all_weights)
 
-    features = normalize.features_for_band(feature_file, band)
-    names = list(features)
-    weights = weights_for_band(all_weights, band, features)
-    scales, is_category = normalize.difference_scales(features)
-    confidence_settings = feature_file["confidence"]
-
-    mars = mars.reset_index(drop=True)
-    earth = earth.reset_index(drop=True)
-    mars_grid, earth_grid, settings = normalize.normalize_pair(mars, earth, features)
-    mars_quality = explain.quality_grid(mars, features, confidence_settings)
-    earth_quality = explain.quality_grid(earth, features, confidence_settings)
-    earth_lats = earth["lat"].to_numpy(dtype=float)
-    earth_lons = earth["lon"].to_numpy(dtype=float)
+    # Short names for things used a lot below.
+    mars, earth = prepared["mars"], prepared["earth"]
+    features, names, weights = prepared["features"], prepared["names"], prepared["weights"]
+    confidence_settings = prepared["confidence_settings"]
+    mars_quality, earth_quality = prepared["mars_quality"], prepared["earth_quality"]
+    settings = prepared["settings"]
 
     # Pass 1: find each Mars place's twins and remember their distances.
     found = []  # per Mars place: list of (earth row, distance, differences)
     for m in range(len(mars)):
-        differences = feature_differences(mars_grid[m], earth_grid, scales, is_category)
-        distances = gower_distance(differences, weights)
-        twins = pick_twins(distances, earth_lats, earth_lons, how_many, spacing_km)
+        distances, differences = cell_distances(prepared, m)
+        twins = pick_twins(distances, prepared["earth_lats"], prepared["earth_lons"],
+                           how_many, spacing_km)
         found.append([(e, distances[e], differences[e]) for e in twins])
 
     # Pass 2: now that we know what a typical best distance is, turn distances into %.
