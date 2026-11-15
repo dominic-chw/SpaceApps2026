@@ -60,6 +60,34 @@ def region_ranking(distances, region_ids):
     return list(best.sort_values(na_position="last").index)
 
 
+SPACING_KM = 200   # same rule as the app's twins (config min_twin_spacing_km)
+
+
+def spaced_ranks(distances, lats, lons, spacing_km=SPACING_KM):
+    """Rank Earth places the way the app shows them: closest first, 200 km apart.
+
+    A place within spacing_km of a better-ranked place shares that place's rank
+    (the app would show the better one instead), so a cluster of near-identical
+    neighbouring cells counts as ONE place. Returns (rank per place, number of distinct places).
+    """
+    order = np.argsort(np.where(np.isnan(distances), np.inf, distances))
+    rank = np.zeros(len(distances), dtype=int)
+    c_lat = np.empty(len(distances))
+    c_lon = np.empty(len(distances))
+    k = 0
+    for i in order:
+        if k:
+            gaps = match.distance_km(lats[i], lons[i], c_lat[:k], c_lon[:k])
+            j = int(np.argmin(gaps))
+            if gaps[j] < spacing_km:
+                rank[i] = j + 1
+                continue
+        c_lat[k], c_lon[k] = lats[i], lons[i]
+        k += 1
+        rank[i] = k
+    return rank, k
+
+
 def rank_of(region, ranking):
     """Position (1 = top) of a region in a ranking, or None if it isn't there."""
     return ranking.index(region) + 1 if region in ranking else None
@@ -79,7 +107,9 @@ def random_best_ranks(n_places, n_targets, runs, rng):
 
 
 def summarize(ranks, n_regions, runs, rng, n_targets=None):
-    """Turn a list of ranks into recall@K, mean rank and the random baseline."""
+    """Turn a list of ranks into recall@K, mean rank and the random baseline.
+
+    n_regions: number of places ranked (one number, or one per pair)."""
     ranks = np.array(ranks, dtype=float)
     result = {"n_pairs": int(len(ranks))}
     if len(ranks) == 0:
@@ -90,7 +120,9 @@ def summarize(ranks, n_regions, runs, rng, n_targets=None):
 
     # Random baseline: give each pair's agreed site(s) random positions, many times.
     n_targets = n_targets or [1] * len(ranks)
-    random_ranks = np.column_stack([random_best_ranks(n_regions, m, runs, rng) for m in n_targets])
+    n_places = n_regions if np.ndim(n_regions) else [n_regions] * len(ranks)
+    random_ranks = np.column_stack([random_best_ranks(int(n), m, runs, rng)
+                                    for n, m in zip(n_places, n_targets)])
     for k in TOP_KS:
         result[f"random_recall_at_{k}"] = round(float(np.mean(random_ranks <= k)), 3)
     result["random_mean_rank"] = round(float(random_ranks.mean()), 2)
@@ -120,8 +152,10 @@ def pair_targets(pair, prepared):
 def pair_ranks(prepared_by_band, pairs, notes):
     """For every usable known pair, the best rank of its agreed Earth site.
 
-    Returns a list of (band, rank, number of target places). Pairs that can't be
-    checked are skipped and explained in `notes`.
+    Ranking uses the app's 200 km spacing (spaced_ranks), so the random baseline is
+    "one random place among the distinct places". Returns a list of
+    (band, rank, 1, number of distinct places). Pairs that can't be checked are skipped
+    and explained in `notes`.
     """
     results = []
     for _, pair in pairs.iterrows():
@@ -132,15 +166,16 @@ def pair_ranks(prepared_by_band, pairs, notes):
         prepared = prepared_by_band[band]
         targets = pair_targets(pair, prepared)
         if not targets:
-            where = pair.get("earth_region_id") or pair.get("earth_name") or "its Earth site"
+            region = pair.get("earth_region_id")
+            where = region if isinstance(region, str) and region else pair.get("earth_name", "its Earth site")
             notes.append(f"{pair['pair_id']}: {where} not in the Earth library "
                          f"(no cell within {SITE_RADIUS_KM} km), skipped")
             continue
         m = nearest_mars_row(prepared["mars"], pair["mars_lat"], pair["mars_lon"])
         distances, _ = match.cell_distances(prepared, m)
-        ranking = region_ranking(distances, prepared["site_ids"])
-        best = min(rank_of(t, ranking) for t in targets)
-        results.append((band, best, len(targets)))
+        ranks, n_places = spaced_ranks(distances, prepared["earth_lats"], prepared["earth_lons"])
+        is_target = np.isin(np.asarray(prepared["site_ids"]), list(targets))
+        results.append((band, int(ranks[is_target].min()), 1, n_places))
     return results
 
 
@@ -164,17 +199,16 @@ def evaluate(mars_tables, earth_tables, pairs, matcher="knn", runs=1000, seed=0,
 
     prepared_by_band = prepare_all(all_weights)
     found = pair_ranks(prepared_by_band, pairs, notes)
-    n_regions = max((len(set(p["site_ids"])) for p in prepared_by_band.values()),
-                    default=0)
+    n_regions = max((n for *_, n in found), default=0)    # distinct places (200 km apart)
 
-    overall = summarize([r for _, r, _ in found], n_regions, runs, rng, [m for _, _, m in found])
+    overall = summarize([r for _, r, _, _ in found], [n for *_, n in found], runs, rng,
+                        [m for _, _, m, _ in found])
     per_band = {}
     for band in BANDS:
-        band_found = [(r, m) for b, r, m in found if b == band]
+        band_found = [(r, m, n) for b, r, m, n in found if b == band]
         if band_found:
-            band_regions = len(set(prepared_by_band[band]["site_ids"]))
-            per_band[band] = summarize([r for r, _ in band_found], band_regions, runs, rng,
-                                       [m for _, m in band_found])
+            per_band[band] = summarize([r for r, _, _ in band_found], [n for *_, n in band_found],
+                                       runs, rng, [m for _, m, _ in band_found])
 
     # Ablation: switch off one feature at a time (weight 0) and re-check mean rank.
     # A big jump in mean rank = that feature really helps find the right site.
@@ -182,7 +216,7 @@ def evaluate(mars_tables, earth_tables, pairs, matcher="knn", runs=1000, seed=0,
     if ablation and found:
         for name in feature_file["features"]:
             weights_without = {band: {**w, name: 0.0} for band, w in all_weights.items()}
-            ranks = [r for _, r, _ in pair_ranks(prepare_all(weights_without), pairs, notes=[])]
+            ranks = [r for _, r, _, _ in pair_ranks(prepare_all(weights_without), pairs, notes=[])]
             ablation_result[name] = round(float(np.mean(ranks)) - overall["mean_rank"], 2)
 
     if n_regions and n_regions <= 20:

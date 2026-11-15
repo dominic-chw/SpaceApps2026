@@ -49,6 +49,29 @@ def real_frozen_fraction(rec, band):
     return sum(values) / len(values) if values else float("nan")
 
 
+def near_known_pair_site(layers, radius_km=100):
+    """True for cells within radius_km of an Earth site in pipeline/validation/known_pairs.csv.
+
+    Known analog sites (e.g. Tuktoyaktuk tundra) are kept even when not bare ground,
+    like the named regions, so validation can check them.
+    """
+    import numpy as np
+    pairs_csv = ROOT / "pipeline" / "validation" / "known_pairs.csv"
+    keep = np.zeros(len(layers), dtype=bool)
+    if not pairs_csv.exists():
+        return keep
+    pairs = pd.read_csv(pairs_csv)
+    if not {"earth_lat", "earth_lon"} <= set(pairs.columns):
+        return keep
+    lat = np.radians(layers["lat"].to_numpy(float))
+    lon = np.radians(layers["lon"].to_numpy(float))
+    for plat, plon in pairs[["earth_lat", "earth_lon"]].dropna().drop_duplicates().to_numpy(float):
+        a, b = np.radians(plat), np.radians(plon)
+        h = np.sin((lat - a) / 2) ** 2 + np.cos(lat) * np.cos(a) * np.sin((lon - b) / 2) ** 2
+        keep |= 2 * 6371.0 * np.arcsin(np.sqrt(h)) <= radius_km
+    return keep
+
+
 def add_real_frozen(layers):
     """Bring the ERA5-Land frozen-share extras (frozen_l1..4) from data/earth/layers.parquet.
 
@@ -102,7 +125,7 @@ def build_earth(params=None, out_dir=None, layers=None):
     # sheet, and WorldCover has no Antarctica); grid cells must pass the bare-ground filter
     named = layers["name"].fillna("").ne("")
     bare = layers["bare_fraction"] >= p["bare_ground_min_fraction"]
-    layers = layers[named | bare].reset_index(drop=True)
+    layers = layers[named | bare | near_known_pair_site(layers)].reset_index(drop=True)
     filled, cv = fill_gaps(layers, p)
     path = write_features(extract_earth(filled, p), "earth", out_dir)
     cv_path = path.parent / "gap_model_cv.json"

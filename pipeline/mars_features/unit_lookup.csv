@@ -44,3 +44,12 @@ Hp,icy,Hesperian polar
 Hpe,icy,Hesperian polar edifice
 Hpu,icy,Hesperian polar undivided (Dorsa Argentea; ice-rich)
 clay_sulfate_site,clay_sulfate,hand-tagged known clay/sulfate site (Meridiani; Mawrth; Gale; VM ILDs; Jezero)
+Noachian_highland,impact_mixed,synthetic test layers (common/synthetic.py)
+Hesperian_volcanic,volcanic,synthetic test layers
+Amazonian_volcanic,volcanic,synthetic test layers
+Noachian_clay,clay_sulfate,synthetic test layers
+Hesperian_sulfate,clay_sulfate,synthetic test layers
+Sedimentary_plains,sedimentary,synthetic test layers
+Polar_layered,icy,synthetic test layers
+Polar_cap,icy,synthetic test layers
+Impact_ejecta,impact_mixed,synthetic test layers

@@ -71,7 +71,11 @@ def extract_cell(rec, lookup=None, params=None):
         rows += [feature_row("mars", rec["cell_id"], rec["lat"], rec["lon"], band, f, v, q)
                  for f, v, q in vals]
     # leave out unknown values (None / NaN), e.g. no TES data or no geologic unit
-    return [r for r in rows if r and (r["value_num"] == r["value_num"] or r["value_cat"] not in (None, "None"))]
+    def known(r):
+        if r["value_cat"] is not None:
+            return r["value_cat"] not in ("None", "nan")
+        return r["value_num"] is not None and r["value_num"] == r["value_num"]
+    return [r for r in rows if r and known(r)]
 
 
 def extract_all(layers, params=None):
