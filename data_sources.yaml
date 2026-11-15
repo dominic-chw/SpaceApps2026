@@ -221,16 +221,17 @@ earth:
 
   - id: glim
     role: required
-    access: manual
-    status: manual
-    title: GLiM global lithological map (Hartmann and Moosdorf 2012)
-    url: "https://www.dropbox.com/s/9vuowtebp9f1iud/LiMW_GIS%202015.gdb.zip?dl=0"
-    landing: "https://www.geo.uni-hamburg.de/en/geologie/forschung/aquatische-geochemie/glim.html"
+    access: http
+    status: ready
+    title: GLiM global lithological map (Hartmann and Moosdorf 2012), LiMW GIS 2015 file geodatabase
     local_dir: data/earth/glim
+    files:
+      - {url: "https://www.dropbox.com/scl/fi/5v00i8op7a9brmn4qeg8b/LiMW_GIS-2015.gdb.zip?rlkey=89q1aj8zfpmiv82y41xe6ttmp&dl=1", name: LiMW_GIS-2015.gdb.zip, size_mb: 1139}
+    landing: "https://www.geo.uni-hamburg.de/en/geologie/forschung/aquatische-geochemie/glim.html"
     version: "LiMW GIS 2015"
     licence: "Free for research; cite Hartmann and Moosdorf 2012, G-cubed 13, Q12004"
     features: [rock]
-    notes: Download link taken from the University of Hamburg page. Classes map to rock via pipeline/earth_library/glim_lookup.csv.
+    notes: "Link from the University of Hamburg page. The old ?dl=0 link returns an HTML page; this dl=1 redirect target serves the ZIP. Classes map to rock via pipeline/earth_library/glim_lookup.csv."
 
   - id: nsidc_circumarctic_ground_ice
     role: required
