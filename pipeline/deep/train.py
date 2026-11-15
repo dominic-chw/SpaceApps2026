@@ -1,1 +1,2 @@
-"""train: TODO (see docs/plan.md)."""
+"""OPTIONAL: SimCLR contrastive + DANN planet-adversarial training (Colab). Plan s10.
+"""
