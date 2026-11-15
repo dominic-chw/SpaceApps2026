@@ -1,1 +1,285 @@
-{"type":"FeatureCollection","features":[]}
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "dry_valleys",
+    "name": "Dry Valleys (University Valley)"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     160.73,
+     -77.87
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "devon_haughton",
+    "name": "Devon Island / Haughton"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.68,
+     75.37
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "axel_heiberg",
+    "name": "Axel Heiberg"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -90.8,
+     79.4
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "svalbard",
+    "name": "Svalbard"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     15.6,
+     78.2
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "greenland_margin",
+    "name": "Greenland margin"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -50.0,
+     67.1
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "atacama_high",
+    "name": "High Atacama"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -68.0,
+     -24.0
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "atacama_coastal",
+    "name": "Coastal Atacama"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -70.4,
+     -24.1
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "iceland_highlands",
+    "name": "Iceland highlands"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -18.5,
+     64.7
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "hawaii",
+    "name": "Hawaii"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -155.5,
+     19.8
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "lanzarote",
+    "name": "Lanzarote"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -13.6,
+     29.0
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "hanksville",
+    "name": "Hanksville UT"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -110.7,
+     38.4
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "death_valley",
+    "name": "Death Valley"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -117.1,
+     36.5
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "mojave",
+    "name": "Mojave"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -116.0,
+     35.0
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "rio_tinto",
+    "name": "Rio Tinto"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -6.6,
+     37.7
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "lake_salda",
+    "name": "Lake Salda"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     29.68,
+     37.55
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "pilbara",
+    "name": "Pilbara"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     119.0,
+     -21.5
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "namib",
+    "name": "Namib"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     15.5,
+     -24.5
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "tibetan_plateau",
+    "name": "Tibetan Plateau"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     88.0,
+     33.0
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "lava_beds",
+    "name": "Lava Beds CA"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -121.5,
+     41.7
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "region_id": "craters_moon",
+    "name": "Craters of the Moon ID"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -113.5,
+     43.4
+    ]
+   }
+  }
+ ]
+}

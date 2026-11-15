@@ -1,0 +1,1566 @@
+{
+ "fake": true,
+ "matcher": "knn",
+ "sites": [
+  {
+   "site_id": "jezero",
+   "name": "Jezero crater",
+   "lat": 18.4,
+   "lon": 77.5,
+   "bands": {
+    "skin": {
+     "mars": {
+      "temp_mean": 198.8,
+      "frozen_fraction": 1.0,
+      "temp_swing": 9.9,
+      "ice": "yes",
+      "ground_class": "dry_regolith",
+      "hardness": 1,
+      "rock": "impact_mixed",
+      "slope_deg": 13.7,
+      "roughness_m": 2.6,
+      "dryness": 0.95
+     },
+     "data_quality": {
+      "temp_mean": "modelled",
+      "frozen_fraction": "measured",
+      "temp_swing": "measured",
+      "ice": "measured",
+      "ground_class": "measured",
+      "hardness": "measured",
+      "rock": "modelled",
+      "slope_deg": "predicted",
+      "roughness_m": "modelled",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "e_73.5_139.0",
+       "name": "New site 73.5N 139.0E",
+       "new_site": true,
+       "lat": 73.5,
+       "lon": 139.0,
+       "match_pct": 89.4,
+       "level": "excellent",
+       "best": [
+        "hardness",
+        "temp_swing",
+        "temp_mean"
+       ],
+       "worst": [
+        "frozen_fraction",
+        "roughness_m",
+        "ground_class"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "e_-73.0_-9.5",
+       "name": "New site 73.0S 9.5W",
+       "new_site": true,
+       "lat": -73.0,
+       "lon": -9.5,
+       "match_pct": 75.0,
+       "level": "good",
+       "best": [
+        "temp_swing",
+        "roughness_m",
+        "rock"
+       ],
+       "worst": [
+        "frozen_fraction",
+        "ice",
+        "dryness"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "greenland_margin",
+       "name": "Greenland margin",
+       "new_site": false,
+       "lat": 67.1,
+       "lon": -50.0,
+       "match_pct": 72.8,
+       "level": "good",
+       "best": [
+        "hardness",
+        "frozen_fraction",
+        "dryness"
+       ],
+       "worst": [
+        "temp_swing",
+        "temp_mean",
+        "roughness_m"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "namib",
+       "name": "Namib",
+       "new_site": false,
+       "lat": -24.5,
+       "lon": 15.5,
+       "match_pct": 37.3,
+       "level": "poor",
+       "best": [
+        "temp_mean",
+        "rock",
+        "roughness_m"
+       ],
+       "worst": [
+        "temp_swing",
+        "frozen_fraction",
+        "ice"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "death_valley",
+       "name": "Death Valley",
+       "new_site": false,
+       "lat": 36.5,
+       "lon": -117.1,
+       "match_pct": 31.4,
+       "level": "poor",
+       "best": [
+        "rock",
+        "frozen_fraction",
+        "dryness"
+       ],
+       "worst": [
+        "temp_mean",
+        "roughness_m",
+        "hardness"
+       ],
+       "confidence": "high"
+      }
+     ]
+    },
+    "upper_metre": {
+     "mars": {
+      "temp_mean": 196.8,
+      "frozen_fraction": 1.0,
+      "temp_swing": 22.2,
+      "ice": "no",
+      "ground_class": "ice_cemented",
+      "hardness": 2,
+      "rock": "volcanic",
+      "slope_deg": 4.5,
+      "roughness_m": 1.43,
+      "dryness": 0.04
+     },
+     "data_quality": {
+      "temp_mean": "measured",
+      "frozen_fraction": "modelled",
+      "temp_swing": "modelled",
+      "ice": "predicted",
+      "ground_class": "predicted",
+      "hardness": "modelled",
+      "rock": "modelled",
+      "slope_deg": "measured",
+      "roughness_m": "modelled",
+      "dryness": "predicted"
+     },
+     "twins": [
+      {
+       "region_id": "hawaii",
+       "name": "Hawaii",
+       "new_site": false,
+       "lat": 19.8,
+       "lon": -155.5,
+       "match_pct": 91.6,
+       "level": "excellent",
+       "best": [
+        "frozen_fraction",
+        "hardness",
+        "rock"
+       ],
+       "worst": [
+        "temp_swing",
+        "temp_mean",
+        "ice"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "e_-37.5_-46.5",
+       "name": "New site 37.5S 46.5W",
+       "new_site": true,
+       "lat": -37.5,
+       "lon": -46.5,
+       "match_pct": 91.3,
+       "level": "excellent",
+       "best": [
+        "ice",
+        "ground_class",
+        "temp_swing"
+       ],
+       "worst": [
+        "hardness",
+        "rock",
+        "slope_deg"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "iceland_highlands",
+       "name": "Iceland highlands",
+       "new_site": false,
+       "lat": 64.7,
+       "lon": -18.5,
+       "match_pct": 70.0,
+       "level": "fair",
+       "best": [
+        "ice",
+        "ground_class",
+        "temp_swing"
+       ],
+       "worst": [
+        "frozen_fraction",
+        "roughness_m",
+        "temp_mean"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "e_0.5_159.0",
+       "name": "New site 0.5N 159.0E",
+       "new_site": true,
+       "lat": 0.5,
+       "lon": 159.0,
+       "match_pct": 64.3,
+       "level": "fair",
+       "best": [
+        "slope_deg",
+        "temp_swing",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "temp_mean",
+        "ground_class",
+        "ice"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "rio_tinto",
+       "name": "Rio Tinto",
+       "new_site": false,
+       "lat": 37.7,
+       "lon": -6.6,
+       "match_pct": 42.3,
+       "level": "poor",
+       "best": [
+        "hardness",
+        "ice",
+        "temp_mean"
+       ],
+       "worst": [
+        "temp_swing",
+        "rock",
+        "ground_class"
+       ],
+       "confidence": "medium"
+      }
+     ]
+    },
+    "drill_zone": {
+     "mars": {
+      "temp_mean": 203.2,
+      "frozen_fraction": 1.0,
+      "temp_swing": 3.0,
+      "ice": "yes",
+      "ground_class": "ice_cemented",
+      "hardness": 1,
+      "rock": "icy",
+      "slope_deg": 7.6,
+      "roughness_m": 4.84,
+      "dryness": 0.21
+     },
+     "data_quality": {
+      "temp_mean": "predicted",
+      "frozen_fraction": "measured",
+      "temp_swing": "predicted",
+      "ice": "predicted",
+      "ground_class": "measured",
+      "hardness": "predicted",
+      "rock": "measured",
+      "slope_deg": "modelled",
+      "roughness_m": "measured",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "pilbara",
+       "name": "Pilbara",
+       "new_site": false,
+       "lat": -21.5,
+       "lon": 119.0,
+       "match_pct": 92.0,
+       "level": "excellent",
+       "best": [
+        "dryness",
+        "temp_swing",
+        "ice"
+       ],
+       "worst": [
+        "hardness",
+        "rock",
+        "roughness_m"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "e_6.5_-9.5",
+       "name": "New site 6.5N 9.5W",
+       "new_site": true,
+       "lat": 6.5,
+       "lon": -9.5,
+       "match_pct": 88.1,
+       "level": "excellent",
+       "best": [
+        "frozen_fraction",
+        "hardness",
+        "slope_deg"
+       ],
+       "worst": [
+        "roughness_m",
+        "ground_class",
+        "rock"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "e_-12.5_-24.0",
+       "name": "New site 12.5S 24.0W",
+       "new_site": true,
+       "lat": -12.5,
+       "lon": -24.0,
+       "match_pct": 75.3,
+       "level": "good",
+       "best": [
+        "temp_mean",
+        "ground_class",
+        "roughness_m"
+       ],
+       "worst": [
+        "hardness",
+        "ice",
+        "frozen_fraction"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "e_-12.0_-178.5",
+       "name": "New site 12.0S 178.5W",
+       "new_site": true,
+       "lat": -12.0,
+       "lon": -178.5,
+       "match_pct": 70.9,
+       "level": "good",
+       "best": [
+        "dryness",
+        "frozen_fraction",
+        "ice"
+       ],
+       "worst": [
+        "temp_swing",
+        "slope_deg",
+        "rock"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "e_-80.0_17.5",
+       "name": "New site 80.0S 17.5E",
+       "new_site": true,
+       "lat": -80.0,
+       "lon": 17.5,
+       "match_pct": 51.3,
+       "level": "fair",
+       "best": [
+        "frozen_fraction",
+        "temp_mean",
+        "hardness"
+       ],
+       "worst": [
+        "ice",
+        "roughness_m",
+        "temp_swing"
+       ],
+       "confidence": "medium"
+      }
+     ]
+    },
+    "deep": {
+     "mars": {
+      "temp_mean": 205.3,
+      "frozen_fraction": 1.0,
+      "temp_swing": 11.4,
+      "ice": "yes",
+      "ground_class": "bedrock",
+      "hardness": 1,
+      "rock": "volcanic",
+      "slope_deg": 11.5,
+      "roughness_m": 1.45,
+      "dryness": 0.09
+     },
+     "data_quality": {
+      "temp_mean": "measured",
+      "frozen_fraction": "modelled",
+      "temp_swing": "measured",
+      "ice": "modelled",
+      "ground_class": "measured",
+      "hardness": "measured",
+      "rock": "predicted",
+      "slope_deg": "measured",
+      "roughness_m": "predicted",
+      "dryness": "modelled"
+     },
+     "twins": [
+      {
+       "region_id": "e_4.5_-136.5",
+       "name": "New site 4.5N 136.5W",
+       "new_site": true,
+       "lat": 4.5,
+       "lon": -136.5,
+       "match_pct": 87.1,
+       "level": "excellent",
+       "best": [
+        "dryness",
+        "roughness_m",
+        "slope_deg"
+       ],
+       "worst": [
+        "temp_swing",
+        "rock",
+        "frozen_fraction"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "axel_heiberg",
+       "name": "Axel Heiberg",
+       "new_site": false,
+       "lat": 79.4,
+       "lon": -90.8,
+       "match_pct": 73.9,
+       "level": "good",
+       "best": [
+        "hardness",
+        "temp_swing",
+        "roughness_m"
+       ],
+       "worst": [
+        "dryness",
+        "slope_deg",
+        "ice"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "iceland_highlands",
+       "name": "Iceland highlands",
+       "new_site": false,
+       "lat": 64.7,
+       "lon": -18.5,
+       "match_pct": 73.2,
+       "level": "good",
+       "best": [
+        "slope_deg",
+        "dryness",
+        "roughness_m"
+       ],
+       "worst": [
+        "temp_mean",
+        "frozen_fraction",
+        "rock"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "tibetan_plateau",
+       "name": "Tibetan Plateau",
+       "new_site": false,
+       "lat": 33.0,
+       "lon": 88.0,
+       "match_pct": 42.2,
+       "level": "poor",
+       "best": [
+        "temp_mean",
+        "ice",
+        "hardness"
+       ],
+       "worst": [
+        "frozen_fraction",
+        "rock",
+        "slope_deg"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "e_70.5_-130.5",
+       "name": "New site 70.5N 130.5W",
+       "new_site": true,
+       "lat": 70.5,
+       "lon": -130.5,
+       "match_pct": 40.3,
+       "level": "poor",
+       "best": [
+        "slope_deg",
+        "ground_class",
+        "hardness"
+       ],
+       "worst": [
+        "temp_swing",
+        "roughness_m",
+        "frozen_fraction"
+       ],
+       "confidence": "medium"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "site_id": "gale",
+   "name": "Gale crater",
+   "lat": -5.4,
+   "lon": 137.8,
+   "bands": {
+    "skin": {
+     "mars": {
+      "temp_mean": 203.2,
+      "frozen_fraction": 1.0,
+      "temp_swing": 5.2,
+      "ice": "no",
+      "ground_class": "dry_regolith",
+      "hardness": 1,
+      "rock": "sedimentary",
+      "slope_deg": 2.3,
+      "roughness_m": 1.27,
+      "dryness": 0.95
+     },
+     "data_quality": {
+      "temp_mean": "predicted",
+      "frozen_fraction": "modelled",
+      "temp_swing": "predicted",
+      "ice": "measured",
+      "ground_class": "measured",
+      "hardness": "predicted",
+      "rock": "modelled",
+      "slope_deg": "predicted",
+      "roughness_m": "modelled",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "lanzarote",
+       "name": "Lanzarote",
+       "new_site": false,
+       "lat": 29.0,
+       "lon": -13.6,
+       "match_pct": 94.9,
+       "level": "excellent",
+       "best": [
+        "hardness",
+        "temp_swing",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "rock",
+        "dryness",
+        "roughness_m"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "death_valley",
+       "name": "Death Valley",
+       "new_site": false,
+       "lat": 36.5,
+       "lon": -117.1,
+       "match_pct": 69.0,
+       "level": "fair",
+       "best": [
+        "slope_deg",
+        "ground_class",
+        "roughness_m"
+       ],
+       "worst": [
+        "hardness",
+        "frozen_fraction",
+        "dryness"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "atacama_coastal",
+       "name": "Coastal Atacama",
+       "new_site": false,
+       "lat": -24.1,
+       "lon": -70.4,
+       "match_pct": 68.9,
+       "level": "fair",
+       "best": [
+        "rock",
+        "roughness_m",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "slope_deg",
+        "temp_swing",
+        "ground_class"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "atacama_coastal",
+       "name": "Coastal Atacama",
+       "new_site": false,
+       "lat": -24.1,
+       "lon": -70.4,
+       "match_pct": 42.5,
+       "level": "poor",
+       "best": [
+        "roughness_m",
+        "ice",
+        "ground_class"
+       ],
+       "worst": [
+        "slope_deg",
+        "frozen_fraction",
+        "hardness"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "e_-75.0_-57.5",
+       "name": "New site 75.0S 57.5W",
+       "new_site": true,
+       "lat": -75.0,
+       "lon": -57.5,
+       "match_pct": 39.1,
+       "level": "poor",
+       "best": [
+        "ice",
+        "hardness",
+        "rock"
+       ],
+       "worst": [
+        "temp_mean",
+        "frozen_fraction",
+        "temp_swing"
+       ],
+       "confidence": "high"
+      }
+     ]
+    },
+    "upper_metre": {
+     "mars": {
+      "temp_mean": 202.9,
+      "frozen_fraction": 1.0,
+      "temp_swing": 17.0,
+      "ice": "yes",
+      "ground_class": "ice_cemented",
+      "hardness": 2,
+      "rock": "icy",
+      "slope_deg": 6.7,
+      "roughness_m": 2.82,
+      "dryness": 0.57
+     },
+     "data_quality": {
+      "temp_mean": "modelled",
+      "frozen_fraction": "modelled",
+      "temp_swing": "predicted",
+      "ice": "predicted",
+      "ground_class": "predicted",
+      "hardness": "measured",
+      "rock": "predicted",
+      "slope_deg": "measured",
+      "roughness_m": "measured",
+      "dryness": "modelled"
+     },
+     "twins": [
+      {
+       "region_id": "tibetan_plateau",
+       "name": "Tibetan Plateau",
+       "new_site": false,
+       "lat": 33.0,
+       "lon": 88.0,
+       "match_pct": 90.0,
+       "level": "excellent",
+       "best": [
+        "temp_swing",
+        "hardness",
+        "dryness"
+       ],
+       "worst": [
+        "temp_mean",
+        "ground_class",
+        "frozen_fraction"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "e_66.0_61.5",
+       "name": "New site 66.0N 61.5E",
+       "new_site": true,
+       "lat": 66.0,
+       "lon": 61.5,
+       "match_pct": 55.0,
+       "level": "fair",
+       "best": [
+        "slope_deg",
+        "ice",
+        "temp_swing"
+       ],
+       "worst": [
+        "roughness_m",
+        "dryness",
+        "ground_class"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "e_53.0_-113.5",
+       "name": "New site 53.0N 113.5W",
+       "new_site": true,
+       "lat": 53.0,
+       "lon": -113.5,
+       "match_pct": 47.5,
+       "level": "poor",
+       "best": [
+        "roughness_m",
+        "frozen_fraction",
+        "temp_swing"
+       ],
+       "worst": [
+        "ice",
+        "ground_class",
+        "slope_deg"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "e_74.0_99.5",
+       "name": "New site 74.0N 99.5E",
+       "new_site": true,
+       "lat": 74.0,
+       "lon": 99.5,
+       "match_pct": 44.9,
+       "level": "poor",
+       "best": [
+        "rock",
+        "hardness",
+        "temp_mean"
+       ],
+       "worst": [
+        "dryness",
+        "ground_class",
+        "temp_swing"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "rio_tinto",
+       "name": "Rio Tinto",
+       "new_site": false,
+       "lat": 37.7,
+       "lon": -6.6,
+       "match_pct": 26.2,
+       "level": "no_match",
+       "best": [
+        "temp_swing",
+        "ice",
+        "hardness"
+       ],
+       "worst": [
+        "rock",
+        "slope_deg",
+        "ground_class"
+       ],
+       "confidence": "low"
+      }
+     ]
+    },
+    "drill_zone": {
+     "mars": {
+      "temp_mean": 204.4,
+      "frozen_fraction": 1.0,
+      "temp_swing": 36.1,
+      "ice": "no",
+      "ground_class": "ice_cemented",
+      "hardness": 0,
+      "rock": "impact_mixed",
+      "slope_deg": 11.7,
+      "roughness_m": 3.75,
+      "dryness": 0.42
+     },
+     "data_quality": {
+      "temp_mean": "measured",
+      "frozen_fraction": "modelled",
+      "temp_swing": "predicted",
+      "ice": "predicted",
+      "ground_class": "modelled",
+      "hardness": "predicted",
+      "rock": "modelled",
+      "slope_deg": "predicted",
+      "roughness_m": "measured",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "lava_beds",
+       "name": "Lava Beds CA",
+       "new_site": false,
+       "lat": 41.7,
+       "lon": -121.5,
+       "match_pct": 92.0,
+       "level": "excellent",
+       "best": [
+        "rock",
+        "slope_deg",
+        "dryness"
+       ],
+       "worst": [
+        "frozen_fraction",
+        "ice",
+        "temp_mean"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "lanzarote",
+       "name": "Lanzarote",
+       "new_site": false,
+       "lat": 29.0,
+       "lon": -13.6,
+       "match_pct": 40.0,
+       "level": "poor",
+       "best": [
+        "frozen_fraction",
+        "dryness",
+        "hardness"
+       ],
+       "worst": [
+        "ice",
+        "temp_swing",
+        "slope_deg"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "pilbara",
+       "name": "Pilbara",
+       "new_site": false,
+       "lat": -21.5,
+       "lon": 119.0,
+       "match_pct": 36.6,
+       "level": "poor",
+       "best": [
+        "roughness_m",
+        "ice",
+        "rock"
+       ],
+       "worst": [
+        "temp_swing",
+        "frozen_fraction",
+        "temp_mean"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "rio_tinto",
+       "name": "Rio Tinto",
+       "new_site": false,
+       "lat": 37.7,
+       "lon": -6.6,
+       "match_pct": 33.1,
+       "level": "poor",
+       "best": [
+        "frozen_fraction",
+        "rock",
+        "temp_mean"
+       ],
+       "worst": [
+        "temp_swing",
+        "roughness_m",
+        "ice"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "e_-70.5_-27.5",
+       "name": "New site 70.5S 27.5W",
+       "new_site": true,
+       "lat": -70.5,
+       "lon": -27.5,
+       "match_pct": 32.2,
+       "level": "poor",
+       "best": [
+        "ice",
+        "slope_deg",
+        "hardness"
+       ],
+       "worst": [
+        "dryness",
+        "roughness_m",
+        "temp_mean"
+       ],
+       "confidence": "high"
+      }
+     ]
+    },
+    "deep": {
+     "mars": {
+      "temp_mean": 203.5,
+      "frozen_fraction": 1.0,
+      "temp_swing": 3.6,
+      "ice": "yes",
+      "ground_class": "dry_regolith",
+      "hardness": 2,
+      "rock": "impact_mixed",
+      "slope_deg": 10.1,
+      "roughness_m": 1.66,
+      "dryness": 0.97
+     },
+     "data_quality": {
+      "temp_mean": "predicted",
+      "frozen_fraction": "predicted",
+      "temp_swing": "measured",
+      "ice": "modelled",
+      "ground_class": "predicted",
+      "hardness": "modelled",
+      "rock": "modelled",
+      "slope_deg": "modelled",
+      "roughness_m": "modelled",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "e_-9.0_-90.0",
+       "name": "New site 9.0S 90.0W",
+       "new_site": true,
+       "lat": -9.0,
+       "lon": -90.0,
+       "match_pct": 82.5,
+       "level": "good",
+       "best": [
+        "hardness",
+        "rock",
+        "slope_deg"
+       ],
+       "worst": [
+        "temp_swing",
+        "dryness",
+        "ground_class"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "e_-65.0_-32.0",
+       "name": "New site 65.0S 32.0W",
+       "new_site": true,
+       "lat": -65.0,
+       "lon": -32.0,
+       "match_pct": 64.9,
+       "level": "fair",
+       "best": [
+        "ice",
+        "roughness_m",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "rock",
+        "dryness",
+        "slope_deg"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "e_-17.0_-155.5",
+       "name": "New site 17.0S 155.5W",
+       "new_site": true,
+       "lat": -17.0,
+       "lon": -155.5,
+       "match_pct": 58.7,
+       "level": "fair",
+       "best": [
+        "rock",
+        "ground_class",
+        "frozen_fraction"
+       ],
+       "worst": [
+        "temp_mean",
+        "ice",
+        "dryness"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "e_43.0_66.0",
+       "name": "New site 43.0N 66.0E",
+       "new_site": true,
+       "lat": 43.0,
+       "lon": 66.0,
+       "match_pct": 45.4,
+       "level": "poor",
+       "best": [
+        "frozen_fraction",
+        "temp_mean",
+        "hardness"
+       ],
+       "worst": [
+        "roughness_m",
+        "slope_deg",
+        "temp_swing"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "dry_valleys",
+       "name": "Dry Valleys (University Valley)",
+       "new_site": false,
+       "lat": -77.87,
+       "lon": 160.73,
+       "match_pct": 41.4,
+       "level": "poor",
+       "best": [
+        "slope_deg",
+        "temp_mean",
+        "hardness"
+       ],
+       "worst": [
+        "temp_swing",
+        "dryness",
+        "ground_class"
+       ],
+       "confidence": "medium"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "site_id": "phoenix",
+   "name": "Phoenix landing site",
+   "lat": 68.2,
+   "lon": -125.7,
+   "bands": {
+    "skin": {
+     "mars": {
+      "temp_mean": 174.1,
+      "frozen_fraction": 1.0,
+      "temp_swing": 30.2,
+      "ice": "yes",
+      "ground_class": "ice_cemented",
+      "hardness": 3,
+      "rock": "sedimentary",
+      "slope_deg": 11.8,
+      "roughness_m": 1.47,
+      "dryness": 0.95
+     },
+     "data_quality": {
+      "temp_mean": "modelled",
+      "frozen_fraction": "modelled",
+      "temp_swing": "modelled",
+      "ice": "predicted",
+      "ground_class": "modelled",
+      "hardness": "measured",
+      "rock": "measured",
+      "slope_deg": "modelled",
+      "roughness_m": "modelled",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "namib",
+       "name": "Namib",
+       "new_site": false,
+       "lat": -24.5,
+       "lon": 15.5,
+       "match_pct": 79.8,
+       "level": "good",
+       "best": [
+        "ground_class",
+        "ice",
+        "slope_deg"
+       ],
+       "worst": [
+        "roughness_m",
+        "temp_mean",
+        "rock"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "e_-69.5_46.5",
+       "name": "New site 69.5S 46.5E",
+       "new_site": true,
+       "lat": -69.5,
+       "lon": 46.5,
+       "match_pct": 67.4,
+       "level": "fair",
+       "best": [
+        "ground_class",
+        "frozen_fraction",
+        "hardness"
+       ],
+       "worst": [
+        "slope_deg",
+        "temp_mean",
+        "roughness_m"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "e_4.5_41.0",
+       "name": "New site 4.5N 41.0E",
+       "new_site": true,
+       "lat": 4.5,
+       "lon": 41.0,
+       "match_pct": 66.8,
+       "level": "fair",
+       "best": [
+        "slope_deg",
+        "frozen_fraction",
+        "hardness"
+       ],
+       "worst": [
+        "dryness",
+        "temp_swing",
+        "ice"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "e_13.0_-120.5",
+       "name": "New site 13.0N 120.5W",
+       "new_site": true,
+       "lat": 13.0,
+       "lon": -120.5,
+       "match_pct": 60.0,
+       "level": "fair",
+       "best": [
+        "temp_swing",
+        "ice",
+        "slope_deg"
+       ],
+       "worst": [
+        "rock",
+        "frozen_fraction",
+        "dryness"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "e_-57.0_15.5",
+       "name": "New site 57.0S 15.5E",
+       "new_site": true,
+       "lat": -57.0,
+       "lon": 15.5,
+       "match_pct": 36.0,
+       "level": "poor",
+       "best": [
+        "temp_mean",
+        "ice",
+        "dryness"
+       ],
+       "worst": [
+        "frozen_fraction",
+        "temp_swing",
+        "roughness_m"
+       ],
+       "confidence": "low"
+      }
+     ]
+    },
+    "upper_metre": {
+     "mars": {
+      "temp_mean": 179.4,
+      "frozen_fraction": 1.0,
+      "temp_swing": 17.9,
+      "ice": "yes",
+      "ground_class": "ice_cemented",
+      "hardness": 1,
+      "rock": "clay_sulfate",
+      "slope_deg": 1.3,
+      "roughness_m": 2.96,
+      "dryness": 0.83
+     },
+     "data_quality": {
+      "temp_mean": "predicted",
+      "frozen_fraction": "predicted",
+      "temp_swing": "measured",
+      "ice": "measured",
+      "ground_class": "predicted",
+      "hardness": "predicted",
+      "rock": "predicted",
+      "slope_deg": "predicted",
+      "roughness_m": "predicted",
+      "dryness": "measured"
+     },
+     "twins": [
+      {
+       "region_id": "e_44.0_-103.5",
+       "name": "New site 44.0N 103.5W",
+       "new_site": true,
+       "lat": 44.0,
+       "lon": -103.5,
+       "match_pct": 93.0,
+       "level": "excellent",
+       "best": [
+        "slope_deg",
+        "temp_swing",
+        "ice"
+       ],
+       "worst": [
+        "rock",
+        "hardness",
+        "dryness"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "svalbard",
+       "name": "Svalbard",
+       "new_site": false,
+       "lat": 78.2,
+       "lon": 15.6,
+       "match_pct": 72.2,
+       "level": "good",
+       "best": [
+        "hardness",
+        "rock",
+        "roughness_m"
+       ],
+       "worst": [
+        "temp_mean",
+        "ice",
+        "temp_swing"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "namib",
+       "name": "Namib",
+       "new_site": false,
+       "lat": -24.5,
+       "lon": 15.5,
+       "match_pct": 63.8,
+       "level": "fair",
+       "best": [
+        "frozen_fraction",
+        "ground_class",
+        "hardness"
+       ],
+       "worst": [
+        "temp_mean",
+        "rock",
+        "ice"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "mojave",
+       "name": "Mojave",
+       "new_site": false,
+       "lat": 35.0,
+       "lon": -116.0,
+       "match_pct": 62.3,
+       "level": "fair",
+       "best": [
+        "temp_mean",
+        "ground_class",
+        "rock"
+       ],
+       "worst": [
+        "ice",
+        "temp_swing",
+        "slope_deg"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "atacama_coastal",
+       "name": "Coastal Atacama",
+       "new_site": false,
+       "lat": -24.1,
+       "lon": -70.4,
+       "match_pct": 43.9,
+       "level": "poor",
+       "best": [
+        "ground_class",
+        "slope_deg",
+        "temp_mean"
+       ],
+       "worst": [
+        "ice",
+        "dryness",
+        "temp_swing"
+       ],
+       "confidence": "high"
+      }
+     ]
+    },
+    "drill_zone": {
+     "mars": {
+      "temp_mean": 172.2,
+      "frozen_fraction": 1.0,
+      "temp_swing": 5.5,
+      "ice": "no",
+      "ground_class": "massive_ice",
+      "hardness": 3,
+      "rock": "icy",
+      "slope_deg": 10.9,
+      "roughness_m": 4.78,
+      "dryness": 0.12
+     },
+     "data_quality": {
+      "temp_mean": "modelled",
+      "frozen_fraction": "measured",
+      "temp_swing": "measured",
+      "ice": "modelled",
+      "ground_class": "measured",
+      "hardness": "measured",
+      "rock": "measured",
+      "slope_deg": "predicted",
+      "roughness_m": "modelled",
+      "dryness": "modelled"
+     },
+     "twins": [
+      {
+       "region_id": "greenland_margin",
+       "name": "Greenland margin",
+       "new_site": false,
+       "lat": 67.1,
+       "lon": -50.0,
+       "match_pct": 94.5,
+       "level": "excellent",
+       "best": [
+        "slope_deg",
+        "ground_class",
+        "dryness"
+       ],
+       "worst": [
+        "frozen_fraction",
+        "temp_swing",
+        "hardness"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "hawaii",
+       "name": "Hawaii",
+       "new_site": false,
+       "lat": 19.8,
+       "lon": -155.5,
+       "match_pct": 89.6,
+       "level": "excellent",
+       "best": [
+        "roughness_m",
+        "ice",
+        "dryness"
+       ],
+       "worst": [
+        "hardness",
+        "rock",
+        "temp_swing"
+       ],
+       "confidence": "high"
+      },
+      {
+       "region_id": "axel_heiberg",
+       "name": "Axel Heiberg",
+       "new_site": false,
+       "lat": 79.4,
+       "lon": -90.8,
+       "match_pct": 59.5,
+       "level": "fair",
+       "best": [
+        "slope_deg",
+        "roughness_m",
+        "rock"
+       ],
+       "worst": [
+        "dryness",
+        "temp_swing",
+        "ice"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "e_33.0_35.5",
+       "name": "New site 33.0N 35.5E",
+       "new_site": true,
+       "lat": 33.0,
+       "lon": 35.5,
+       "match_pct": 59.0,
+       "level": "fair",
+       "best": [
+        "temp_mean",
+        "ground_class",
+        "hardness"
+       ],
+       "worst": [
+        "rock",
+        "dryness",
+        "roughness_m"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "e_41.0_30.5",
+       "name": "New site 41.0N 30.5E",
+       "new_site": true,
+       "lat": 41.0,
+       "lon": 30.5,
+       "match_pct": 46.1,
+       "level": "poor",
+       "best": [
+        "hardness",
+        "temp_mean",
+        "dryness"
+       ],
+       "worst": [
+        "rock",
+        "temp_swing",
+        "frozen_fraction"
+       ],
+       "confidence": "medium"
+      }
+     ]
+    },
+    "deep": {
+     "mars": {
+      "temp_mean": 178.4,
+      "frozen_fraction": 1.0,
+      "temp_swing": 15.1,
+      "ice": "no",
+      "ground_class": "dry_regolith",
+      "hardness": 3,
+      "rock": "sedimentary",
+      "slope_deg": 11.6,
+      "roughness_m": 1.57,
+      "dryness": 0.9
+     },
+     "data_quality": {
+      "temp_mean": "predicted",
+      "frozen_fraction": "measured",
+      "temp_swing": "predicted",
+      "ice": "measured",
+      "ground_class": "measured",
+      "hardness": "modelled",
+      "rock": "predicted",
+      "slope_deg": "predicted",
+      "roughness_m": "measured",
+      "dryness": "predicted"
+     },
+     "twins": [
+      {
+       "region_id": "e_-45.5_-102.0",
+       "name": "New site 45.5S 102.0W",
+       "new_site": true,
+       "lat": -45.5,
+       "lon": -102.0,
+       "match_pct": 85.7,
+       "level": "excellent",
+       "best": [
+        "ice",
+        "temp_swing",
+        "ground_class"
+       ],
+       "worst": [
+        "roughness_m",
+        "hardness",
+        "dryness"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "dry_valleys",
+       "name": "Dry Valleys (University Valley)",
+       "new_site": false,
+       "lat": -77.87,
+       "lon": 160.73,
+       "match_pct": 84.4,
+       "level": "good",
+       "best": [
+        "dryness",
+        "ice",
+        "roughness_m"
+       ],
+       "worst": [
+        "frozen_fraction",
+        "temp_mean",
+        "slope_deg"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "lake_salda",
+       "name": "Lake Salda",
+       "new_site": false,
+       "lat": 37.55,
+       "lon": 29.68,
+       "match_pct": 65.3,
+       "level": "fair",
+       "best": [
+        "ice",
+        "dryness",
+        "rock"
+       ],
+       "worst": [
+        "temp_mean",
+        "hardness",
+        "ground_class"
+       ],
+       "confidence": "low"
+      },
+      {
+       "region_id": "e_65.5_-146.5",
+       "name": "New site 65.5N 146.5W",
+       "new_site": true,
+       "lat": 65.5,
+       "lon": -146.5,
+       "match_pct": 29.5,
+       "level": "no_match",
+       "best": [
+        "frozen_fraction",
+        "temp_mean",
+        "temp_swing"
+       ],
+       "worst": [
+        "slope_deg",
+        "ground_class",
+        "hardness"
+       ],
+       "confidence": "medium"
+      },
+      {
+       "region_id": "hawaii",
+       "name": "Hawaii",
+       "new_site": false,
+       "lat": 19.8,
+       "lon": -155.5,
+       "match_pct": 28.9,
+       "level": "no_match",
+       "best": [
+        "slope_deg",
+        "hardness",
+        "roughness_m"
+       ],
+       "worst": [
+        "temp_mean",
+        "frozen_fraction",
+        "rock"
+       ],
+       "confidence": "low"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}
