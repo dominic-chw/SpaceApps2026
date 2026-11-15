@@ -217,8 +217,9 @@ def test_match_band_end_to_end():
     # An icy, ice-cemented Mars plain should pick an icy Earth site first.
     assert icy["twins"][0]["region_id"] in {"dry_valleys", "devon"}
     for twin in icy["twins"]:
-        assert set(twin) == {"region_id", "name", "lat", "lon", "match_pct", "level",
-                             "best", "worst", "confidence"}
+        assert set(twin) == {"region_id", "name", "new_site", "lat", "lon", "match_pct",
+                             "level", "best", "worst", "confidence"}
+        assert twin["new_site"] is False    # all fake Earth rows are known regions
         assert 0 <= twin["match_pct"] <= 100
         assert twin["confidence"] in {"high", "medium", "low"}
         assert len(twin["best"]) <= 3 and len(twin["worst"]) <= 3
@@ -235,3 +236,36 @@ def test_match_band_end_to_end():
     assert all(t["level"] != "insufficient_data" for t in icy["twins"])
     assert unknown["mars"]["temp_mean"] is None      # NaN became JSON-safe None
     assert not math.isnan(info["curve_steepness"])
+
+
+# ---------------------------------------------------------------------------
+# Global Earth grid: unnamed cells are "new sites"
+# ---------------------------------------------------------------------------
+
+def test_unnamed_cells_become_labelled_new_sites():
+    earth = pd.DataFrame({
+        "region_id": ["devon", None, None],
+        "name": ["Devon Island", None, None],
+        "cell_id": [None, "e_1", None],
+        "lat": [75.4, 74.5, -23.5],
+        "lon": [-89.8, -89.8, -69.0],
+    })
+    ids, names, new = match.site_labels(earth)
+    assert ids.tolist() == ["devon", "e_1", "earth_-23.50_-69.00"]
+    assert new.tolist() == [False, True, True]
+    assert names[1].startswith("New site, ") and "Devon Island" in names[1]  # ~100 km away
+    assert names[2] == "New site (23.5°S, 69.0°W)"                          # far from known
+
+
+def test_new_sites_show_up_as_twins():
+    earth = fake_earth()
+    # Add an unnamed cell that is a near-copy of Devon Island, 3,000+ km away from it.
+    extra = earth.iloc[[1]].copy()
+    extra[["region_id", "name"]] = None
+    extra["lat"], extra["lon"] = 62.0, 100.0
+    earth = pd.concat([earth, extra], ignore_index=True)
+    cells, _ = match.match_band(fake_mars(), earth, "upper_metre", how_many=3)
+    icy_twins = cells[0]["twins"]
+    assert any(t["new_site"] for t in icy_twins)
+    new = next(t for t in icy_twins if t["new_site"])
+    assert new["name"].startswith("New site")

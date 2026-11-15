@@ -133,6 +133,61 @@ def level_for(pct, levels=DEFAULT_LEVELS):
     return "no_match"
 
 
+def format_lat_lon(lat, lon):
+    """23.5, -69.0 -> '23.5°N, 69.0°W' (for names of unnamed sites)."""
+    return f"{abs(lat):.1f}°{'N' if lat >= 0 else 'S'}, {abs(lon):.1f}°{'E' if lon >= 0 else 'W'}"
+
+
+# An unnamed site this close to a known analog region is labelled "N km from <region>".
+NEAR_KNOWN_KM = 500
+
+
+def site_labels(earth):
+    """Give every Earth row an id, a display name, and a "new site" flag.
+
+    The Earth library is a global grid. Cells inside a known analog region
+    (e.g. Devon Island) have a region_id and name: those are KNOWN sites.
+    Every other cell has no region_id: it is a NEW, possibly untested site.
+
+    Returns three arrays, one entry per Earth row:
+      ids:   region_id for known sites; cell_id (or one made from lat/lon) for new ones
+      names: region name, or e.g. "New site, 120 km from Devon Island" / "New site (23.5°S, 69.0°W)"
+      new:   True for new sites
+    """
+    n = len(earth)
+    empty = pd.Series([None] * n, index=earth.index)
+    regions = earth["region_id"] if "region_id" in earth else empty
+    names = earth["name"] if "name" in earth else empty
+    cell_ids = earth["cell_id"] if "cell_id" in earth else empty
+    lats = earth["lat"].to_numpy(dtype=float)
+    lons = earth["lon"].to_numpy(dtype=float)
+
+    known = (regions.notna() & (regions.astype(str).str.strip() != "")).to_numpy()
+    known_rows = np.where(known)[0]
+
+    ids, labels = [], []
+    for i in range(n):
+        if known[i]:
+            ids.append(str(regions.iloc[i]).strip())
+            labels.append(str(names.iloc[i]) if pd.notna(names.iloc[i]) else ids[-1])
+            continue
+        # New site: use its cell_id if it has one, otherwise build one from lat/lon.
+        cell = cell_ids.iloc[i]
+        ids.append(str(cell) if pd.notna(cell) else f"earth_{lats[i]:+.2f}_{lons[i]:+.2f}")
+        label = f"New site ({format_lat_lon(lats[i], lons[i])})"
+        if known_rows.size:
+            gaps = distance_km(lats[i], lons[i], lats[known_rows], lons[known_rows])
+            nearest = int(np.argmin(gaps))
+            if gaps[nearest] <= NEAR_KNOWN_KM:
+                nearest_row = known_rows[nearest]
+                nearest_name = names.iloc[nearest_row]
+                if pd.isna(nearest_name):
+                    nearest_name = regions.iloc[nearest_row]
+                label = f"New site, {round(gaps[nearest])} km from {nearest_name}"
+        labels.append(label)
+    return np.array(ids), np.array(labels, dtype=object), ~known
+
+
 def plain_value(value):
     """Make a value safe for JSON (NaN -> None, numpy numbers -> normal numbers)."""
     if value is None or (isinstance(value, float) and math.isnan(value)):
@@ -162,6 +217,7 @@ def prepare_band(mars, earth, band, feature_file=None, all_weights=None):
     earth = earth.reset_index(drop=True)
     mars_grid, earth_grid, settings = normalize.normalize_pair(mars, earth, features)
     scales, is_category = normalize.difference_scales(features)
+    site_ids, site_names, new_site = site_labels(earth)
     return {
         "band": band,
         "mars": mars,
@@ -179,6 +235,9 @@ def prepare_band(mars, earth, band, feature_file=None, all_weights=None):
         "earth_quality": explain.quality_grid(earth, features, confidence_settings),
         "earth_lats": earth["lat"].to_numpy(dtype=float),
         "earth_lons": earth["lon"].to_numpy(dtype=float),
+        "site_ids": site_ids,          # region_id (known) or cell id (new), per Earth row
+        "site_names": site_names,      # what the app shows
+        "new_site": new_site,          # True = not one of the known analog regions
     }
 
 
@@ -244,8 +303,9 @@ def match_band(mars, earth, band, how_many=3, spacing_km=200, levels=None,
             )
             earth_row = earth.iloc[e]
             twin_list.append({
-                "region_id": plain_value(earth_row["region_id"]),
-                "name": plain_value(earth_row["name"]),
+                "region_id": prepared["site_ids"][e],
+                "name": prepared["site_names"][e],
+                "new_site": bool(prepared["new_site"][e]),
                 "lat": plain_value(earth_row["lat"]),
                 "lon": plain_value(earth_row["lon"]),
                 "match_pct": pct,

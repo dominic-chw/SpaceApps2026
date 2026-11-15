@@ -14,7 +14,10 @@ Plain maths, no AI model: normalize -> weighted Gower distance -> nearest Earth 
 One CSV per planet per band, e.g. `mars_upper_metre.csv`, `earth_upper_metre.csv`.
 
 - **Mars columns:** `cell_id, lat, lon`, then the feature columns.
-- **Earth columns:** `region_id, name, lat, lon`, then the feature columns.
+- **Earth columns:** `cell_id, lat, lon, region_id, name`, then the feature columns.
+  Earth is a global grid (bare ground). `region_id` + `name` are filled only for cells inside
+  a known analog region (`regions.geojson`); leave them empty for every other cell.
+  Those become "new sites" in the app, labelled e.g. "New site, 120 km from Devon Island".
 - **Feature columns:** the `column` names in `features.yaml` (right now `temp_mean, frozen_fraction, temp_swing, ice, ground_class, hardness, rock, slope_deg, roughness_m, dryness`).
 - **Quality (optional, recommended):** `<column>_quality` = `measured`, `modelled` or `predicted`.
 - Leave a cell **empty** when the value is unknown. It is skipped and confidence goes down.

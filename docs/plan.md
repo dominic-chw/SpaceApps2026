@@ -34,7 +34,7 @@ Shared (PR only): `CLAUDE.md`, `README.md`, `config.yaml`, `docs/plan.md`.
 - `weights/default.json`: `{band: {feature: weight}}`, default 1
 
 **Outputs**
-- `output/grid/<band>.json`: `{band, grid_deg, matcher, fake, cells:[{cell_id, lat, lon, mars:{features}, twins:[{region_id, name, lat, lon, match_pct, level, best[3], worst[3], confidence}]}]}`, top 3 twins
+- `output/grid/<band>.json`: `{band, grid_deg, matcher, fake, cells:[{cell_id, lat, lon, mars:{features}, twins:[{region_id, name, new_site, lat, lon, match_pct, level, best[3], worst[3], confidence}]}]}`, top 3 twins. `new_site: true` = an Earth cell outside the known analog regions (`region_id` is then its cell id, `name` e.g. "New site, 120 km from Devon Island")
 - `output/showcase.json`: same per showcase site, all bands, top 5, full conditions, `data_quality` (measured/modelled/predicted) per value
 - `output/validation.json`: `{matcher, recall_at_10, recall_at_20, random_recall_at_20, per_band, n_pairs, notes}`
 - `output/earth_library.json`: normalized Earth features + normalization settings, for slider re-scoring with the same Gower formula (reference implementation provided)
@@ -102,7 +102,7 @@ Protected `main`, PRs only. Branch `owner/task`. Pull before work; PR after each
 4. Heat model (check vs MCD subsurface, Phoenix).
 5. Mars features per band.
 6. Mars 2° grid (±70°).
-7. Earth library (regions, WorldCover filter, EE export, local layers).
+7. Earth library: GLOBAL grid at `earth_grid_deg` (0.5°, fallback 1°), bare/sparse ground only (WorldCover), lat ±85. Cells inside `regions.geojson` get that region's `region_id` + `name` (known analogs); all other cells are candidate new sites. EE export, local layers.
 8. Earth gap-filling model.
 9. Normalization.
 10. kNN matching, explanations, `run_all.py`, real outputs.
@@ -110,7 +110,7 @@ Protected `main`, PRs only. Branch `owner/task`. Pull before work; PR after each
 12. Optional: deep/hybrid matcher.
 13. Freeze ~5 h before deadline.
 
-**Earth regions:** Dry Valleys (University Valley), Devon Island/Haughton, Axel Heiberg, Svalbard, Greenland margin, high + coastal Atacama, Iceland highlands, Hawaii, Lanzarote, Hanksville UT, Death Valley, Mojave, Rio Tinto, Lake Salda, Pilbara, Namib, Tibetan Plateau, Lava Beds CA, Craters of the Moon ID.
+**Known Earth analog regions** (tags on the global grid, used for validation, names and drill campaigns; matching searches the whole grid): Dry Valleys (University Valley), Devon Island/Haughton, Axel Heiberg, Svalbard, Greenland margin, high + coastal Atacama, Iceland highlands, Hawaii, Lanzarote, Hanksville UT, Death Valley, Mojave, Rio Tinto, Lake Salda, Pilbara, Namib, Tibetan Plateau, Lava Beds CA, Craters of the Moon ID.
 
 ## 10. Methods
 **Heat model (required).** Surface daily/yearly swings decay exponentially with depth; skin depth from thermal diffusivity (via thermal inertia) and cycle length. Mars daily swing fades in cm, yearly (~687 days) reaches ~1 m+; deeper ≈ yearly mean. Gives `temp_mean`/`temp_swing` per band. Assumes uniform ground.

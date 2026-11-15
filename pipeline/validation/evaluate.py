@@ -96,7 +96,7 @@ def pair_ranks(prepared_by_band, pairs, notes):
             notes.append(f"{pair['pair_id']}: no tables for band '{band}', skipped")
             continue
         prepared = prepared_by_band[band]
-        region_ids = prepared["earth"]["region_id"].astype(str).to_numpy()
+        region_ids = prepared["site_ids"]   # known region ids + one id per new-site cell
         if str(pair["earth_region_id"]) not in set(region_ids):
             notes.append(f"{pair['pair_id']}: Earth region '{pair['earth_region_id']}' "
                          f"not in the Earth library, skipped")
@@ -128,7 +128,7 @@ def evaluate(mars_tables, earth_tables, pairs, matcher="knn", runs=1000, seed=0,
 
     prepared_by_band = prepare_all(all_weights)
     found = pair_ranks(prepared_by_band, pairs, notes)
-    n_regions = max((p["earth"]["region_id"].nunique() for p in prepared_by_band.values()),
+    n_regions = max((len(set(p["site_ids"])) for p in prepared_by_band.values()),
                     default=0)
 
     overall = summarize([rank for _, rank in found], n_regions, runs, rng)
@@ -136,7 +136,7 @@ def evaluate(mars_tables, earth_tables, pairs, matcher="knn", runs=1000, seed=0,
     for band in BANDS:
         band_ranks = [rank for b, rank in found if b == band]
         if band_ranks:
-            band_regions = prepared_by_band[band]["earth"]["region_id"].nunique()
+            band_regions = len(set(prepared_by_band[band]["site_ids"]))
             per_band[band] = summarize(band_ranks, band_regions, runs, rng)
 
     # Ablation: switch off one feature at a time (weight 0) and re-check mean rank.
@@ -150,7 +150,7 @@ def evaluate(mars_tables, earth_tables, pairs, matcher="knn", runs=1000, seed=0,
             ablation_result[name] = round(float(np.mean(ranks)) - overall["mean_rank"], 2)
 
     if n_regions and n_regions <= 20:
-        notes.append(f"Only {n_regions} Earth regions: recall@10/20 are easy to reach, "
+        notes.append(f"Only {n_regions} Earth places: recall@10/20 are easy to reach, "
                      f"so recall_at_1/3 and mean_rank are the more telling numbers.")
 
     return {

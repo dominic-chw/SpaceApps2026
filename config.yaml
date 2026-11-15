@@ -1,5 +1,6 @@
 matcher: knn          # knn | deep | hybrid
-grid_deg: 2
+grid_deg: 2            # Mars grid
+earth_grid_deg: 0.5    # Earth global grid (bare ground only); 1 if exports are too slow
 lat_limit: 70
 bands: [skin, upper_metre, drill_zone, deep]
 top_twins_grid: 3
