@@ -13,7 +13,8 @@ Column sources
   aridity                               Global Aridity Index (EE)
   glim_class                            GLiM `xx` at the point
   perm_prob                             CCI permafrost fraction (0..1), else NSIDC extent class
-  ice_label, ground_label               CCI + NSIDC where they cover the point; warm ground (> 278 K) = no ice;
+  ice_label, ground_label               CCI + NSIDC where they cover the point; warm ground (> 278 K) = no ice,
+                                        cold ground (< 271 K) = ice;
                                         NaN elsewhere (filled by earth_ml gap model, marked predicted)
   bedrock_depth_m                       NaN (optional dataset not downloaded)
 Run: python -m pipeline.earth_library.build_layers
@@ -30,6 +31,7 @@ EARTH = ROOT / "data" / "earth"
 EE_DIR = EARTH / "ee"
 NSIDC_PROB = {"C": 0.95, "D": 0.7, "S": 0.3, "I": 0.05}
 WARM_K = 278.0
+COLD_K = 271.15  # mean ground temp below -2 C: permafrost (Antarctica/Greenland lie outside CCI/NSIDC cover)
 
 
 def load_ee():
@@ -106,6 +108,7 @@ def labels(df, pfr, ns):
     nsidc_known = np.isnan(ice) & (ext.isin(["C", "D", "I"]) | covered_land).to_numpy()
     ice[nsidc_known] = ext[nsidc_known].isin(["C", "D"]).astype(float)
     ice[np.isnan(ice) & (df["mean_temp_k"].to_numpy() > WARM_K)] = 0.0
+    ice[np.isnan(ice) & (df["mean_temp_k"].to_numpy() < COLD_K)] = 1.0
 
     ground = np.where(ice == 1, "ice_cemented", np.where(ice == 0, "dry_regolith", None)).astype(object)
     massive = (ns["CONTENT"].eq("h") & ext.eq("C")).to_numpy() & (ice == 1)
