@@ -8,16 +8,16 @@
    "lon": 160.73,
    "lat": -77.87,
    "features": {
-    "temp_mean": 173.1,
+    "temp_mean": 168.8,
     "frozen_fraction": 1.0,
-    "temp_swing": 11.0,
+    "temp_swing": 39.0,
     "ice": "no",
-    "ground_class": "dry_regolith",
-    "hardness": 3,
-    "rock": "impact_mixed",
-    "slope_deg": 10.3,
-    "roughness_m": 0.12,
-    "dryness": 0.11
+    "ground_class": "bedrock",
+    "hardness": 2,
+    "rock": "clay_sulfate",
+    "slope_deg": 0.1,
+    "roughness_m": 0.79,
+    "dryness": 0.46
    }
   },
   {
@@ -28,14 +28,14 @@
    "features": {
     "temp_mean": 177.0,
     "frozen_fraction": 1.0,
-    "temp_swing": 16.4,
-    "ice": "yes",
-    "ground_class": "bedrock",
-    "hardness": 0,
-    "rock": "icy",
-    "slope_deg": 8.7,
-    "roughness_m": 4.35,
-    "dryness": 0.35
+    "temp_swing": 5.2,
+    "ice": "no",
+    "ground_class": "massive_ice",
+    "hardness": 1,
+    "rock": "sedimentary",
+    "slope_deg": 0.9,
+    "roughness_m": 3.71,
+    "dryness": 0.15
    }
   },
   {
@@ -44,16 +44,16 @@
    "lon": -90.8,
    "lat": 79.4,
    "features": {
-    "temp_mean": 171.9,
+    "temp_mean": 173.6,
     "frozen_fraction": 1.0,
-    "temp_swing": 8.0,
+    "temp_swing": 5.7,
     "ice": "no",
-    "ground_class": "ice_cemented",
+    "ground_class": "dry_regolith",
     "hardness": 3,
-    "rock": "icy",
-    "slope_deg": 3.5,
-    "roughness_m": 0.38,
-    "dryness": 0.15
+    "rock": "impact_mixed",
+    "slope_deg": 6.4,
+    "roughness_m": 4.39,
+    "dryness": 0.26
    }
   },
   {
@@ -62,16 +62,16 @@
    "lon": 15.6,
    "lat": 78.2,
    "features": {
-    "temp_mean": 175.6,
+    "temp_mean": 166.8,
     "frozen_fraction": 1.0,
-    "temp_swing": 22.8,
+    "temp_swing": 30.8,
     "ice": "no",
-    "ground_class": "ice_cemented",
+    "ground_class": "massive_ice",
     "hardness": 0,
-    "rock": "volcanic",
-    "slope_deg": 2.7,
-    "roughness_m": 4.52,
-    "dryness": 0.21
+    "rock": "clay_sulfate",
+    "slope_deg": 7.4,
+    "roughness_m": 1.48,
+    "dryness": 0.46
    }
   },
   {
@@ -80,16 +80,16 @@
    "lon": -50.0,
    "lat": 67.1,
    "features": {
-    "temp_mean": 175.2,
+    "temp_mean": 173.0,
     "frozen_fraction": 1.0,
-    "temp_swing": 9.3,
+    "temp_swing": 36.3,
     "ice": "no",
     "ground_class": "ice_cemented",
-    "hardness": 0,
+    "hardness": 3,
     "rock": "impact_mixed",
-    "slope_deg": 7.5,
-    "roughness_m": 1.33,
-    "dryness": 0.19
+    "slope_deg": 5.8,
+    "roughness_m": 0.92,
+    "dryness": 0.1
    }
   },
   {
@@ -98,16 +98,16 @@
    "lon": -68.0,
    "lat": -24.0,
    "features": {
-    "temp_mean": 196.9,
+    "temp_mean": 194.9,
     "frozen_fraction": 1.0,
-    "temp_swing": 25.3,
+    "temp_swing": 15.1,
     "ice": "yes",
-    "ground_class": "bedrock",
+    "ground_class": "dry_regolith",
     "hardness": 3,
-    "rock": "icy",
-    "slope_deg": 12.5,
-    "roughness_m": 0.31,
-    "dryness": 0.4
+    "rock": "volcanic",
+    "slope_deg": 13.6,
+    "roughness_m": 1.76,
+    "dryness": 0.71
    }
   },
   {
@@ -116,16 +116,16 @@
    "lon": -70.4,
    "lat": -24.1,
    "features": {
-    "temp_mean": 201.7,
+    "temp_mean": 199.2,
     "frozen_fraction": 1.0,
-    "temp_swing": 39.2,
+    "temp_swing": 11.8,
     "ice": "no",
-    "ground_class": "ice_cemented",
+    "ground_class": "bedrock",
     "hardness": 2,
-    "rock": "icy",
-    "slope_deg": 4.7,
-    "roughness_m": 4.76,
-    "dryness": 0.08
+    "rock": "impact_mixed",
+    "slope_deg": 9.3,
+    "roughness_m": 4.07,
+    "dryness": 0.63
    }
   },
   {
@@ -134,16 +134,16 @@
    "lon": -18.5,
    "lat": 64.7,
    "features": {
-    "temp_mean": 181.4,
+    "temp_mean": 179.1,
     "frozen_fraction": 1.0,
-    "temp_swing": 25.9,
+    "temp_swing": 29.0,
     "ice": "no",
     "ground_class": "ice_cemented",
-    "hardness": 2,
+    "hardness": 3,
     "rock": "impact_mixed",
-    "slope_deg": 5.3,
-    "roughness_m": 2.92,
-    "dryness": 0.17
+    "slope_deg": 7.1,
+    "roughness_m": 1.12,
+    "dryness": 0.73
    }
   },
   {
@@ -152,16 +152,16 @@
    "lon": -155.5,
    "lat": 19.8,
    "features": {
-    "temp_mean": 197.1,
+    "temp_mean": 200.8,
     "frozen_fraction": 1.0,
-    "temp_swing": 24.5,
+    "temp_swing": 39.5,
     "ice": "yes",
-    "ground_class": "bedrock",
-    "hardness": 2,
+    "ground_class": "massive_ice",
+    "hardness": 0,
     "rock": "volcanic",
-    "slope_deg": 13.8,
-    "roughness_m": 4.72,
-    "dryness": 0.98
+    "slope_deg": 10.7,
+    "roughness_m": 3.63,
+    "dryness": 0.92
    }
   },
   {
@@ -170,16 +170,16 @@
    "lon": -13.6,
    "lat": 29.0,
    "features": {
-    "temp_mean": 198.2,
+    "temp_mean": 195.9,
     "frozen_fraction": 1.0,
-    "temp_swing": 11.0,
+    "temp_swing": 18.6,
     "ice": "no",
     "ground_class": "ice_cemented",
     "hardness": 0,
-    "rock": "clay_sulfate",
-    "slope_deg": 4.0,
-    "roughness_m": 1.23,
-    "dryness": 0.5
+    "rock": "icy",
+    "slope_deg": 12.2,
+    "roughness_m": 0.2,
+    "dryness": 0.12
    }
   },
   {
@@ -188,16 +188,16 @@
    "lon": -110.7,
    "lat": 38.4,
    "features": {
-    "temp_mean": 187.3,
+    "temp_mean": 188.3,
     "frozen_fraction": 1.0,
-    "temp_swing": 19.5,
-    "ice": "no",
+    "temp_swing": 19.6,
+    "ice": "yes",
     "ground_class": "bedrock",
-    "hardness": 0,
-    "rock": "volcanic",
-    "slope_deg": 13.9,
-    "roughness_m": 3.55,
-    "dryness": 0.64
+    "hardness": 2,
+    "rock": "clay_sulfate",
+    "slope_deg": 4.8,
+    "roughness_m": 1.44,
+    "dryness": 0.53
    }
   },
   {
@@ -206,16 +206,16 @@
    "lon": -117.1,
    "lat": 36.5,
    "features": {
-    "temp_mean": 195.5,
+    "temp_mean": 194.1,
     "frozen_fraction": 1.0,
-    "temp_swing": 29.4,
+    "temp_swing": 2.9,
     "ice": "yes",
-    "ground_class": "bedrock",
-    "hardness": 2,
-    "rock": "icy",
-    "slope_deg": 3.5,
-    "roughness_m": 2.19,
-    "dryness": 0.16
+    "ground_class": "massive_ice",
+    "hardness": 3,
+    "rock": "clay_sulfate",
+    "slope_deg": 7.0,
+    "roughness_m": 1.35,
+    "dryness": 0.34
    }
   },
   {
@@ -224,16 +224,16 @@
    "lon": -116.0,
    "lat": 35.0,
    "features": {
-    "temp_mean": 192.1,
+    "temp_mean": 189.4,
     "frozen_fraction": 1.0,
-    "temp_swing": 34.7,
-    "ice": "no",
-    "ground_class": "ice_cemented",
-    "hardness": 0,
-    "rock": "icy",
-    "slope_deg": 9.5,
-    "roughness_m": 2.36,
-    "dryness": 0.11
+    "temp_swing": 34.1,
+    "ice": "yes",
+    "ground_class": "dry_regolith",
+    "hardness": 3,
+    "rock": "volcanic",
+    "slope_deg": 10.0,
+    "roughness_m": 1.12,
+    "dryness": 0.22
    }
   },
   {
@@ -242,16 +242,16 @@
    "lon": -6.6,
    "lat": 37.7,
    "features": {
-    "temp_mean": 188.3,
+    "temp_mean": 191.3,
     "frozen_fraction": 1.0,
-    "temp_swing": 3.8,
+    "temp_swing": 3.6,
     "ice": "no",
-    "ground_class": "dry_regolith",
-    "hardness": 0,
-    "rock": "clay_sulfate",
+    "ground_class": "bedrock",
+    "hardness": 3,
+    "rock": "impact_mixed",
     "slope_deg": 2.0,
-    "roughness_m": 2.17,
-    "dryness": 0.78
+    "roughness_m": 4.05,
+    "dryness": 0.17
    }
   },
   {
@@ -260,16 +260,16 @@
    "lon": 29.68,
    "lat": 37.55,
    "features": {
-    "temp_mean": 189.0,
+    "temp_mean": 190.7,
     "frozen_fraction": 1.0,
-    "temp_swing": 35.7,
+    "temp_swing": 36.5,
     "ice": "no",
     "ground_class": "dry_regolith",
-    "hardness": 0,
-    "rock": "clay_sulfate",
-    "slope_deg": 1.0,
-    "roughness_m": 4.66,
-    "dryness": 0.66
+    "hardness": 1,
+    "rock": "impact_mixed",
+    "slope_deg": 14.2,
+    "roughness_m": 2.65,
+    "dryness": 0.88
    }
   },
   {
@@ -278,16 +278,16 @@
    "lon": 119.0,
    "lat": -21.5,
    "features": {
-    "temp_mean": 198.5,
+    "temp_mean": 198.7,
     "frozen_fraction": 1.0,
-    "temp_swing": 14.5,
+    "temp_swing": 14.2,
     "ice": "yes",
     "ground_class": "massive_ice",
     "hardness": 3,
     "rock": "clay_sulfate",
-    "slope_deg": 2.5,
-    "roughness_m": 1.62,
-    "dryness": 0.67
+    "slope_deg": 12.4,
+    "roughness_m": 3.51,
+    "dryness": 0.19
    }
   },
   {
@@ -296,16 +296,16 @@
    "lon": 15.5,
    "lat": -24.5,
    "features": {
-    "temp_mean": 194.7,
+    "temp_mean": 202.4,
     "frozen_fraction": 1.0,
-    "temp_swing": 20.9,
+    "temp_swing": 35.5,
     "ice": "yes",
-    "ground_class": "ice_cemented",
-    "hardness": 0,
-    "rock": "icy",
-    "slope_deg": 8.6,
-    "roughness_m": 2.61,
-    "dryness": 0.07
+    "ground_class": "massive_ice",
+    "hardness": 3,
+    "rock": "clay_sulfate",
+    "slope_deg": 14.3,
+    "roughness_m": 2.93,
+    "dryness": 0.38
    }
   },
   {
@@ -314,16 +314,16 @@
    "lon": 88.0,
    "lat": 33.0,
    "features": {
-    "temp_mean": 192.0,
+    "temp_mean": 196.5,
     "frozen_fraction": 1.0,
-    "temp_swing": 24.2,
+    "temp_swing": 1.2,
     "ice": "yes",
     "ground_class": "massive_ice",
     "hardness": 1,
-    "rock": "volcanic",
-    "slope_deg": 0.4,
-    "roughness_m": 4.83,
-    "dryness": 0.09
+    "rock": "impact_mixed",
+    "slope_deg": 7.2,
+    "roughness_m": 2.09,
+    "dryness": 0.48
    }
   },
   {
@@ -332,16 +332,16 @@
    "lon": -121.5,
    "lat": 41.7,
    "features": {
-    "temp_mean": 188.0,
+    "temp_mean": 191.7,
     "frozen_fraction": 1.0,
-    "temp_swing": 27.4,
+    "temp_swing": 9.5,
     "ice": "no",
-    "ground_class": "massive_ice",
-    "hardness": 1,
-    "rock": "clay_sulfate",
-    "slope_deg": 0.8,
-    "roughness_m": 2.11,
-    "dryness": 0.89
+    "ground_class": "dry_regolith",
+    "hardness": 3,
+    "rock": "impact_mixed",
+    "slope_deg": 7.3,
+    "roughness_m": 2.09,
+    "dryness": 0.94
    }
   },
   {
@@ -350,16 +350,16 @@
    "lon": -113.5,
    "lat": 43.4,
    "features": {
-    "temp_mean": 188.4,
+    "temp_mean": 191.3,
     "frozen_fraction": 1.0,
-    "temp_swing": 6.6,
+    "temp_swing": 7.0,
     "ice": "yes",
     "ground_class": "massive_ice",
-    "hardness": 2,
-    "rock": "impact_mixed",
-    "slope_deg": 4.0,
-    "roughness_m": 0.79,
-    "dryness": 0.0
+    "hardness": 3,
+    "rock": "clay_sulfate",
+    "slope_deg": 10.2,
+    "roughness_m": 1.9,
+    "dryness": 0.9
    }
   }
  ]

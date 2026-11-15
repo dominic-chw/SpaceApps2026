@@ -9,7 +9,7 @@ from pipeline.common.schema import BANDS, GROUND, ROCK
 
 LEVELS = {"excellent", "good", "fair", "poor", "no_match", "insufficient_data"}
 CONFIDENCE = {"high", "medium", "low"}
-TWIN_KEYS = {"region_id", "name", "lat", "lon", "match_pct", "level", "best", "worst", "confidence"}
+TWIN_KEYS = {"region_id", "name", "new_site", "lat", "lon", "match_pct", "level", "best", "worst", "confidence"}
 
 
 @pytest.fixture(scope="module")
@@ -22,6 +22,9 @@ def out(tmp_path_factory):
 def check_twin(t):
     assert set(t) >= TWIN_KEYS
     assert t["level"] in LEVELS and t["confidence"] in CONFIDENCE
+    assert isinstance(t["new_site"], bool)
+    if t["new_site"]:
+        assert t["region_id"].startswith("e_")  # new sites use the cell_id
     assert len(t["best"]) == 3 and len(t["worst"]) == 3
     assert 0 <= t["match_pct"] <= 100
 

@@ -38,13 +38,25 @@ def fake_conditions(rng, lat):
             "dryness": round(rng.uniform(0, 1), 2)}
 
 
+def fake_new_site(rng):
+    """A made-up global-grid Earth cell that is NOT in regions.geojson.
+    Real scoring sets region_id = cell_id and generates the label."""
+    lat = round(rng.randrange(-170, 171) / 2, 1)
+    lon = round(rng.randrange(-360, 360) / 2, 1)
+    cell_id = f"e_{lat}_{lon}"
+    name = f"New site {abs(lat)}{'N' if lat >= 0 else 'S'} {abs(lon)}{'E' if lon >= 0 else 'W'}"
+    return {"region_id": cell_id, "name": name, "lat": lat, "lon": lon}
+
+
 def fake_twins(rng, regions, n):
-    """n twins from the region list, best first, in the contract shape."""
+    """n twins, best first, in the contract shape. About half are new sites."""
     pcts = sorted((rng.uniform(25, 95) for _ in range(n)), reverse=True)
     twins = []
-    for r, pct in zip(rng.sample(regions, n), pcts):
+    for pct in pcts:
+        new_site = rng.random() < 0.5
+        r = fake_new_site(rng) if new_site else rng.choice(regions)
         feats = rng.sample(FEATURES, 6)
-        twins.append({"region_id": r["region_id"], "name": r["name"],
+        twins.append({"region_id": r["region_id"], "name": r["name"], "new_site": new_site,
                       "lat": r["lat"], "lon": r["lon"], "match_pct": round(pct, 1),
                       "level": level_for(pct), "best": feats[:3], "worst": feats[3:],
                       "confidence": rng.choice(CONFIDENCE)})
