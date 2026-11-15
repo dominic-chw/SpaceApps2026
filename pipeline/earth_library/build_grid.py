@@ -121,6 +121,10 @@ def build_earth(params=None, out_dir=None, layers=None):
     p = params or get_processing()
     layers = load_layers(p) if layers is None else layers
     layers = add_real_frozen(layers)
+    # A named region whose cell has no measured data (e.g. Lanzarote: its 0.5 deg cell is ocean)
+    # would only carry gap-model guesses and could look like a perfect match: drop it.
+    if layers["mean_temp_k"].notna().any():
+        layers = layers[layers["mean_temp_k"].notna()].reset_index(drop=True)
     # named analog regions are always kept (team-chosen sites; a region point can fall on a lake or ice
     # sheet, and WorldCover has no Antarctica); grid cells must pass the bare-ground filter
     named = layers["name"].fillna("").ne("")
