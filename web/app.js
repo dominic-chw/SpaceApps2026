@@ -403,7 +403,7 @@
     const conf = t.confidence ? cap(String(t.confidence)) : '—';
     const camps = state.campaigns.filter(c => c.region_id && c.region_id === t.region_id);
     const hidden = state.hiddenIcy.length
-      ? `<p class="why-note">Left out ${state.hiddenIcy.map(h => esc(siteName(h))).join(', ')}: ${state.hiddenIcy.length === 1 ? 'it has' : 'they have'} permanent ground ice or snow cover, and this spot on Mars has no ground ice.</p>`
+      ? `<p class="why-note">Left out ${state.hiddenIcy.length === 1 ? 'one site' : `${state.hiddenIcy.length} sites`} with permanent ground ice or snow cover, because this spot on Mars has no ground ice: ${state.hiddenIcy.map(h => esc(siteName(h))).join('; ')}.</p>`
       : '';
     $('why').innerHTML = `
       <div><h3>Matched on</h3>${chips(t.best)}</div>
