@@ -662,3 +662,12 @@ body.home { min-height: 100vh; display: flex; flex-direction: column; }
   .p-mid strong { font-size: 13px; }
   .p-head span { display: none; }
 }
+
+/* Error bars (underground temperature): shorter = better, so say it and mark the best. */
+.bars-label { font-size: 11.5px; color: var(--muted); margin-bottom: 2px; }
+.bars-label b { color: var(--text); font-weight: 600; }
+.finding-bars.errors .fbar.rule i::after { background: #6b5552; }
+.fbar em { font-style: normal; font-size: 10.5px; font-weight: 600; color: #8fd3a6; border: 1px solid #6fb78a; border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+.fbar.best span { color: var(--text); }
+.finding-bars.errors .fbar { grid-template-columns: 170px minmax(0, 1fr) 54px; }
+@media (max-width: 520px) { .finding-bars.errors .fbar { grid-template-columns: 128px minmax(0, 1fr) 50px; } }

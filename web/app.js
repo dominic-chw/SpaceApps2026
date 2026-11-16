@@ -593,21 +593,23 @@
       const vio = [num(pn.spatial_block_cv?.physics_informed_nn?.physics_violation_rate), num(pn.spatial_block_cv?.plain_nn?.physics_violation_rate)];
       const ens = Object.values(pe?.leave_region_out || {}).filter(r => num(r.rmse_flagged) !== null && num(r.rmse_not_flagged) !== null);
       const ratio = ens.length ? ens.reduce((a, r) => a + num(r.rmse_flagged) / num(r.rmse_not_flagged), 0) / ens.length : null;
+      const gbmv = vals[2][1];
+      const bestLearned = [nnv, gbmv].filter(x => x !== null);
+      const factor = heat && bestLearned.length ? heat / Math.min(...bestLearned) : null;
+      const ranked = vals.filter(v => v[1] !== null).sort((x, y) => x[1] - y[1]);
+      const NB = '\u00a0';
+      const nnNote = gbmv !== null && nnv !== null
+        ? (Math.abs(gbmv - nnv) < 0.05 ? 'The physics-informed neural net is as accurate as gradient boosting'
+          : gbmv < nnv ? 'Gradient boosting is slightly more accurate than the physics-informed neural net' : 'The physics-informed neural net is the most accurate')
+        : '';
       findings.push(`<article class="finding">
         <span class="finding-kicker">Underground temperature</span>
-        <h3>${(() => {
-          const gbmv = vals[2][1];
-          const lead = nnv && heat ? `Learned models predict ground temperature 10 m down about ${(heat / Math.min(nnv, gbmv ?? nnv)).toFixed(1)}× closer than the heat model` : 'Learned models beat the heat model 10 m down';
-          if (gbmv === null || nnv === null) return lead;
-          if (Math.abs(gbmv - nnv) < 0.05) return `${lead}; the physics-informed neural net matches gradient boosting and keeps profiles physical`;
-          return gbmv < nnv
-            ? `${lead}. Gradient boosting is slightly more accurate; the physics-informed neural net keeps profiles physical and knows when it is guessing`
-            : `${lead}. The physics-informed neural net is the most accurate`;
-        })()}</h3>
-        <div class="finding-bars">
-          ${vals.map(([n, x, cls]) => `<div class="fbar ${cls}"><span>${n}</span><i style="--w:${x === null ? 0 : (x / worst) * 100}%"></i><b>${x === null ? '—' : x.toFixed(1) + '°'}</b></div>`).join('')}
+        <h3>${factor ? `Learned models: ${factor.toFixed(1)}× smaller error than the heat model` : 'Learned models beat the heat model'}</h3>
+        <div class="finding-bars errors">
+          <div class="bars-label">Error at 10${NB}m · <b>lower is better</b></div>
+          ${ranked.map(([n, x, cls], i) => `<div class="fbar ${cls}${i === 0 ? ' best' : ''}"><span>${n}${i === 0 ? ' <em>best</em>' : ''}</span><i style="--w:${(x / worst) * 100}%"></i><b>${x.toFixed(1)}${NB}°C</b></div>`).join('')}
         </div>
-        <p>Error at 10 m (°C, lower is better), averaged over regions held out of training (${esc(pnRegions.map(([n]) => n).join(', '))}). ${vio.every(x => x !== null) ? `The physics term in its loss cuts physically impossible profiles from ${pctOf(vio[1])} to ${pctOf(vio[0])}.` : ''} ${ratio ? `A 5-model ensemble flags places unlike anything it trained on; there its error is ${ratio.toFixed(1)}× higher, so we fall back to the heat model.` : ''}</p>
+        <p>Averaged over regions held out of training (${esc(pnRegions.map(([n]) => n).join(', '))}). ${nnNote}${vio.every(x => x !== null) ? `; the neural net's physics term cuts impossible temperature profiles from ${pctOf(vio[1])} to ${pctOf(vio[0])}` : ''}.${ratio ? ` Where its 5-model ensemble flags a place as unlike its training data, the app uses the heat model instead.` : ''}</p>
       </article>`);
     }
     // 2. Matching finds known analogs far better than chance.
