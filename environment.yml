@@ -13,4 +13,5 @@ dependencies:
   - xgboost
   - lightgbm
   - pyyaml
+  - requests
   - pytest
