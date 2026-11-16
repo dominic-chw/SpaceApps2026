@@ -5,10 +5,10 @@
   const ROOT = new URL('../', window.location.href);
   const BAND_KEYS = ['skin', 'upper_metre', 'drill_zone', 'deep'];
   const BANDS = {
-    skin:        {name: 'Skin', range: '0–10 cm', hint: 'Surface layer, 0–10 cm.'},
-    upper_metre: {name: 'Upper metre', range: '10 cm–1 m', hint: 'Shallow ground, 10 cm–1 m.'},
-    drill_zone:  {name: 'Drill zone', range: '1–3 m', hint: 'Typical drill target, 1–3 m.'},
-    deep:        {name: 'Deep', range: '>3 m', hint: 'Below 3 m. Experimental: less subsurface data, lower confidence.'}
+    skin:        {name: 'Skin', range: '0–10 cm', hint: 'Surface layer, 0–10 cm.'},
+    upper_metre: {name: 'Upper metre', range: '10 cm–1 m', hint: 'Shallow ground, 10 cm–1 m.'},
+    drill_zone:  {name: 'Drill zone', range: '1–3 m', hint: 'Typical drill target, 1–3 m.'},
+    deep:        {name: 'Deep', range: '>3 m', hint: 'Below 3 m. Experimental: less subsurface data, lower confidence.'}
   };
   const FALLBACK_LABELS = {
     temp_mean_rank: 'Coldness', temp_mean: 'Mean temperature', frozen_fraction: 'Frozen share of the year',
@@ -20,12 +20,12 @@
     temp_mean_rank: 'Mean ground temperature at this depth, ranked as a percentile within its own planet (Mars is 60–100 K colder, so absolute kelvin would never match). From a 1-D heat-conduction model: surface daily and yearly temperature waves decay as e^(−z/δ), with skin depth δ = √(κP/π) set by thermal inertia (TES on Mars; ERA5-Land / SoilGrids on Earth). Compared as |Δ percentile|.',
     frozen_fraction: 'Share of the year this layer stays below 273 K, from the same heat model (mean plus the damped yearly wave). Compared as an absolute difference in fraction of the year (0–1).',
     temp_swing: 'Amplitude of the temperature cycle at this depth. The daily wave dies out within centimetres; the yearly wave (687 sols on Mars) reaches about a metre. Percentile within each planet, compared as |Δ percentile|.',
-    ice: 'Ground ice present in this layer (yes/no). Mars: Odyssey neutron hydrogen (water-equivalent hydrogen ≥ 25%) plus an ice-table depth that deepens away from the poles. Earth: ESA CCI permafrost, NSIDC ground-ice map, a cold-ground rule (< 271 K) and the gap-filling model; ice only below the ~0.5 m active layer. Same or different: distance 0 or 1.',
+    ice: 'Ground ice present in this layer (yes/no). Mars: Odyssey neutron hydrogen (water-equivalent hydrogen ≥ 25%) plus an ice-table depth that deepens away from the poles. Earth: ESA CCI permafrost, NSIDC ground-ice map, a cold-ground rule (< 271 K) and the gap-filling model; ice only below the ~0.5 m active layer. Same or different: distance 0 or 1.',
     ground_class: 'Ground type: dry regolith, ice-cemented, massive ice or bedrock. Mars: thermal inertia (≥ 700 SI → bedrock) and ice fraction (≥ 70% → massive ice). Earth: permafrost and ground-ice maps, gaps filled by a gradient-boosted model (SoilGrids, ERA5-Land, terrain as predictors). Categorical: distance 0 or 1.',
     hardness: 'How hard the layer is to drill, on a 0–3 scale derived from ground type and rock (dry regolith 0, ice-bearing 2, bedrock 2–3 by rock type). Compared as |Δ| / 3.',
     rock: 'Broad rock class: volcanic, sedimentary, clay/sulfate, icy or impact-mixed. Mars: USGS geologic map SIM 3292 units. Earth: GLiM global lithology. Categorical: distance 0 or 1.',
-    slope_deg: 'Mean terrain slope at 500 m resolution (MOLA 463 m on Mars, Copernicus DEM on Earth). Compared after ln(1 + slope) and a z-score on Earth statistics, so 1° vs 2° counts more than 20° vs 21°.',
-    roughness_m: 'Standard deviation of elevation in a 3 × 3 window of 500 m pixels: a proxy for boulders, ridges and rough ground. Compared after ln(1 + x) and a z-score on Earth statistics.',
+    slope_deg: 'Mean terrain slope at 500 m resolution (MOLA 463 m on Mars, Copernicus DEM on Earth). Compared after ln(1 + slope) and a z-score on Earth statistics, so 1° vs 2° counts more than 20° vs 21°.',
+    roughness_m: 'Standard deviation of elevation in a 3 × 3 window of 500 m pixels: a proxy for boulders, ridges and rough ground. Compared after ln(1 + x) and a z-score on Earth statistics.',
     dryness: 'How dry the surface environment is. Mars: water-vapour column (Mars Climate Database). Earth: Global Aridity Index. Percentile within each planet. Used for the two shallow layers only.'
   };
   const LEVEL_TEXT = {excellent: 'Excellent', good: 'Good', fair: 'Fair', poor: 'Poor', no_match: 'No match', insufficient_data: 'Not enough data'};
@@ -224,7 +224,7 @@
   }
   const KNOWN_REGION_COUNT = () => (state.library?.bands?.[state.band]?.places || []).filter(p => !p.new_site).length || 'known';
 
-  /* ---------- drilling-target highlight on the globe (drill zone, 1–3 m) ---------- */
+  /* ---------- drilling-target highlight on the globe (drill zone, 1–3 m) ---------- */
   const HIGHLIGHTS = {
     ice: {
       legend: '<i style="background:#78beff"></i>Massive ice <i style="background:#b4dcff"></i>Ice-cemented ground',
@@ -597,7 +597,7 @@
         <span class="finding-kicker">Underground temperature</span>
         <h3>${(() => {
           const gbmv = vals[2][1];
-          const lead = nnv && heat ? `Learned models predict ground temperature 10 m down about ${(heat / Math.min(nnv, gbmv ?? nnv)).toFixed(1)}× closer than the heat model` : 'Learned models beat the heat model 10 m down';
+          const lead = nnv && heat ? `Learned models predict ground temperature 10 m down about ${(heat / Math.min(nnv, gbmv ?? nnv)).toFixed(1)}× closer than the heat model` : 'Learned models beat the heat model 10 m down';
           if (gbmv === null || nnv === null) return lead;
           if (Math.abs(gbmv - nnv) < 0.05) return `${lead}; the physics-informed neural net matches gradient boosting and keeps profiles physical`;
           return gbmv < nnv
@@ -607,7 +607,7 @@
         <div class="finding-bars">
           ${vals.map(([n, x, cls]) => `<div class="fbar ${cls}"><span>${n}</span><i style="--w:${x === null ? 0 : (x / worst) * 100}%"></i><b>${x === null ? '—' : x.toFixed(1) + '°'}</b></div>`).join('')}
         </div>
-        <p>Error at 10 m (°C, lower is better), averaged over regions held out of training (${esc(pnRegions.map(([n]) => n).join(', '))}). ${vio.every(x => x !== null) ? `The physics term in its loss cuts physically impossible profiles from ${pctOf(vio[1])} to ${pctOf(vio[0])}.` : ''} ${ratio ? `A 5-model ensemble flags places unlike anything it trained on; there its error is ${ratio.toFixed(1)}× higher, so we fall back to the heat model.` : ''}</p>
+        <p>Error at 10 m (°C, lower is better), averaged over regions held out of training (${esc(pnRegions.map(([n]) => n).join(', '))}). ${vio.every(x => x !== null) ? `The physics term in its loss cuts physically impossible profiles from ${pctOf(vio[1])} to ${pctOf(vio[0])}.` : ''} ${ratio ? `A 5-model ensemble flags places unlike anything it trained on; there its error is ${ratio.toFixed(1)}× higher, so we fall back to the heat model.` : ''}</p>
       </article>`);
     }
     // 2. Matching finds known analogs far better than chance.
@@ -651,7 +651,7 @@
           ${row('10° spatial blocks', ml.spatial_block_cv || {})}
           ${regions.map(([name, r]) => row(name, r)).join('')}
         </tbody></table></div>
-        <p class="validation-note">Labels: ESA CCI Permafrost (${esc((ml.n_labelled ?? 0).toLocaleString())} cells, 25–85° N). Inputs: soil and surface temperatures, terrain, aridity, soil texture, rock type; never the permafrost map itself. Best value per row in bold; "—" means the region has only one class. Most informative inputs: ${top || '—'}. The physics guard sets ice to "no" where even the 1–3 m soil never freezes; without it the model leaned towards ice in hot deserts it had never seen. ${conf.empirical_coverage !== undefined ? `90% conformal prediction sets covered ${pctOf(conf.empirical_coverage)} of cells in held-out blocks${num(conf.empirical_coverage) < 0.9 ? ', so the model is overconfident when the region changes' : ''}.` : ''}</p>
+        <p class="validation-note">Labels: ESA CCI Permafrost (${esc((ml.n_labelled ?? 0).toLocaleString())} cells, 25–85° N). Inputs: soil and surface temperatures, terrain, aridity, soil texture, rock type; never the permafrost map itself. Best value per row in bold; "—" means the region has only one class. Most informative inputs: ${top || '—'}. The physics guard sets ice to "no" where even the 1–3 m soil never freezes; without it the model leaned towards ice in hot deserts it had never seen. ${conf.empirical_coverage !== undefined ? `90% conformal prediction sets covered ${pctOf(conf.empirical_coverage)} of cells in held-out blocks${num(conf.empirical_coverage) < 0.9 ? ', so the model is overconfident when the region changes' : ''}.` : ''}</p>
       </section>`);
     }
     if (pn && pnRegions.length) {
@@ -665,7 +665,7 @@
       const fx = x => num(x) === null ? '—' : num(x).toFixed(2);
       const ensRows = Object.entries(pe?.leave_region_out || {});
       details.push(`<section class="acc wide">
-        <h3>Underground temperature at 10 m, by held-out test (error in °C)</h3>
+        <h3>Underground temperature at 10 m, by held-out test (error in °C)</h3>
         <div class="table-scroll"><table class="acc-table"><thead><tr><th>Held out</th>${PN_COLS.map(([, n]) => `<th>${n}</th>`).join('')}<th>Impossible profiles, physics NN / plain NN</th></tr></thead><tbody>
           ${pr('10° spatial blocks', pn.spatial_block_cv)}
           ${pnRegions.map(([n, r]) => pr(n, r)).join('')}
@@ -673,7 +673,7 @@
         ${ensRows.length ? `<div class="table-scroll"><table class="acc-table"><thead><tr><th>Ensemble, held out</th><th>Flagged "extrapolating"</th><th>Error, flagged</th><th>Error, not flagged</th><th>Truth within ±2 spread</th></tr></thead><tbody>
           ${ensRows.map(([n, r]) => `<tr><th>${esc(n)}</th><td>${pctOf(r.share_flagged)}</td><td>${fx(r.rmse_flagged)}</td><td>${fx(r.rmse_not_flagged)}</td><td>${pctOf(r.within_2_std)}</td></tr>`).join('')}
         </tbody></table></div>` : ''}
-        <p class="validation-note">Labels: ESA CCI Permafrost ground temperature at 0, 1, 2, 5 and 10 m (${esc((pn.n_cells ?? 0).toLocaleString())} cells, 25–85° N). One PyTorch network predicts ground ice, thaw depth and the whole temperature profile from surface data only. Its loss also penalises profiles that break heat conduction (kinks, or gradients no real ground has). The heat model assumes the temperature at depth equals the yearly mean. Best value per row in bold.</p>
+        <p class="validation-note">Labels: ESA CCI Permafrost ground temperature at 0, 1, 2, 5 and 10 m (${esc((pn.n_cells ?? 0).toLocaleString())} cells, 25–85° N). One PyTorch network predicts ground ice, thaw depth and the whole temperature profile from surface data only. Its loss also penalises profiles that break heat conduction (kinks, or gradients no real ground has). The heat model assumes the temperature at depth equals the yearly mean. Best value per row in bold.</p>
       </section>`);
     }
     if (lw?.loo) {
@@ -700,10 +700,10 @@
           <tr><th>Planetary Twin</th><td class="best">${pctOf(o.recall_at_1)}</td><td class="best">${pctOf(o.recall_at_10)}</td><td class="best">${pctOf(o.recall_at_20)}</td><td class="best">${rankOf(o.mean_rank)}</td></tr>
           <tr><th>Random</th><td>${pctOf(o.random_recall_at_1)}</td><td>${pctOf(o.random_recall_at_10)}</td><td>${pctOf(o.random_recall_at_20)}</td><td>${rankOf(o.random_mean_rank)}</td></tr>
         </tbody></table></div>
-        <p class="validation-note">Each pair's Earth site (e.g. the Dry Valleys for Phoenix) is ranked among ${esc((v.n_regions ?? 0).toLocaleString())} Earth places kept 200 km apart.</p>
+        <p class="validation-note">Each pair's Earth site (e.g. the Dry Valleys for Phoenix) is ranked among ${esc((v.n_regions ?? 0).toLocaleString())} Earth places kept 200 km apart.</p>
       </section>`);
     }
-    $('validation').innerHTML = `<p class="acc-why"><strong>Why machine learning?</strong> Satellite maps of what lies underground (permafrost, ground temperature) stop at 25° N, but several of the best Mars analogs, such as Antarctica's Dry Valleys and the high Andes, are further south. The models below learn from the places those maps cover and predict the rest. Each is compared with the simple rule it replaces, on whole regions it never trained on.</p>
+    $('validation').innerHTML = `<p class="acc-why"><strong>Why machine learning?</strong> Satellite maps of what lies underground (permafrost, ground temperature) stop at 25° N, but several of the best Mars analogs, such as Antarctica's Dry Valleys and the high Andes, are further south. The models below learn from the places those maps cover and predict the rest. Each is compared with the simple rule it replaces, on whole regions it never trained on.</p>
       <div class="findings">${findings.join('')}</div>
       ${details.length ? `<h3 class="data-title">The data behind these findings</h3><div class="acc-grid">${details.join('')}</div>` : ''}`;
     $('validation').querySelectorAll('[data-metric]').forEach(b => b.addEventListener('click', () => { state.mlMetric = b.dataset.metric; renderValidation(); }));
@@ -903,9 +903,9 @@
   const SURFACE_WEIGHTS = {rock: 2, ground_class: 1, slope_deg: 1, roughness_m: 1, dryness: 1, temp_mean_rank: .5, temp_swing: .5};
   const BASIS = {
     surface: {band: 'skin', name: 'surface geology', hint: 'Above-ground geology: rock type, exposed bedrock vs loose regolith, slope, roughness, dryness and surface temperature. Buried ice and hardness are ignored.'},
-    upper_metre: {band: 'upper_metre', name: '10 cm–1 m underground', hint: 'Ground 10 cm–1 m down, every feature with the default weights.'},
-    drill_zone: {band: 'drill_zone', name: '1–3 m underground', hint: 'The 1–3 m drill zone: ice, ground type and hardness weigh most.'},
-    deep: {band: 'deep', name: 'deeper than 3 m', hint: 'Below 3 m. Experimental: less subsurface data, lower confidence.'}
+    upper_metre: {band: 'upper_metre', name: '10 cm–1 m underground', hint: 'Ground 10 cm–1 m down, every feature with the default weights.'},
+    drill_zone: {band: 'drill_zone', name: '1–3 m underground', hint: 'The 1–3 m drill zone: ice, ground type and hardness weigh most.'},
+    deep: {band: 'deep', name: 'deeper than 3 m', hint: 'Below 3 m. Experimental: less subsurface data, lower confidence.'}
   };
   const PRESETS = [
     ['Reykjavík', 64.15, -21.94], ['Atacama Desert', -24.5, -69.25], ['Death Valley', 36.46, -116.87],
@@ -1077,7 +1077,7 @@
     $('rev-title').textContent = `Where on Mars is like ${where}?`;
     const far = r.snapKm > 150;
     $('rev-sub').textContent = p.lookup
-      ? `Compared on ${BASIS[r.basis].name}, using the ground of the surrounding 55 km map cell.`
+      ? `Compared on ${BASIS[r.basis].name}, using the ground of the surrounding 55 km map cell.`
       : `Compared on ${BASIS[r.basis].name}, using open ground ${r.snapKm < 1 ? 'at this spot' : `${Math.round(r.snapKm).toLocaleString()} km away`}.${far ? ' Only bare or sparsely vegetated ground (where drill tests happen) is in the Earth data, so cities and forests use the nearest open terrain.' : ''}`;
 
     // Earth map (left column)
@@ -1106,7 +1106,7 @@
     const below = [GROUND_TEXT[deep.ground_class] || '', deep.ice === 'yes' ? 'ground ice' : deep.ice === 'no' ? 'no ice' : ''].filter(Boolean).join(' · ');
     $('rev-place').hidden = false;
     $('rev-place').innerHTML = `<div class="rp-head"><span class="label">Ground used</span>${p.lookup ? '<span class="tag" title="Vegetated or built-up ground: compared on its own soil, rock and climate, but not a drill-test candidate.">Not open ground</span>' : p.new_site ? '<span class="tag new" title="No recorded field or drill tests here (NASA, ESA or university campaigns).">No field tests yet</span>' : '<span class="tag known" title="A known Mars analog region where field or drill tests have been run.">Field-tested analog</span>'}</div>
-      <dl class="rp-facts"><div><dt>Surface</dt><dd>${esc(surface || '—')}</dd></div><div><dt>1–3 m down</dt><dd>${esc(below || '—')}</dd></div></dl>
+      <dl class="rp-facts"><div><dt>Surface</dt><dd>${esc(surface || '—')}</dd></div><div><dt>1–3 m down</dt><dd>${esc(below || '—')}</dd></div></dl>
       ${r.near.length > 1 ? `<details class="rp-near"><summary>Use other open ground nearby</summary><div>${r.near.slice(1).filter(({p: o}) => !o.lookup).map(({p: o}) =>
         `<button type="button" class="link" data-place="${esc(o.id)}">${esc(Math.round(km(q, o)).toLocaleString())} km · ${esc(o.new_site ? coordText(o.lat, o.lon, 1) : o.name)}</button>`).join('')}</div></details>` : ''}`;
     $('rev-place').querySelectorAll('[data-place]').forEach(b => b.addEventListener('click', () => pickPlace(b.dataset.place)));

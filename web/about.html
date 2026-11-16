@@ -31,7 +31,7 @@
     <section id="how">
       <h2>How it works</h2>
       <ol class="steps">
-        <li><span class="step-n">1</span><h3>Pick a spot and a depth</h3><p>Anywhere within ±70° latitude on Mars, snapped to a 2° grid (about 120 km), at one of four depths: 0–10 cm, 10 cm–1 m, 1–3 m, or deeper than 3 m.</p></li>
+        <li><span class="step-n">1</span><h3>Pick a spot and a depth</h3><p>Anywhere within ±70° latitude on Mars, snapped to a 2° grid (about 120 km), at one of four depths: 0–10 cm, 10 cm–1 m, 1–3 m, or deeper than 3 m.</p></li>
         <li><span class="step-n">2</span><h3>Describe the ground</h3><p>For that depth we estimate temperature, how much it swings, how much of the year it stays frozen, ground ice, ground type, hardness, rock type, slope and roughness.</p></li>
         <li><span class="step-n">3</span><h3>Compare with Earth</h3><p>The same ten features are computed for bare ground on Earth. Each Earth place gets a distance from the Mars spot, and the closest ones become its twins.</p></li>
         <li><span class="step-n">4</span><h3>Explain the result</h3><p>Every twin comes with a match percentage, the features that agree and differ, and a confidence level based on how much of the data was measured rather than modelled.</p></li>
@@ -44,14 +44,14 @@
 
       <div class="math">
         <h3><span>A</span>Working out conditions underground</h3>
-        <p>Nobody has measured the temperature 2 m below most of Mars, so we calculate it. The surface warms by day and cools by night, and warms in summer and cools in winter. Those swings travel down into the ground but shrink quickly: every extra <em>skin depth</em> cuts the swing to about a third of what it was above.</p>
+        <p>Nobody has measured the temperature 2 m below most of Mars, so we calculate it. The surface warms by day and cools by night, and warms in summer and cools in winter. Those swings travel down into the ground but shrink quickly: every extra <em>skin depth</em> cuts the swing to about a third of what it was above.</p>
         <div class="formula">swing at depth = swing at surface × e<sup>−depth / skin depth</sup><span>skin depth = √(heat diffusivity × cycle length / π)</span></div>
-        <p>How fast heat moves through the ground comes from its <em>thermal inertia</em>, which orbiters measure from how quickly the surface heats up. For typical Martian soil the daily swing fades over about 4 cm and the yearly swing over about a metre. Below that, the ground sits close to its yearly average temperature. The same model runs on Earth, so both planets are treated the same way.</p>
+        <p>How fast heat moves through the ground comes from its <em>thermal inertia</em>, which orbiters measure from how quickly the surface heats up. For typical Martian soil the daily swing fades over about 4 cm and the yearly swing over about a metre. Below that, the ground sits close to its yearly average temperature. The same model runs on Earth, so both planets are treated the same way.</p>
       </div>
 
       <div class="math">
         <h3><span>B</span>Putting two planets on the same scale</h3>
-        <p>Mars is 60–100 °C colder than Earth, so comparing raw temperatures would match nothing. Instead each place is ranked <em>within its own planet</em>: a spot in the coldest 10% of Mars is compared with places in the coldest 10% of Earth.</p>
+        <p>Mars is 60–100 °C colder than Earth, so comparing raw temperatures would match nothing. Instead each place is ranked <em>within its own planet</em>: a spot in the coldest 10% of Mars is compared with places in the coldest 10% of Earth.</p>
         <ul>
           <li><strong>Ranked (percentile):</strong> temperature, temperature swing, dryness.</li>
           <li><strong>Same or different:</strong> ground ice, ground type, rock type.</li>
@@ -84,7 +84,7 @@
 
       <div class="math">
         <h3><span>E</span>Picking the twins and setting confidence</h3>
-        <p>Earth places are sorted by distance and the closest are kept, as long as each one is at least 200 km from the twins already picked, so the list is not five neighbouring valleys. Two further rules apply:</p>
+        <p>Earth places are sorted by distance and the closest are kept, as long as each one is at least 200 km from the twins already picked, so the list is not five neighbouring valleys. Two further rules apply:</p>
         <ul>
           <li><strong>Ice rule.</strong> If the Mars spot has no ground ice at any depth, Earth sites with permanent ground ice or snow cover are left out, even when other features line up.</li>
           <li><strong>Confidence.</strong> High when most values were measured. Lower when they came from the heat model or the Earth gap-filling model (a gradient-boosted classifier that predicts ground ice and ground type where maps have gaps), and lower again for the deepest layer.</li>
@@ -94,10 +94,10 @@
 
     <section id="ml">
       <h2>Machine learning</h2>
-      <p>Satellite maps of what lies underground stop at 25° N, but several of the best Mars analogs (the Antarctic Dry Valleys, the high Andes) are further south. Machine learning fills that gap. Every model is scored on whole regions it never saw during training, next to the simple rule it replaces.</p>
+      <p>Satellite maps of what lies underground stop at 25° N, but several of the best Mars analogs (the Antarctic Dry Valleys, the high Andes) are further south. Machine learning fills that gap. Every model is scored on whole regions it never saw during training, next to the simple rule it replaces.</p>
       <ul>
         <li><strong>Ground ice.</strong> A gradient-boosted classifier and a PyTorch neural network, both trained on ESA's satellite permafrost map, predict whether a place has ground ice from its climate, terrain, soil and rock. Both clearly beat a temperature rule. A physics check stops them predicting ice in hot deserts, which they never saw in training.</li>
-        <li><strong>Underground temperature.</strong> A physics-informed PyTorch network predicts the whole temperature profile down to 10 m. Its training loss penalises profiles that break heat conduction. Five copies form an ensemble that flags places unlike its training data; there the app falls back to the heat model and says so.</li>
+        <li><strong>Underground temperature.</strong> A physics-informed PyTorch network predicts the whole temperature profile down to 10 m. Its training loss penalises profiles that break heat conduction. Five copies form an ensemble that flags places unlike its training data; there the app falls back to the heat model and says so.</li>
         <li><strong>Match weights.</strong> Weights learned from 12 published Mars–Earth analog pairs were tested on Mars sites held out of training. They did not beat the hand-tuned weights, so the hand-tuned ones stay the default.</li>
       </ul>
       <p><a class="btn ghost" href="./app.html#accuracy">See the models and their scores</a></p>
@@ -112,7 +112,7 @@
       <h2>Data</h2>
       <div class="data-grid">
         <div><h3>Mars</h3><ul>
-          <li>MOLA elevation, 463 m (slope, roughness)</li>
+          <li>MOLA elevation, 463 m (slope, roughness)</li>
           <li>TES thermal inertia (heat model, ground type)</li>
           <li>Mars Odyssey neutron hydrogen (ground ice)</li>
           <li>USGS geologic map SIM 3292 (rock type)</li>
