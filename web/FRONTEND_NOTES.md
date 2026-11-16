@@ -30,3 +30,9 @@ If the Mars cell has no ground ice at any loaded depth, Earth sites with permane
 - Untested = `new_site` Earth places (outside the named analog regions). Cards tag them; when every card is a known (tested) site, a row below the cards lists up to 3 untested ones within 8 points of the lowest card (browser-scored, ice rule applied). Names come from OpenStreetMap Nominatim reverse geocoding (1 request/s, cached).
 - "Matched on / Differs on" chips show a tooltip: feature definition, data source, comparison method, and this pair's Mars/Earth values, distance and weight.
 - Globe highlight (`#...&hl=ice|sedimentary|volcanic|easy`, default off) colours drill-zone grid cells via `MarsGlobe.setOverlay`.
+
+## Earth → Mars (reverse search)
+Mode switch at the top (`#mode=reverse&basis=surface&elat=..&elon=..`). An Earth point (city search, preset or a map click) snaps to the nearest `earth_library.json` place; `TwinRescore.scoreMars` scores every Mars cell of the band's grid with the same `pairDistance` as the forward direction, so both directions agree. `basis=surface` uses the skin band with only rock, ground type, slope, roughness, dryness and surface temperature weighted (above-ground geology). The match % of every cell is painted on the globe; the top 5 (≥ 300 km apart on Mars) are labelled with the nearest named Mars region. City search uses Nominatim `search` through the same 1 request/s queue as reverse geocoding.
+
+## Mission brief and drill difficulty
+"Mission brief" fills `#brief` and calls `window.print()`; `@media print` hides everything else (save as PDF from the print dialog). The globe highlights now follow the selected depth band; "Drill difficulty" = hardness + 1 for ice-bearing ground + 0.5 on slopes over 5°.

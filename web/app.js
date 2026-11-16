@@ -38,9 +38,11 @@
   const state = {
     lat: 18.4, lon: 77.5, band: 'drill_zone', picked: false,   // picked: no search until the user chooses a spot
     cell: null, nearest: null, column: {}, gridDeg: 2, twins: [], baseTwins: [], hiddenIcy: [], candidates: [], selected: 0, site: null, highlight: '',
-    grids: {}, showcase: null, library: null, validation: null, campaigns: [], customWeights: null, token: 0
+    grids: {}, showcase: null, library: null, validation: null, campaigns: [], customWeights: null, token: 0,
+    mode: 'forward',
+    rev: {query: null, place: null, near: [], snapKm: 0, basis: 'surface', band: 'skin', grid: null, top: [], pct: null, selected: 0, token: 0, pending: null}
   };
-  let globe = null, marsMap = null, earthMap = null, marsLayer = null, earthLayer = null, searchTimer = 0;
+  let globe = null, marsMap = null, earthMap = null, marsLayer = null, earthLayer = null, searchTimer = 0, revMap = null, revLayer = null;
 
   /* ---------- helpers ---------- */
   const wrapLon = lon => ((lon + 180) % 360 + 360) % 360 - 180;
@@ -196,7 +198,7 @@
   const HIGHLIGHTS = {
     ice: {
       legend: '<i style="background:#78beff"></i>Massive ice <i style="background:#b4dcff"></i>Ice-cemented ground',
-      note: 'Ground ice at 1–3 m: Odyssey neutron hydrogen plus the ice-table model.',
+      note: 'Ground ice at this depth: Odyssey neutron hydrogen plus the ice-table model.',
       color: c => c.ground_class === 'massive_ice' ? [120, 190, 255, 220] : c.ground_class === 'ice_cemented' || c.ice === 'yes' ? [180, 220, 255, 170] : null
     },
     sedimentary: {
@@ -213,20 +215,32 @@
       legend: '<i style="background:#8fdc8f"></i>Dry, soft, flat and smooth',
       note: 'Dry regolith, hardness 0, slope under 1° and roughness below the Mars median: easiest to land on and drill.',
       color: (c, ctx) => c.ground_class === 'dry_regolith' && Number(c.hardness) === 0 && num(c.slope_deg) !== null && c.slope_deg < 1 && num(c.roughness_m) !== null && c.roughness_m < ctx.roughMedian ? [143, 220, 143, 200] : null
+    },
+    difficulty: {
+      legend: '<span class="ramp-wrap"><span class="ramp difficulty"></span><span class="ramp-ends"><span>Easy</span><span>Hard</span></span></span>',
+      note: 'Drilling difficulty at this depth: hardness (0–3), +1 for ice-cemented ground or massive ice, +0.5 on slopes over 5°.',
+      color: c => {
+        const h = num(c.hardness); if (h === null) return null;
+        const score = Math.min(4, h + (['ice_cemented', 'massive_ice'].includes(c.ground_class) ? 1 : 0) + (num(c.slope_deg) > 5 ? .5 : 0)) / 4;
+        const stops = [[95, 200, 120], [230, 205, 80], [235, 130, 60], [205, 55, 55]];
+        const x = score * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(x)), f = x - i;
+        return [...stops[i].map((v, k) => Math.round(v + (stops[i + 1][k] - v) * f)), 200];
+      }
     }
   };
-  let overlayGrid = null;
   async function setHighlight(kind) {
     state.highlight = kind;
     if (state.cell) writeHash();
     $('highlight').querySelectorAll('[data-hl]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.hl === kind)));
-    const legend = $('globe-legend');
+    const legend = $('globe-legend'), band = state.band;
+    $('highlight-label').textContent = `Highlight drilling targets on the globe (${BANDS[band].range})`;
+    if (state.mode !== 'forward') return;
     if (!kind || !HIGHLIGHTS[kind]) { globe?.setOverlay(null); legend.hidden = true; return; }
     legend.hidden = false; legend.innerHTML = '<span>Loading…</span>';
     try {
-      if (!overlayGrid) overlayGrid = await gridFor('drill_zone');
-      if (state.highlight !== kind) return;
-      const g = overlayGrid, gd = num(g.grid_deg) || 2, w = Math.round(360 / gd), h = Math.round(180 / gd);
+      const g = await gridFor(band);
+      if (state.highlight !== kind || state.band !== band || state.mode !== 'forward') return;
+      const gd = num(g.grid_deg) || 2, w = Math.round(360 / gd), h = Math.round(180 / gd);
       const rough = g.cells.map(c => num(c.mars?.roughness_m)).filter(x => x !== null).sort((a, b) => a - b);
       const ctx = {roughMedian: rough[Math.floor(rough.length / 2)] ?? Infinity};
       const px = new Uint8ClampedArray(w * h * 4);
@@ -239,7 +253,7 @@
       globe?.setOverlay({w, h, px});
       const share = Math.round(100 * n / g.cells.length);
       legend.innerHTML = `<div class="gl-keys">${HIGHLIGHTS[kind].legend}</div><p>${esc(HIGHLIGHTS[kind].note)} ${n.toLocaleString()} cells (${share}% of the map).</p>`;
-    } catch (e) { legend.innerHTML = `<span>Could not load the drill-zone grid.</span>`; }
+    } catch (e) { legend.innerHTML = `<span>Could not load the ${esc(BANDS[band].name.toLowerCase())} grid.</span>`; }
   }
 
   /* Readable names for untested sites (OpenStreetMap Nominatim reverse geocoding, max 1 request/s, cached). */
@@ -331,6 +345,7 @@
   function renderTwins() {
     const list = $('twins');
     $('export-button').disabled = !state.twins.length;
+    $('brief-button').disabled = !state.twins.length;
     if (!state.twins.length) { list.innerHTML = ''; return; }
     list.style.setProperty('--n', state.twins.length);
     list.innerHTML = state.twins.map((t, i) => {
@@ -608,6 +623,7 @@
     state.band = band;
     $('depth').querySelectorAll('[data-band]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.band === band)));
     $('depth-hint').textContent = BANDS[band].hint;
+    if (globe && state.highlight && state.mode === 'forward') setHighlight(state.highlight);
   }
 
   function exportCsv() {
@@ -620,9 +636,367 @@
     a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
+  /* ---------- Earth → Mars: reverse search ---------- */
+  // Above-ground geology: what a geologist standing there would see. Subsurface ice and hardness are switched off.
+  const SURFACE_WEIGHTS = {rock: 2, ground_class: 1, slope_deg: 1, roughness_m: 1, dryness: 1, temp_mean_rank: .5, temp_swing: .5};
+  const BASIS = {
+    surface: {band: 'skin', name: 'surface geology', hint: 'Above-ground geology: rock type, exposed bedrock vs loose regolith, slope, roughness, dryness and surface temperature. Buried ice and hardness are ignored.'},
+    upper_metre: {band: 'upper_metre', name: '10 cm–1 m underground', hint: 'Ground 10 cm–1 m down, every feature with the default weights.'},
+    drill_zone: {band: 'drill_zone', name: '1–3 m underground', hint: 'The 1–3 m drill zone: ice, ground type and hardness weigh most.'},
+    deep: {band: 'deep', name: 'deeper than 3 m', hint: 'Below 3 m. Experimental: less subsurface data, lower confidence.'}
+  };
+  const PRESETS = [
+    ['Reykjavík', 64.15, -21.94], ['Atacama Desert', -24.5, -69.25], ['Death Valley', 36.46, -116.87],
+    ['Hawaiʻi Volcanoes', 19.42, -155.29], ['Antarctic Dry Valleys', -77.5, 162.0], ['Toronto', 43.65, -79.38]
+  ];
+  // Approximate centres of well-known Mars regions (east-positive longitude), used only to label results.
+  const MARS_PLACES = [
+    ['Olympus Mons', 18.6, -133.8], ['Tharsis Montes', 1.0, -112.0], ['Valles Marineris', -13.9, -59.2], ['Hellas Planitia', -42.4, 70.5],
+    ['Argyre Planitia', -49.7, -43.4], ['Utopia Planitia', 46.7, 117.5], ['Arcadia Planitia', 47.2, -175.6], ['Amazonis Planitia', 24.8, -164.0],
+    ['Acidalia Planitia', 49.8, -20.6], ['Chryse Planitia', 28.4, -40.0], ['Elysium Mons', 25.0, 147.2], ['Elysium Planitia', 3.0, 154.7],
+    ['Isidis Planitia', 12.9, 87.0], ['Syrtis Major', 8.4, 69.5], ['Arabia Terra', 21.3, 6.0], ['Meridiani Planum', -0.2, -6.0],
+    ['Terra Sirenum', -39.7, -150.0], ['Terra Cimmeria', -32.7, 145.5], ['Noachis Terra', -45.0, -10.0], ['Tempe Terra', 39.7, -71.0],
+    ['Lunae Planum', 10.0, -67.0], ['Daedalia Planum', -18.0, -127.0], ['Tyrrhena Terra', -14.0, 90.0], ['Promethei Terra', -64.0, 97.0],
+    ['Xanthe Terra', 2.0, -45.0], ['Aeolis Mensae', -2.5, 140.0], ['Vastitas Borealis', 66.0, 30.0], ['Alba Mons', 40.5, -109.6]
+  ];
+  const marsKm = (a, b) => angular(Number(a.lat), Number(a.lon), Number(b.lat), Number(b.lon)) * 3389.5;
+  function marsName(c) {
+    for (const s of state.showcase?.sites || []) if (num(s.lat) !== null && marsKm(c, s) < 150) return s.name;
+    let best = null, bd = Infinity;
+    for (const [n, la, lo] of MARS_PLACES) { const d = marsKm(c, {lat: la, lon: lo}); if (d < bd) { bd = d; best = n; } }
+    return bd < 900 ? `Near ${best}` : `Mars ${coordText(c.lat, c.lon, 0)}`;
+  }
+
+  /* OpenStreetMap Nominatim: shared queue, max 1 request per second (their usage policy). */
+  function osm(path) {
+    const run = geoQueue.then(() => fetch(`https://nominatim.openstreetmap.org/${path}`).then(r => r.ok ? r.json() : null).catch(() => null));
+    geoQueue = run.then(() => new Promise(r => setTimeout(r, 1100)));
+    return run;
+  }
+  const placeCache = new Map();
+  function placeLookup(q) {
+    const key = q.trim().toLowerCase();
+    if (key.length < 3) return Promise.resolve([]);
+    if (!placeCache.has(key)) placeCache.set(key, osm(`search?format=jsonv2&limit=5&accept-language=en&q=${encodeURIComponent(q.trim())}`)
+      .then(r => (r || []).map(x => ({label: String(x.display_name || ''), short: x.name || String(x.display_name || '').split(',')[0], lat: Number(x.lat), lon: Number(x.lon)}))
+        .filter(x => Number.isFinite(x.lat) && Number.isFinite(x.lon))));
+    return placeCache.get(key);
+  }
+
+  function nearestPlaces(lat, lon, n = 1) {
+    const places = state.library?.bands?.skin?.places || [], here = {lat, lon};
+    return places.filter(p => num(p.lat) !== null && num(p.lon) !== null).map(p => ({p, d: km(here, p)})).sort((a, b) => a.d - b.d).slice(0, n);
+  }
+  const revNotice = (msg, kind = 'warning') => { const n = $('rev-notice'); n.hidden = !msg; n.className = `notice ${kind}`; n.textContent = msg || ''; };
+
+  function pickEarth(lat, lon, label) {
+    if (!state.library) { setMode('reverse'); revNotice('The Earth library (output/earth_library.json) is still loading or missing.', 'error'); return; }
+    lat = Math.max(-90, Math.min(90, lat)); lon = wrapLon(lon);
+    const near = nearestPlaces(lat, lon, 6);
+    if (!near.length) return;
+    const r = state.rev;
+    r.query = {lat, lon, label: label || null};
+    r.near = near; r.place = near[0].p; r.snapKm = near[0].d;
+    if (!label) {
+      const q = r.query;
+      osm(`reverse?format=jsonv2&zoom=8&accept-language=en&lat=${lat}&lon=${lon}`).then(d => {
+        const a = d?.address || {};
+        const l = [a.city || a.town || a.village || a.county || a.state_district || a.state, a.country].filter(Boolean).join(', ');
+        if (l && r.query === q) { q.label = l; renderReverse(); }
+      });
+    }
+    setMode('reverse');
+    reverseSearch();
+  }
+  function pickPlace(id) {
+    const p = (state.library?.bands?.skin?.places || []).find(x => x.id === id); if (!p) return;
+    const r = state.rev; r.place = p; r.snapKm = r.query ? km(r.query, p) : 0;
+    reverseSearch();
+  }
+
+  async function reverseSearch() {
+    const r = state.rev, token = ++r.token;
+    if (!r.place) { renderReverse(); return; }
+    const band = BASIS[r.basis].band;
+    revNotice('');
+    $('rev-twins').innerHTML = '<li><div class="twin skeleton">Scoring all 12,600 Mars cells…</div></li>';
+    try {
+      const grid = await gridFor(band);
+      if (token !== r.token) return;
+      const lib = state.library.bands[band];
+      const place = lib?.places?.find(p => p.id === r.place.id);
+      if (!place) throw new Error(`no ${band} values for this Earth place`);
+      const weights = r.basis === 'surface' ? Object.fromEntries(lib.features.map(f => [f.name, SURFACE_WEIGHTS[f.name] ?? 0])) : lib.weights;
+      const res = window.TwinRescore.scoreMars(place, lib, state.library, grid, weights, {topN: 5, spacingKm: 300});
+      Object.assign(r, {band, grid, weights, top: res.top, pct: res.pct, selected: 0});
+      if (!res.top.length) revNotice('Not enough data at this Earth place to compare with Mars. Try a nearby cell or another depth.');
+      writeHash(); renderReverse(); paintReverseGlobe(true);
+    } catch (e) {
+      if (token !== r.token) return;
+      r.top = []; r.pct = null; renderReverse(); paintReverseGlobe();
+      revNotice(`Could not score Mars (${e.message}). Serve the repository root and open /web/.`, 'error');
+    }
+  }
+
+  function paintReverseGlobe(focus = false) {
+    const r = state.rev, legend = $('rev-legend');
+    if (state.mode !== 'reverse') return;
+    if (!r.pct || !r.grid) { globe?.setOverlay(null); legend.hidden = true; return; }
+    const g = r.grid, gd = num(g.grid_deg) || 2, w = Math.round(360 / gd), h = Math.round(180 / gd);
+    const px = new Uint8ClampedArray(w * h * 4);
+    let good = 0;
+    g.cells.forEach((c, i) => {
+      const p = r.pct[i]; if (!(p >= 30)) return;
+      if (p >= (state.library?.levels?.good ?? 70)) good++;
+      const t = Math.min(1, (p - 30) / 60);
+      const row = Math.min(h - 1, Math.max(0, Math.floor((90 - Number(c.lat)) / gd))), col = Math.min(w - 1, Math.max(0, Math.floor((wrapLon(Number(c.lon)) + 180) / gd)));
+      px.set([Math.round(40 + 60 * t), Math.round(140 + 100 * t), Math.round(200 + 55 * t), Math.round(40 + 200 * t * t)], (row * w + col) * 4);
+    });
+    globe?.setOverlay({w, h, px});
+    const sel = r.top[r.selected];
+    if (sel) { globe?.setTarget(sel.lat, sel.lon); if (focus) globe?.centerOnTarget(); }
+    legend.hidden = false;
+    legend.innerHTML = `<div class="gl-keys"><span class="ramp-wrap"><span class="ramp similarity"></span><span class="ramp-ends"><span>30%</span><span>90%+ match</span></span></span></div>
+      <p>Every Mars cell scored against this Earth place. ${good ? `${good.toLocaleString()} cells (${(100 * good / g.cells.length).toFixed(good * 100 < g.cells.length ? 1 : 0)}% of the map) are a good match or better.` : 'No cell is a good match: this place has no close twin on Mars.'}</p>`;
+  }
+
+  function initRevMap() {
+    if (revMap || !window.L) return;
+    revMap = L.map('rev-earth-map', {minZoom: 1, maxZoom: 18, zoomSnap: 0.5, worldCopyJump: true});
+    revMap.attributionControl.setPrefix(false);
+    L.tileLayer(EARTH_TILES, {maxNativeZoom: 18, attribution: 'Esri, Maxar, Earthstar Geographics'}).addTo(revMap);
+    revMap.setView([25, 0], 1.5);
+    revLayer = L.layerGroup().addTo(revMap);
+    revMap.on('click', e => pickEarth(e.latlng.lat, e.latlng.lng, null));
+    new ResizeObserver(() => revMap.invalidateSize()).observe($('rev-earth-map'));
+  }
+
+  // log_z values in earth_library.json can be turned back into real units: x = e^(z·σ + μ) − 1.
+  function earthRaw(place, band, name) {
+    const lib = state.library?.bands?.[band], i = lib?.features?.findIndex(f => f.name === name) ?? -1;
+    const v = i >= 0 ? place?.v?.[i] : null, f = lib?.features?.[i];
+    if (v === null || v === undefined || !f) return null;
+    if (f.compare === 'log_z') return Math.expm1(v * Number(f.earth_log_std) + Number(f.earth_log_mean));
+    if (f.compare === 'same') return Object.keys(f.codes || {}).find(k => f.codes[k] === v) ?? null;
+    return v;
+  }
+
+  function revTip(c, name) {
+    const lib = state.library?.bands?.[state.rev.band], i = lib?.features?.findIndex(f => f.name === name) ?? -1;
+    const info = FEATURE_INFO[name];
+    let vals = '';
+    if (i >= 0) {
+      const f = lib.features[i], place = lib.places.find(p => p.id === state.rev.place?.id);
+      const m = window.TwinRescore.normalized(c.mars, f), e = place?.v?.[i] ?? null;
+      vals = `<span class="tip-vals"><span>Earth</span><b>${esc(showNorm(f, e))}</b><span>Mars</span><b>${esc(showNorm(f, m, c.mars?.[name === 'temp_mean_rank' ? 'temp_mean' : name]))}</b>
+        <span>Weight</span><b>${Number(state.rev.weights?.[name] ?? 0).toFixed(1)}</b></span>`;
+    }
+    return `<span class="tip" role="tooltip"><strong>${esc(featureLabel(name))}</strong>${info ? `<span>${esc(info)}</span>` : ''}${vals}</span>`;
+  }
+
+  function renderReverse() {
+    const r = state.rev, q = r.query, p = r.place;
+    $('rev-basis').querySelectorAll('[data-basis]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.basis === r.basis)));
+    $('rev-basis-hint').textContent = BASIS[r.basis].hint;
+    if (!q || !p) {
+      $('rev-twins').innerHTML = ''; $('rev-why').innerHTML = '';
+      $('rev-earth-name').textContent = 'Earth'; $('rev-earth-caption').textContent = 'Click to pick a place';
+      return;
+    }
+    const where = q.label || coordText(q.lat, q.lon);
+    $('rev-title').textContent = `Where on Mars is like ${where}?`;
+    const far = r.snapKm > 150;
+    $('rev-sub').textContent = `Matched on ${BASIS[r.basis].name}, using the open ground ${r.snapKm < 1 ? 'here' : `${Math.round(r.snapKm).toLocaleString()} km away`} (${coordText(p.lat, p.lon)}).${far ? ' The Earth library only covers bare or sparsely vegetated ground, where drill tests actually happen, so cities and forests snap to the nearest open terrain.' : ''}`;
+
+    // Earth map
+    $('rev-earth-name').textContent = `Earth · ${siteName({...p, region_id: p.id})}`;
+    $('rev-earth-caption').textContent = `${coordText(p.lat, p.lon)} · ${p.new_site ? 'untested ground' : 'known analog region'}`;
+    geocode([{...p, region_id: p.id}]);
+    if (revMap) {
+      revLayer.clearLayers();
+      const pts = [[q.lat, q.lon], [Number(p.lat), Number(p.lon)]];
+      r.near.slice(1).forEach(({p: o}) => L.circleMarker([o.lat, o.lon], {radius: 5, color: '#ffffff', weight: 1, fillColor: '#8f969d', fillOpacity: .9})
+        .bindTooltip(`${esc(o.name)} · click to use`).on('click', ev => { L.DomEvent.stopPropagation(ev); pickPlace(o.id); }).addTo(revLayer));
+      if (r.snapKm >= 1) {
+        L.polyline(pts, {color: '#ffffff', weight: 1.5, dashArray: '4 4', opacity: .8, interactive: false}).addTo(revLayer);
+        L.circleMarker(pts[0], {radius: 6, color: '#ffffff', weight: 2, fillColor: '#4a90d9', fillOpacity: 1, interactive: false}).bindTooltip(esc(where)).addTo(revLayer);
+      }
+      L.circleMarker(pts[1], {radius: 8, color: '#ffffff', weight: 2, fillColor: '#c8714c', fillOpacity: 1, interactive: false}).addTo(revLayer);
+      if (r.snapKm >= 1) revMap.fitBounds(pts, {padding: [40, 40], maxZoom: 7, animate: false});
+      else revMap.setView(pts[1], 6, {animate: false});
+    }
+
+    // Earth ground column
+    const rows = BAND_KEYS.map(b => {
+      const e = earthProfile(p.id, b);
+      return `<tr><th>${esc(BANDS[b].range)}</th><td>${esc(e ? GROUND_TEXT[e.ground_class] || cap(String(e.ground_class || '—')) : '—')}</td>
+        <td>${esc(e?.rock ? cap(String(e.rock).replaceAll('_', ' ')) : '—')}</td><td>${e?.ice ? esc(e.ice) : '—'}</td><td>${e?.hardness ?? '—'}</td></tr>`;
+    }).join('');
+    const slope = earthRaw(p, 'skin', 'slope_deg'), rough = earthRaw(p, 'skin', 'roughness_m');
+    $('rev-place').innerHTML = `<div class="rp-head"><h2>${nameSpan({...p, region_id: p.id})}</h2>${p.new_site ? '<span class="tag new">Untested</span>' : '<span class="tag known">Known analog</span>'}</div>
+      <p class="muted">${[slope !== null ? `Slope ${slope.toFixed(1)}°` : '', rough !== null ? `roughness ${rough.toFixed(1)} m` : ''].filter(Boolean).join(' · ') || 'Terrain values unavailable'}</p>
+      <table class="mini"><thead><tr><th>Depth</th><th>Ground</th><th>Rock</th><th>Ice</th><th>Hard</th></tr></thead><tbody>${rows}</tbody></table>
+      ${r.near.length > 1 ? `<div class="rp-near"><span class="label">Other open ground nearby</span>${r.near.map(({p: o}) =>
+        `<button type="button" class="u-chip" data-place="${esc(o.id)}" aria-pressed="${o.id === p.id}"><b>${esc(Math.round(km(q, o)).toLocaleString())} km</b>${esc(o.new_site ? coordText(o.lat, o.lon, 1) : o.name)}</button>`).join('')}</div>` : ''}`;
+    $('rev-place').querySelectorAll('[data-place]').forEach(b => b.addEventListener('click', () => pickPlace(b.dataset.place)));
+
+    // Mars results
+    const list = $('rev-twins');
+    list.style.setProperty('--n', Math.max(1, r.top.length));
+    list.innerHTML = r.top.map((c, i) => {
+      const pct = pctText(c.match_pct);
+      return `<li><button type="button" class="twin mars-twin" data-i="${i}" aria-pressed="${i === r.selected}">
+        <span class="top"><span class="pct">${pct}<small>%</small></span><span class="rank">#${i + 1}</span></span>
+        <span class="name">${esc(marsName(c))}</span>
+        <span class="meta"><span class="level ${esc(c.level)}">${esc(LEVEL_TEXT[c.level] || c.level)}</span><span class="muted">${esc(coordText(c.lat, c.lon, 0))}</span></span>
+      </button></li>`;
+    }).join('');
+    list.querySelectorAll('[data-i]').forEach(el => el.addEventListener('click', () => { r.selected = Number(el.dataset.i); renderReverse(); paintReverseGlobe(true); }));
+    renderReverseWhy();
+  }
+
+  function renderReverseWhy() {
+    const r = state.rev, c = r.top[r.selected];
+    if (!c) { $('rev-why').innerHTML = ''; return; }
+    const chips = (arr, cls = '') => (arr || []).length
+      ? `<div class="chips">${arr.map(n => `<span class="chip ${cls}" tabindex="0">${esc(featureLabel(n))}${revTip(c, n)}</span>`).join('')}</div>`
+      : '<span class="muted">—</span>';
+    const m = c.mars || {};
+    const facts = [m.rock ? cap(String(m.rock).replaceAll('_', ' ')) : '', GROUND_TEXT[m.ground_class] || '', num(m.temp_mean) !== null ? `${(num(m.temp_mean) - 273.15).toFixed(0)} °C mean` : '', m.ice === 'yes' ? 'ground ice' : ''].filter(Boolean).join(' · ');
+    $('rev-why').innerHTML = `
+      <div><h3>Matched on</h3>${chips(c.best)}</div>
+      <div><h3>Differs on</h3>${chips(c.worst, 'diff')}</div>
+      <div class="conf"><h3>This Mars cell</h3>${esc(facts || '—')}</div>
+      <div class="rev-go"><button type="button" class="btn" id="rev-open">Find Earth drill sites for this Mars spot →</button></div>`;
+    $('rev-open').addEventListener('click', () => openForward(c));
+  }
+
+  function openForward(c) {
+    if (state.rev.basis !== 'surface') setBand(state.rev.band);
+    setMode('forward');
+    setCoords(c.lat, c.lon); globe?.centerOnTarget(); search();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    document.body.classList.toggle('mode-reverse', mode === 'reverse');
+    document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === mode)));
+    if (mode === 'reverse') {
+      initRevMap();
+      requestAnimationFrame(() => revMap?.invalidateSize());
+      renderReverse(); paintReverseGlobe();
+    } else {
+      $('rev-legend').hidden = true;
+      globe?.setOverlay(null);
+      if (state.highlight) setHighlight(state.highlight);
+      if (state.picked) globe?.setTarget(state.lat, state.lon);
+      requestAnimationFrame(() => { marsMap?.invalidateSize(); earthMap?.invalidateSize(); });
+    }
+    writeHash();
+  }
+
+  function installReverse() {
+    document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { if (b.dataset.mode !== state.mode) setMode(b.dataset.mode); }));
+    $('rev-basis').addEventListener('click', ev => {
+      const b = ev.target.closest('[data-basis]'); if (!b || b.dataset.basis === state.rev.basis) return;
+      state.rev.basis = b.dataset.basis; renderReverse(); reverseSearch();
+    });
+    $('presets').innerHTML = `<span class="label">Try</span>${PRESETS.map(([n], i) => `<button type="button" class="u-chip" data-preset="${i}">${esc(n)}</button>`).join('')}`;
+    $('presets').addEventListener('click', ev => {
+      const b = ev.target.closest('[data-preset]'); if (!b) return;
+      const [n, la, lo] = PRESETS[Number(b.dataset.preset)];
+      $('place-q').value = n; hideSuggest(); pickEarth(la, lo, n);
+    });
+
+    const input = $('place-q'), box = $('place-suggest');
+    let items = [], active = -1, timer = 0, ask = 0;
+    const show = list => {
+      items = list; active = -1;
+      box.hidden = !list.length;
+      box.innerHTML = list.map((x, i) => `<li role="option" data-i="${i}" aria-selected="false"><strong>${esc(x.short)}</strong><span>${esc(x.label)}</span></li>`).join('');
+    };
+    const choose = x => { if (!x) return; input.value = x.short; hideSuggest(); pickEarth(x.lat, x.lon, x.short); };
+    function hideSuggest() { box.hidden = true; items = []; active = -1; }
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      const q = input.value, my = ++ask;
+      if (q.trim().length < 3) { hideSuggest(); return; }
+      timer = setTimeout(() => placeLookup(q).then(list => { if (my === ask && document.activeElement === input) show(list); }), 450);
+    });
+    input.addEventListener('keydown', ev => {
+      if (box.hidden || !items.length) return;
+      if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+        ev.preventDefault();
+        active = (active + (ev.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+        box.querySelectorAll('li').forEach((li, i) => li.setAttribute('aria-selected', String(i === active)));
+      } else if (ev.key === 'Escape') hideSuggest();
+    });
+    input.addEventListener('blur', () => setTimeout(hideSuggest, 150));
+    box.addEventListener('mousedown', ev => { const li = ev.target.closest('[data-i]'); if (li) { ev.preventDefault(); choose(items[Number(li.dataset.i)]); } });
+    $('place-form').addEventListener('submit', async ev => {
+      ev.preventDefault();
+      if (items.length) { choose(items[Math.max(0, active)]); return; }
+      const q = input.value.trim();
+      if (q.length < 3) { setMode('reverse'); revNotice('Type at least 3 letters of a city or region.'); return; }
+      const my = ++ask;
+      setMode('reverse'); revNotice(`Looking up “${q}”…`, 'info');
+      const list = await placeLookup(q);
+      if (my !== ask) return;
+      if (!list.length) { revNotice(`No place called “${q}” found. Try a bigger city or region, or click the Earth map.`, 'error'); return; }
+      revNotice(''); choose(list[0]);
+    });
+  }
+
+  /* ---------- mission brief (print / save as PDF) ---------- */
+  async function missionBrief() {
+    if (!state.cell || !state.twins.length) return;
+    const btn = $('brief-button'); btn.disabled = true;
+    try {
+      const lat = state.lat, lon = state.lon, column = {};
+      for (const b of BAND_KEYS) column[b] = state.column[b] || (state.site ? null : nearestCell(await gridFor(b).catch(() => null), lat, lon));
+      const t = current() || state.twins[0];
+      const title = state.site ? state.site.name : `Mars ${coordText(lat, lon)}`;
+      const lbl = n => esc(featureLabel(n));
+      const temp = m => num(m?.temp_mean) !== null ? `${(num(m.temp_mean) - 273.15).toFixed(0)} °C` : '—';
+      const frozen = m => num(m?.frozen_fraction) !== null ? `${Math.round(num(m.frozen_fraction) * 100)}%` : '—';
+      const col = (m, k) => m?.[k] == null ? '—' : k === 'ground_class' ? esc(GROUND_TEXT[m[k]] || m[k]) : esc(cap(String(m[k]).replaceAll('_', ' ')));
+      const marsRows = BAND_KEYS.map(b => { const m = column[b]?.mars;
+        return `<tr${b === state.band ? ' class="sel"' : ''}><th>${esc(BANDS[b].range)}</th><td>${col(m, 'ground_class')}</td><td>${col(m, 'rock')}</td><td>${col(m, 'ice')}</td><td>${m?.hardness ?? '—'}</td><td>${temp(m)}</td><td>${frozen(m)}</td></tr>`; }).join('');
+      const earthRows = BAND_KEYS.map(b => { const e = earthProfile(t.region_id, b);
+        return `<tr${b === state.band ? ' class="sel"' : ''}><th>${esc(BANDS[b].range)}</th><td>${col(e, 'ground_class')}</td><td>${col(e, 'rock')}</td><td>${col(e, 'ice')}</td><td>${e?.hardness ?? '—'}</td><td>${frozen(e)}</td><td>${bandMatch(t, b) === null ? '—' : `${pctText(bandMatch(t, b))}%`}</td></tr>`; }).join('');
+      const twinRows = state.twins.map((tw, i) => `<tr${tw === t ? ' class="sel"' : ''}><td>${i + 1}</td><td>${esc(siteName(tw))}${tw.new_site ? ' <em>untested</em>' : ''}</td><td>${esc(coordText(tw.lat, tw.lon))}</td>
+        <td>${tw.level === 'insufficient_data' ? '—' : `${esc(pctText(tw.match_pct))}%`}</td><td>${esc(LEVEL_TEXT[tw.level] || tw.level)}</td><td>${esc(cap(String(tw.confidence || '—')))}</td>
+        <td>${(tw.best || []).map(lbl).join(', ') || '—'}</td><td>${(tw.worst || []).map(lbl).join(', ') || '—'}</td></tr>`).join('');
+      const camps = state.campaigns.filter(c => state.twins.some(tw => tw.region_id === c.region_id));
+      const v = state.validation && !state.validation.fake ? state.validation.overall || {} : null;
+      const pctOf = x => num(x) === null ? '—' : `${(num(x) * 100).toFixed(0)}%`;
+      $('brief').innerHTML = `
+        <header><p class="b-kicker">Planetary Twin · Field-test mission brief</p><h1>${esc(title)}</h1>
+          <p>${esc(coordText(lat, lon, 2))} · target depth ${esc(BANDS[state.band].range)} (${esc(BANDS[state.band].name)}) · generated ${esc(new Date().toISOString().slice(0, 10))}</p></header>
+        <section><h2>Recommended Earth test site</h2>
+          <p class="b-lead"><strong>${esc(siteName(t))}</strong>, ${esc(coordText(t.lat, t.lon, 2))}: ${t.level === 'insufficient_data' ? 'not enough data for a score' : `${esc(pctText(t.match_pct))}% match (${esc(LEVEL_TEXT[t.level] || t.level)})`}${t.new_site ? ', outside every known analog region (untested ground)' : ''}.</p>
+          <p>Matched on ${(t.best || []).map(lbl).join(', ') || '—'}. Differs on ${(t.worst || []).map(lbl).join(', ') || '—'}.</p></section>
+        <section><h2>Ground column</h2><div class="b-cols">
+          <div><h3>Mars</h3><table><thead><tr><th>Depth</th><th>Ground</th><th>Rock</th><th>Ice</th><th>Hardness</th><th>Mean T</th><th>Frozen</th></tr></thead><tbody>${marsRows}</tbody></table></div>
+          <div><h3>Earth · ${esc(siteName(t))}</h3><table><thead><tr><th>Depth</th><th>Ground</th><th>Rock</th><th>Ice</th><th>Hardness</th><th>Frozen</th><th>Match</th></tr></thead><tbody>${earthRows}</tbody></table></div>
+        </div></section>
+        <section><h2>All candidate sites</h2><table><thead><tr><th>#</th><th>Site</th><th>Location</th><th>Match</th><th>Level</th><th>Confidence</th><th>Matched on</th><th>Differs on</th></tr></thead><tbody>${twinRows}</tbody></table></section>
+        ${camps.length ? `<section><h2>Previous field and drill campaigns</h2><ul>${camps.map(c => `<li>${esc(c.campaign)}${c.year ? ` (${esc(c.year)})` : ''}${c.what_was_tested ? `: ${esc(c.what_was_tested)}` : ''}</li>`).join('')}</ul></section>` : ''}
+        ${v ? `<section><h2>Model accuracy</h2><p>On ${esc(state.validation.n_pairs)} published Mars–Earth analog pairs, the known analog is in the top 3 for ${pctOf(v.recall_at_3)} and the top 20 for ${pctOf(v.recall_at_20)} of pairs (random: ${pctOf(v.random_recall_at_3)} and ${pctOf(v.random_recall_at_20)}) among ${esc(state.validation.n_regions)} Earth places.</p></section>` : ''}
+        <footer><p>Scores are a weighted Gower distance over temperature, ice, ground type, hardness, rock, terrain and dryness (weighted kNN). They are research leads for field testing, not drilling-safety certification.</p>
+          <p>Open this view: ${esc(location.href)}</p></footer>`;
+      window.print();
+    } finally { btn.disabled = !state.twins.length; }
+  }
+
   /* ---------- startup ---------- */
   function writeHash() {
-    history.replaceState(null, '', `#lat=${state.lat.toFixed(1)}&lon=${state.lon.toFixed(1)}&band=${state.band}${state.highlight ? `&hl=${state.highlight}` : ''}`);
+    const q = state.rev.query;
+    const hash = state.mode === 'reverse'
+      ? `mode=reverse&basis=${state.rev.basis}${q ? `&elat=${q.lat.toFixed(2)}&elon=${q.lon.toFixed(2)}` : ''}`
+      : `${state.picked ? `lat=${state.lat.toFixed(1)}&lon=${state.lon.toFixed(1)}&` : ''}band=${state.band}${state.highlight ? `&hl=${state.highlight}` : ''}`;
+    history.replaceState(null, '', `#${hash}`);
   }
   function readHash() {
     const h = new URLSearchParams(location.hash.slice(1));
@@ -630,6 +1004,10 @@
     if (lat !== null && lon !== null && Math.abs(lat) <= 70 && Math.abs(lon) <= 180) { state.lat = lat; state.lon = lon; state.picked = true; }
     if (BANDS[h.get('band')]) state.band = h.get('band');
     if (HIGHLIGHTS[h.get('hl')]) state.highlight = h.get('hl');
+    if (h.get('mode') === 'reverse') state.mode = 'reverse';
+    if (BASIS[h.get('basis')]) state.rev.basis = h.get('basis');
+    const elat = num(h.get('elat')), elon = num(h.get('elon'));
+    if (elat !== null && elon !== null && Math.abs(elat) <= 90 && Math.abs(elon) <= 180) state.rev.pending = {lat: elat, lon: elon};
   }
 
   function install() {
@@ -638,7 +1016,7 @@
     initMaps();
 
     if (window.MarsGlobe?.create) {
-      globe = window.MarsGlobe.create($('mars-canvas'), (lat, lon) => { setCoords(lat, lon); search(); });
+      globe = window.MarsGlobe.create($('mars-canvas'), (lat, lon) => { if (state.mode !== 'forward') setMode('forward'); setCoords(lat, lon); search(); });
       $('mars-canvas').addEventListener('keydown', ev => {
         const step = {ArrowLeft: [0, -2], ArrowRight: [0, 2], ArrowUp: [2, 0], ArrowDown: [-2, 0]}[ev.key];
         if (!step) return;
@@ -664,6 +1042,8 @@
       setCoords(Number(site.lat), Number(site.lon)); globe?.centerOnTarget(); search();
     });
     $('export-button').addEventListener('click', exportCsv);
+    $('brief-button').addEventListener('click', missionBrief);
+    installReverse();
     $('highlight').addEventListener('click', ev => { const b = ev.target.closest('[data-hl]'); if (b) setHighlight(b.dataset.hl); });
 
     if (location.protocol === 'file:') {
@@ -680,8 +1060,14 @@
           $('showcase').append(new Option(s.name || s.site_id, s.site_id));
         }
         renderValidation();
-        if (state.picked) search();
-        if (state.highlight) setHighlight(state.highlight);
+        setMode(state.mode);
+        if (state.mode === 'reverse') {
+          const p = state.rev.pending; state.rev.pending = null;
+          if (p) pickEarth(p.lat, p.lon, null);
+        } else {
+          if (state.picked) search();
+          if (state.highlight) setHighlight(state.highlight);
+        }
       });
   }
 
