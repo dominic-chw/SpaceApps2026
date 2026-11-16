@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#101214" />
-  <title>Planetary Twin · Mars drill-site analog finder</title>
+  <title>Explorer · Planetary Twin: Mars Drill-Site Analog Finder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
@@ -17,44 +17,51 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="./index.html"><strong>Planetary Twin</strong><span>Mars drill-site analog finder</span></a>
-    <nav><a href="./index.html" aria-current="page">Explorer</a><a href="./about.html">About</a></nav>
+    <a class="brand" href="./index.html"><strong>Planetary Twin</strong><span>Mars Drill-Site Analog Finder</span></a>
+    <nav><a href="./index.html">Home</a><a href="./app.html" aria-current="page">Explorer</a><a href="#accuracy" id="nav-accuracy">Models<span class="nav-long"> &amp; accuracy</span></a><a href="./about.html">About</a></nav>
   </header>
 
-  <section class="modebar" aria-label="Search direction">
-    <div class="mode-switch" role="tablist" aria-label="Search direction">
-      <button type="button" role="tab" id="mode-forward" data-mode="forward" aria-selected="true">
-        <span class="orbs"><i class="orb mars"></i><b>→</b><i class="orb earth"></i></span>
-        <span class="mode-text"><strong>Mars → Earth</strong><small>Pick a spot on Mars, get Earth test sites</small></span>
-      </button>
-      <button type="button" role="tab" id="mode-reverse" data-mode="reverse" aria-selected="false">
-        <span class="orbs"><i class="orb earth"></i><b>→</b><i class="orb mars"></i></span>
-        <span class="mode-text"><strong>Earth → Mars</strong><small>Find the Mars twin of any place on Earth</small></span>
-      </button>
-    </div>
-    <form class="place-search" id="place-form" role="search" autocomplete="off">
-      <label class="label" for="place-q">Search a city or region on Earth</label>
-      <div class="place-box">
-        <input id="place-q" type="search" placeholder="e.g. Reykjavík, Atacama Desert, Utah" aria-autocomplete="list" aria-controls="place-suggest" />
-        <button class="btn" type="submit">Find Mars twin</button>
-        <ul class="suggest" id="place-suggest" role="listbox" hidden></ul>
-      </div>
-      <div class="presets" id="presets"></div>
-    </form>
-  </section>
+  <nav class="modetabs" role="tablist" aria-label="Search direction">
+    <button type="button" role="tab" id="mode-forward" data-mode="forward" aria-selected="true">Mars → Earth<small>Find Earth test sites for a spot on Mars</small></button>
+    <button type="button" role="tab" id="mode-reverse" data-mode="reverse" aria-selected="false">Earth → Mars<small>Find where a place on Earth exists on Mars</small></button>
+  </nav>
 
   <main class="app">
-    <aside class="side">
-      <div class="globe-wrap" id="mars-stage">
+    <aside class="side" id="side">
+      <!-- Mars → Earth inputs -->
+      <div class="globe-wrap fwd-globe" id="mars-stage">
         <canvas id="mars-canvas" tabindex="0" aria-label="Mars globe. Drag to rotate, scroll to zoom, click to pick a location."></canvas>
-        <p class="globe-hint">Click to pick a site · drag to rotate</p>
+        <p class="globe-hint" id="globe-hint">Click to pick a site · drag to rotate</p>
       </div>
 
-      <div class="rev-legend" id="rev-legend" hidden></div>
+      <form class="controls fwd-only" id="controls" autocomplete="off">
+        <div class="field">
+          <label class="label" for="showcase">Landing site</label>
+          <select id="showcase"><option value="">Choose a landing site…</option></select>
+        </div>
+        <div class="field">
+          <span class="label">Or coordinates on Mars</span>
+          <div class="coords">
+            <label><span>Lat</span><input id="latitude" type="number" min="-70" max="70" step="0.1" value="18.4" /></label>
+            <label><span>Lon °E</span><input id="longitude" type="number" min="-180" max="180" step="0.1" value="77.5" /></label>
+            <button class="btn" id="find-button" type="submit">Search</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="label">Drilling depth</span>
+          <div class="segmented" id="depth" role="radiogroup" aria-label="Depth band">
+            <button type="button" role="radio" data-band="skin">0–10 cm</button>
+            <button type="button" role="radio" data-band="upper_metre">10 cm–1 m</button>
+            <button type="button" role="radio" data-band="drill_zone">1–3 m</button>
+            <button type="button" role="radio" data-band="deep">&gt;3 m</button>
+          </div>
+          <p class="hint" id="depth-hint"></p>
+        </div>
+      </form>
 
       <div class="field fwd-only">
-        <span class="label" id="highlight-label">Highlight drilling targets on the globe (1–3 m)</span>
-        <div class="chips-toggle" id="highlight" role="radiogroup" aria-label="Highlight drilling targets">
+        <span class="label" id="highlight-label">Highlight on the globe (1–3 m)</span>
+        <div class="chips-toggle" id="highlight" role="radiogroup" aria-label="Highlight on the globe">
           <button type="button" role="radio" data-hl="" aria-checked="true">Off</button>
           <button type="button" role="radio" data-hl="ice">Ground ice</button>
           <button type="button" role="radio" data-hl="sedimentary">Sedimentary</button>
@@ -65,39 +72,38 @@
         <div class="globe-legend" id="globe-legend" hidden></div>
       </div>
 
-      <form class="controls fwd-only" id="controls" autocomplete="off">
-        <div class="field">
-          <span class="label">Location on Mars</span>
-          <div class="coords">
-            <label><span>Lat</span><input id="latitude" type="number" min="-70" max="70" step="0.1" value="18.4" /></label>
-            <label><span>Lon °E</span><input id="longitude" type="number" min="-180" max="180" step="0.1" value="77.5" /></label>
-            <button class="btn" id="find-button" type="submit">Search</button>
-          </div>
+      <!-- Earth → Mars inputs -->
+      <form class="place-search rev-only" id="place-form" role="search" autocomplete="off">
+        <label class="label" for="place-q"><span class="step">1</span>Place on Earth</label>
+        <div class="place-box">
+          <input id="place-q" type="search" placeholder="City or region, e.g. Reykjavík" aria-autocomplete="list" aria-controls="place-suggest" />
+          <button class="btn" type="submit">Search</button>
+          <ul class="suggest" id="place-suggest" role="listbox" hidden></ul>
         </div>
-
-        <div class="field">
-          <span class="label">Depth</span>
-          <div class="segmented" id="depth" role="radiogroup" aria-label="Depth band">
-            <button type="button" role="radio" data-band="skin">0–10 cm</button>
-            <button type="button" role="radio" data-band="upper_metre">10 cm–1 m</button>
-            <button type="button" role="radio" data-band="drill_zone">1–3 m</button>
-            <button type="button" role="radio" data-band="deep">&gt;3 m</button>
-          </div>
-          <p class="hint" id="depth-hint"></p>
-        </div>
-
-        <div class="field">
-          <label class="label" for="showcase">Known landing sites</label>
-          <select id="showcase"><option value="">Choose a site…</option></select>
-        </div>
+        <div class="presets" id="presets"></div>
       </form>
+      <figure class="view rev-only rev-map">
+        <div id="rev-earth-map" class="map"></div>
+        <figcaption><strong id="rev-earth-name">Or click the map</strong><span id="rev-earth-caption"></span></figcaption>
+      </figure>
+      <div class="field rev-only">
+        <span class="label"><span class="step">2</span>Compare</span>
+        <div class="segmented basis" id="rev-basis" role="radiogroup" aria-label="What to compare">
+          <button type="button" role="radio" data-basis="surface" aria-checked="true">Surface geology</button>
+          <button type="button" role="radio" data-basis="upper_metre">10 cm–1 m</button>
+          <button type="button" role="radio" data-basis="drill_zone">1–3 m</button>
+          <button type="button" role="radio" data-basis="deep">&gt;3 m deep</button>
+        </div>
+        <p class="hint" id="rev-basis-hint"></p>
+      </div>
+      <div class="rev-place rev-only" id="rev-place" hidden></div>
     </aside>
 
     <section class="main fwd-only">
       <div class="result-head">
         <div>
           <h1 id="result-title">Earth analogs</h1>
-          <p id="result-sub" class="muted">Pick a location on Mars to find Earth sites with matching ground.</p>
+          <p id="result-sub" class="muted">Click the globe or choose a landing site to find Earth places with matching ground.</p>
         </div>
         <div class="head-actions">
           <button class="btn ghost" id="brief-button" type="button" disabled>Mission brief</button>
@@ -127,29 +133,20 @@
     <section class="main rev-only" id="rev" aria-live="polite">
       <div class="result-head">
         <div>
-          <h1 id="rev-title">Mars twins for any place on Earth</h1>
-          <p id="rev-sub" class="muted">Search a city or region above, pick a preset, or click anywhere on the Earth map.</p>
+          <h1 id="rev-title">Where on Mars is like…</h1>
+          <p id="rev-sub" class="muted">Choose a place on Earth on the left. Every Mars cell is scored against it and the closest matches are listed here.</p>
         </div>
-      </div>
-      <div class="field">
-        <span class="label">Match on</span>
-        <div class="segmented basis" id="rev-basis" role="radiogroup" aria-label="What to match">
-          <button type="button" role="radio" data-basis="surface" aria-checked="true">Surface geology</button>
-          <button type="button" role="radio" data-basis="upper_metre">10 cm–1 m</button>
-          <button type="button" role="radio" data-basis="drill_zone">1–3 m</button>
-          <button type="button" role="radio" data-basis="deep">&gt;3 m</button>
-        </div>
-        <p class="hint" id="rev-basis-hint"></p>
       </div>
       <div id="rev-notice" class="notice" role="status" hidden></div>
-      <div class="rev-top">
-        <figure class="view">
-          <div id="rev-earth-map" class="map"></div>
-          <figcaption><strong id="rev-earth-name">Earth</strong><span id="rev-earth-caption">Click to pick a place</span></figcaption>
-        </figure>
-        <div class="rev-place card" id="rev-place"><p class="muted">The Earth ground you pick is described here.</p></div>
+      <div class="rev-results">
+        <div class="rev-globe" id="rev-globe-slot">
+          <div class="rev-legend" id="rev-legend" hidden></div>
+        </div>
+        <div class="rev-list-wrap">
+          <h2 class="list-title">Closest Mars matches</h2>
+          <ol class="rev-list" id="rev-twins"><li class="empty">No place chosen yet.</li></ol>
+        </div>
       </div>
-      <ol class="twins" id="rev-twins"></ol>
       <div class="why" id="rev-why"></div>
     </section>
   </main>
@@ -159,12 +156,13 @@
       <div class="card-head"><h2>Ground profile</h2><p class="muted" id="profile-sub">Side view of the ground on both planets, from the surface down.</p></div>
       <div id="profile" class="profile"><p class="muted">Run a search to compare the ground column.</p></div>
     </div>
-    <div class="card" id="validation-card" hidden>
-      <h2>How accurate is this?</h2>
+    <div class="card accuracy-card" id="validation-card" hidden>
+      <span id="accuracy" class="anchor"></span>
+      <div class="card-head"><h2>Models and accuracy</h2><p class="muted">Two PyTorch neural networks, gradient boosting and the rules they replace, each tested on data it never trained on.</p></div>
       <div id="validation"></div>
     </div>
     <details class="card fwd-only" id="weights-card">
-      <summary><h2>Adjust feature weights</h2><span class="muted">Re-ranks Earth sites in your browser</span></summary>
+      <summary><h2>Feature weights</h2><span class="muted">Hand-tuned or learned · re-ranks in your browser</span></summary>
       <div id="weights-panel"></div>
     </details>
   </section>

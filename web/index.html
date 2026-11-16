@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101214" />
+  <title>Planetary Twin: Mars Drill-Site Analog Finder</title>
+  <meta name="description" content="Compare ground conditions on Mars and Earth (temperature, ice, rock and hardness) at the depth a drill reaches, to choose where Mars hardware is tested." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script>
+    // Older shared links pointed at index.html#lat=..; send them to the explorer.
+    if (/(^|[#&])(lat|mode|elat|q)=/.test(location.hash.slice(1))) location.replace('./app.html' + location.hash);
+  </script>
+</head>
+<body class="home">
+  <header class="topbar">
+    <a class="brand" href="./index.html"><strong>Planetary Twin</strong></a>
+    <nav><a href="./app.html">Explorer</a><a href="./app.html#accuracy">Models<span class="nav-long"> &amp; accuracy</span></a><a href="./about.html">About</a><a href="https://github.com/dominic-chw/SpaceApps2026" target="_blank" rel="noopener noreferrer" class="nav-gh">GitHub</a></nav>
+  </header>
+
+  <main class="home-main">
+    <section class="home-hero">
+      <p class="kicker">NASA Space Apps Challenge 2026</p>
+      <h1>Planetary Twin</h1>
+      <p class="home-sub">Mars Drill-Site Analog Finder</p>
+      <p class="home-lede">Compare the ground on both planets (temperature, ice, rock and hardness) down to the depth a drill reaches, to choose where Mars hardware should be tested.</p>
+    </section>
+
+    <div class="choices">
+      <a class="choice mars" href="./app.html">
+        <span class="planet mars" aria-hidden="true"></span>
+        <span class="choice-body">
+          <span class="choice-kicker">Start on Mars</span>
+          <strong>Find Earth test sites</strong>
+          <span class="choice-text">Pick a landing site or any spot on Mars and a drilling depth. Get the places on Earth with the closest ground, and why they match.</span>
+          <span class="choice-go">Open the explorer <span aria-hidden="true">→</span></span>
+        </span>
+      </a>
+      <a class="choice earth" href="./app.html#mode=reverse">
+        <span class="planet earth" aria-hidden="true"></span>
+        <span class="choice-body">
+          <span class="choice-kicker">Start on Earth</span>
+          <strong>Find a place's twin on Mars</strong>
+          <span class="choice-text">Search a city or region, or click a map. See which parts of Mars have the same ground, at the surface or underground.</span>
+          <span class="choice-go">Open the explorer <span aria-hidden="true">→</span></span>
+        </span>
+      </a>
+    </div>
+
+    <section class="home-ml" aria-labelledby="ml-title">
+      <h2 id="ml-title">Supported by machine learning</h2>
+      <p class="ml-why"><strong>Why it's needed:</strong> satellite maps of what lies underground (permafrost, ground temperature) stop at 25° N. Several of the best Mars analogs, such as Antarctica's Dry Valleys and the high Andes, are further south. Models trained where the maps exist fill in the rest, and each one is tested on whole regions it never saw.</p>
+      <div class="ml-items">
+        <div class="ml-item">
+          <span class="ml-kicker">Gradient boosting + PyTorch neural network</span>
+          <h3>Is there ground ice?</h3>
+          <p>Learns from ESA's satellite permafrost map how climate, terrain, soil and rock predict ice.<span data-ml="ice"></span></p>
+        </div>
+        <div class="ml-item">
+          <span class="ml-kicker">Physics-informed neural network ensemble</span>
+          <h3>How cold is it underground?</h3>
+          <p>Predicts the temperature profile down to 10 m. Its training loss rejects profiles that break heat conduction, and it says when a place is unlike anything it learned from.<span data-ml="temp"></span></p>
+        </div>
+        <div class="ml-item">
+          <span class="ml-kicker">Weighted nearest neighbours</span>
+          <h3>Which places match?</h3>
+          <p>Scores every place on ten ground features and explains each match.<span data-ml="match"></span></p>
+        </div>
+      </div>
+      <a class="ml-link" href="./app.html#accuracy">See how each model was tested <span aria-hidden="true">→</span></a>
+    </section>
+  </main>
+
+  <footer>
+    <span>NASA Space Apps Challenge 2026 · Research leads for field testing, not drilling-safety certification.</span>
+    <span>Imagery: NASA/USGS Viking MDIM; Esri, Maxar, Earthstar Geographics.</span>
+  </footer>
+
+  <script>
+    // Tested numbers, read from the pipeline outputs (held-out regions / pairs only).
+    (() => {
+      const get = p => fetch(new URL(p, new URL('../', location.href)), {cache: 'no-cache'}).then(r => r.ok ? r.json() : null).catch(() => null);
+      const mean = xs => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+      const put = (k, html) => { const el = document.querySelector(`[data-ml="${k}"]`); if (el) el.innerHTML = ' ' + html; };
+      Promise.all([get('output/ml_report.json'), get('output/validation.json')]).then(([ml, v]) => {
+        const pm = ml && ml.permafrost_model;
+        if (pm) {
+          const rs = Object.values(pm.leave_region_out || {}).filter(r => r.model && r.model.balanced_accuracy != null && r.temperature_rule);
+          const best = mean(rs.map(r => Math.max(r.model.balanced_accuracy, r.nn ? r.nn.balanced_accuracy : 0)));
+          const rule = mean(rs.map(r => r.temperature_rule.balanced_accuracy));
+          if (best != null && rule != null) put('ice', `On unseen regions, the better of the two scores <b>${best.toFixed(2)}</b> balanced accuracy vs ${rule.toFixed(2)} for a temperature rule.`);
+        }
+        const pn = ml && ml.profile_nn;
+        if (pn && pn.leave_region_out) {
+          const rs = Object.values(pn.leave_region_out).filter(r => r.physics_informed_nn && r.heat_model);
+          const nn = mean(rs.map(r => r.physics_informed_nn.rmse_10m)), heat = mean(rs.map(r => r.heat_model.rmse_10m));
+          if (nn != null && heat != null) put('temp', `On unseen regions: <b>${nn.toFixed(1)}&nbsp;°C</b> error at 10&nbsp;m vs ${heat.toFixed(1)}&nbsp;°C for a heat model.`);
+        }
+        if (v && v.overall && !v.fake) put('match', `Known Mars–Earth analog pairs land in the top 10 <b>${Math.round(v.overall.recall_at_10 * 100)}%</b> of the time vs ${Math.round(v.overall.random_recall_at_10 * 100)}% by chance.`);
+      });
+    })();
+  </script>
+</body>
+</html>

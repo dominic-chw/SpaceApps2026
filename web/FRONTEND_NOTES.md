@@ -3,10 +3,11 @@
 Static site; reads `output/*.json` (docs/plan.md §3, §15a) and never writes to it.
 
 ## Run
-From the repo root: `py -m http.server 8000`, open http://localhost:8000/web/. Internet is needed for Leaflet (cdnjs), the Inter font and satellite tiles.
+From the repo root: `py -m http.server 8000`, open http://localhost:8000/web/ (home) or /web/app.html (explorer). Internet is needed for Leaflet (cdnjs), the Inter font and satellite tiles.
 
 ## Files
-- `index.html`, `styles.css`, `app.js`: explorer. Click the globe, change depth or pick a landing site and results load immediately. State is in the URL hash (`#lat=18.4&lon=77.5&band=drill_zone`), so views can be shared.
+- `index.html`: home page with just the two starting points (Mars → Earth, Earth → Mars). Old `index.html#lat=..` links redirect to the explorer.
+- `app.html`, `styles.css`, `app.js`: explorer. Click the globe, change depth or pick a landing site and results load immediately. State is in the URL hash (`#lat=18.4&lon=77.5&band=drill_zone`), so views can be shared.
 - `mars-globe.js` + `mars.jpg`: picker globe (Viking MDIM 2.1 texture).
 - `rescore.js`: in-browser kNN re-scoring for the weight sliders (same formula as `pipeline/matching/match.py`, §15a).
 - `about.html`: project summary.
@@ -36,3 +37,13 @@ Mode switch at the top (`#mode=reverse&basis=surface&elat=..&elon=..`). An Earth
 
 ## Mission brief and drill difficulty
 "Mission brief" fills `#brief` and calls `window.print()`; `@media print` hides everything else (save as PDF from the print dialog). The globe highlights now follow the selected depth band; "Drill difficulty" = hardness + 1 for ice-bearing ground + 0.5 on slopes over 5°.
+
+## Wording
+`new_site` places are shown as **No field tests yet** (no recorded NASA / ESA / university field or drill campaign); known regions as **Field-tested analog**. Code still calls them untested / new_site.
+
+## ML panels
+- "How accurate is this?" reads `output/validation.json` (matching + `learned_weights`) and `output/ml_report.json` (permafrost model: spatial block CV and leave-region-out vs latitude-only, temperature rule and majority baselines; metric switch F1 / balanced accuracy / ROC-AUC).
+- Weights panel: Hand-tuned / Learned presets from `earth_library.json` (`hand_weights`, `learned_weights` per band); moving a slider switches to custom. Home page search: `app.html#mode=reverse&q=<place>`.
+
+## Layout
+Both modes share one layout: inputs on the left, results on the right. In Earth → Mars the Mars globe moves from the left column into the results (`setMode` re-parents `#mars-stage`; the globe resizes itself via ResizeObserver) and shows the match % heat map; clicking it selects the nearest listed match. The mode switch is the tab bar under the header.
