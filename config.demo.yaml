@@ -3,7 +3,7 @@
 #   PowerShell:  $env:SPACEAPPS_CONFIG="config.demo.yaml"; python -m pipeline.run_all --build
 #   bash:        SPACEAPPS_CONFIG=config.demo.yaml python -m pipeline.run_all --build
 # Earth: data/earth/layers.parquet is the interface Jad's Earth side produces (columns of
-# common/synthetic.earth_layers). Until his global grid lands it holds the 20 named regions.
+# common/synthetic.earth_layers): the global 0.5 deg bare-ground grid, known analog regions tagged.
 processing:
   sources:
     # DEMO: real layers built from the downloads (data/ is gitignored; copy it from Drive to rebuild).
