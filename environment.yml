@@ -15,3 +15,8 @@ dependencies:
   - pyyaml
   - requests
   - pytest
+  - pip
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cpu
+      # optional: neural-net comparison for the permafrost model (pipeline/earth_ml/permafrost_nn.py)
+      - torch  # optional, CPU build: pip install torch --index-url https://download.pytorch.org/whl/cpu

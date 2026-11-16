@@ -309,11 +309,14 @@ def fetch_land_grid(grid_deg=2.0, chunk=25, workers=8, min_bare=0.6, start="2015
     box = lambda la, lo: ee.Geometry.Rectangle([lo - h, la - h, lo + h, la + h], "EPSG:4326", False)
 
     bare = {}
-    for i in range(0, len(cells), 500):
+    for i in range(0, len(cells) if min_bare > 0 else 0, 500):
         feats = [ee.Feature(box(la, lo), {"cell_id": cid(la, lo)}) for la, lo in cells[i:i + 500]]
         fc = worldcover_bare(ee).reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 2000, tileScale=4)
         bare.update({f["properties"]["cell_id"]: f["properties"].get("mean") or 0 for f in fc.getInfo()["features"]})
-    todo = [(la, lo) for la, lo in cells if bare.get(cid(la, lo), 0) >= min_bare and cid(la, lo) not in have]
+    # min_bare <= 0: every land cell (training data for the permafrost model needs tundra and forest too;
+    # build_grid applies the bare-ground filter for the app's Earth library).
+    todo = [(la, lo) for la, lo in cells if (min_bare <= 0 or bare.get(cid(la, lo), 0) >= min_bare)
+            and cid(la, lo) not in have]
     print(f"land grid {grid_deg} deg: {len(cells)} land cells, {sum(v >= min_bare for v in bare.values())} bare, "
           f"{len(todo)} to fetch")
 
@@ -339,6 +342,64 @@ def fetch_land_grid(grid_deg=2.0, chunk=25, workers=8, min_bare=0.6, start="2015
             pd.concat(frames, ignore_index=True).to_csv(out_path, index=False)
             print(f"  {n}/{len(todo)} ({time.time() - t0:.0f}s)")
     return out_path
+
+
+def fetch_antarctica(grid_deg=0.5, start="2015-01-01", end="2023-01-01"):
+    """Direct-fetch version of export_antarctica (no Drive): ice-free Antarctic cells (MODIS barren)
+    -> data/earth/ee/earth_layers_antarctica.csv. WorldCover has no Antarctica, so bare_fraction
+    = MODIS barren fraction there."""
+    import pandas as pd
+    cells = antarctic_cells(grid_deg)
+    print(f"antarctica: {len(cells)} cells with bare ground")
+    ee = init_ee()
+    mlc = modis_landcover(ee)
+    stack = ee.Image.cat([era5_stats(ee, start, end), modis_stats(ee, start, end), terrain_stats(ee),
+                          mlc.select("modis_barren").rename("bare_fraction"), mlc,
+                          soilgrids_0_2m(ee), aridity(ee)])
+    h = grid_deg / 2
+    rows = []
+    for i in range(0, len(cells), 25):
+        feats = [ee.Feature(ee.Geometry.Rectangle([lo - h, la - h, lo + h, la + h], "EPSG:4326", False),
+                            {"cell_id": f"{la:+07.2f}_{lo:+07.2f}", "lat": float(la), "lon": float(lo)})
+                 for la, lo in cells[i:i + 25]]
+        fc = stack.reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 5000, tileScale=8)
+        rows += [f["properties"] for f in fc.getInfo()["features"]]
+    out = ROOT_EE / "earth_layers_antarctica.csv"
+    pd.DataFrame(rows).to_csv(out, index=False)
+    return out
+
+
+def fetch_modis_landcover(grid_deg=0.5, chunk=400, workers=8):
+    """Direct-fetch version of export_modis_landcover (no Drive): MODIS barren and snow/ice
+    fractions for every land cell -> data/earth/ee/earth_modis_lc_direct.csv (build_layers.load_ee
+    joins earth_modis_lc_*.csv by cell_id). snow/ice >= 0.5 marks glacier cells as massive ice."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    import pandas as pd
+    cells = land_cells(grid_deg) + antarctic_cells(grid_deg)
+    ee = init_ee()
+    img = modis_landcover(ee)
+    h = grid_deg / 2
+
+    def fetch(part):
+        feats = [ee.Feature(ee.Geometry.Rectangle([lo - h, la - h, lo + h, la + h], "EPSG:4326", False),
+                            {"cell_id": f"{la:+07.2f}_{lo:+07.2f}"}) for la, lo in part]
+        for _ in range(3):
+            try:
+                fc = img.reduceRegions(ee.FeatureCollection(feats), ee.Reducer.mean(), 1000, tileScale=4)
+                return [f["properties"] for f in fc.getInfo()["features"]]
+            except Exception as err:                       # EE rate limits / transient errors
+                print("  retry:", str(err)[:120])
+        return []
+
+    rows = []
+    with ThreadPoolExecutor(workers) as pool:
+        for part in pool.map(fetch, [cells[i:i + chunk] for i in range(0, len(cells), chunk)]):
+            rows += part
+    out = ROOT_EE / "earth_modis_lc_direct.csv"
+    pd.DataFrame(rows).to_csv(out, index=False)
+    print(f"modis land cover: {len(rows)} cells -> {out}")
+    return out
 
 
 def export_grid_samples(tif_path, grid_deg=0.5, chunk=5000, start="2015-01-01", end="2023-01-01", dry_run=False):
@@ -378,15 +439,24 @@ if __name__ == "__main__":
     ap.add_argument("--grid-from", help="path to worldcover_bare_grid.tif; exports layers for its bare cells")
     ap.add_argument("--antarctica", action="store_true", help="export ice-free Antarctic cells (MODIS barren)")
     ap.add_argument("--modis-lc", action="store_true", help="export NASA MODIS land cover for every land cell")
+    ap.add_argument("--min-bare", type=float, default=0.6, help="--fetch-grid: bare fraction filter (0 = all land)")
+    ap.add_argument("--workers", type=int, default=8)
+    ap.add_argument("--chunk", type=int, default=25)
+    ap.add_argument("--fetch-antarctica", action="store_true", help="--antarctica without the Drive round trip")
+    ap.add_argument("--fetch-modis-lc", action="store_true", help="--modis-lc without the Drive round trip")
     a = ap.parse_args()
-    if a.antarctica:
+    if a.fetch_modis_lc:
+        print(fetch_modis_landcover(grid_deg=a.grid_deg))
+    elif a.fetch_antarctica:
+        print(fetch_antarctica(grid_deg=a.grid_deg))
+    elif a.antarctica:
         export_antarctica(dry_run=a.dry_run)
     elif a.modis_lc:
         export_modis_landcover(dry_run=a.dry_run)
     elif a.land_mask:
         save_land_mask()
     elif a.fetch_grid:
-        print(fetch_land_grid(grid_deg=a.grid_deg))
+        print(fetch_land_grid(grid_deg=a.grid_deg, chunk=a.chunk, workers=a.workers, min_bare=a.min_bare))
     elif a.land_grid:
         export_land_grid(grid_deg=a.grid_deg, dry_run=a.dry_run)
     elif a.bare_grid_only:

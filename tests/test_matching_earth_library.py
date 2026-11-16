@@ -124,3 +124,17 @@ def test_write_is_compact_json(tmp_path):
     path = earth_library.write(library, tmp_path / "earth_library.json")
     text = path.read_text(encoding="utf-8")
     assert ": " not in text and json.loads(text)["spacing_km"] == 200
+
+
+def test_lookup_cells_normalized_like_library():
+    """earth_lookup.json rows use the library's settings: re-normalizing the library's own Earth
+    places must give back its values (percentile within 1 rank step, the rest exactly)."""
+    prepared = match.prepare_band(fake_mars(), fake_earth(), "skin")
+    again = earth_library.normalize_like(prepared["earth"], prepared)
+    lib = prepared["earth_grid"]
+    for j, feature in enumerate(prepared["features"].values()):
+        a, b = again[:, j], lib[:, j]
+        both = ~np.isnan(a) & ~np.isnan(b)
+        assert np.array_equal(np.isnan(a), np.isnan(b))
+        tol = 1.0 / max(1, len(a) - 1) + 1e-9 if feature["compare"] == "percentile" else 1e-9
+        assert np.all(np.abs(a[both] - b[both]) <= tol), feature["compare"]

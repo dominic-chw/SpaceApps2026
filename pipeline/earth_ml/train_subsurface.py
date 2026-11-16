@@ -11,8 +11,10 @@ from sklearn.model_selection import GroupKFold, cross_val_score
 
 from ..common.config import get_processing
 
+# perm_prob is NOT a predictor: ice_label / ground_label are derived from the same permafrost data,
+# so using it inflated CV to ~99% (leakage). See earth_ml/permafrost.py for the ice model.
 NUMERIC = ["mean_temp_k", "annual_range_k", "elevation_m", "slope_deg", "lat", "aridity",
-           "bedrock_depth_m", "perm_prob"]
+           "bedrock_depth_m"]
 
 
 def _features(df):
@@ -41,10 +43,17 @@ def fill_gaps(layers, params=None):
     cv = {}
     targets = {"ice": ("ice_label", lambda s: s.astype(int)),
                "ground_class": ("ground_label", lambda s: s.astype(str))}
+    if "ice_source" in df:
+        # Real layers: ice comes from ESA CCI or the permafrost model (build_layers.ice_labels) and is
+        # NOT filled again here; NaN = the permafrost model was unsure, so ice stays unknown.
+        df["ice"] = df["ice_label"]
+        df["ice_q"] = df["ice_source"].fillna("predicted")
+        targets.pop("ice")
     for out, (label, cast) in targets.items():
         known = df[label].notna()
         df[out] = df[label].where(known)
-        df[out + "_q"] = np.where(known, "measured", "predicted")
+        base_q = df["ice_q"] if (out == "ground_class" and "ice_source" in df) else "measured"
+        df[out + "_q"] = np.where(known, base_q, "predicted")
         y = cast(df.loc[known, label])
         n_splits = min(5, groups[known].nunique())
         if y.nunique() < 2 or n_splits < 2:
@@ -56,5 +65,5 @@ def fill_gaps(layers, params=None):
         model = _model(gp).fit(X[known], y)
         if (~known).any():
             df.loc[~known, out] = model.predict(X[~known])
-    df["ice"] = df["ice"].astype(float).astype(int)
+    df["ice"] = df["ice"].astype(float)          # 0 / 1, NaN = unknown
     return df, cv

@@ -180,7 +180,7 @@ def pair_ranks(prepared_by_band, pairs, notes):
 
 
 def evaluate(mars_tables, earth_tables, pairs, matcher="knn", runs=1000, seed=0,
-             feature_file=None, all_weights=None, ablation=True):
+             feature_file=None, all_weights=None, ablation=True, learned_report=None):
     """Run the whole validation.
 
     mars_tables, earth_tables: {band: DataFrame} feature tables.
@@ -223,7 +223,7 @@ def evaluate(mars_tables, earth_tables, pairs, matcher="knn", runs=1000, seed=0,
         notes.append(f"Only {n_regions} Earth places: recall@10/20 are easy to reach, "
                      f"so recall_at_1/3 and mean_rank are the more telling numbers.")
 
-    return {
+    result = {
         "matcher": matcher,
         "recall_at_10": overall.get("recall_at_10"),
         "recall_at_20": overall.get("recall_at_20"),
@@ -237,6 +237,11 @@ def evaluate(mars_tables, earth_tables, pairs, matcher="knn", runs=1000, seed=0,
         "ablation_mean_rank_change": ablation_result,
         "fake": False,
     }
+    if learned_report:
+        # Extra key (plan s3 allows additions): learned weights vs hand-set vs random, all
+        # leave-one-Mars-site-out (pipeline/validation/learn_weights.py).
+        result["learned_weights"] = {k: v for k, v in learned_report.items() if k != "loo_pairs"}
+    return result
 
 
 def write_validation(result, path=OUTPUT_PATH):

@@ -13,10 +13,12 @@ from ..common.ground import hardness
 from ..common.io import FEATURES_DIR, feature_row, write_features
 from ..common.schema import BANDS
 from ..earth_ml.train_subsurface import fill_gaps
-from ..physics.heat_model import band_top_m, earth_band_temps, earth_frozen_fraction
+from ..earth_ml.profile_nn import SUB_COLS, band_temp_k
+from ..physics.heat_model import band_mid_depth_m, band_top_m, earth_band_temps, earth_frozen_fraction
 from .local_layers import GLIM_LOOKUP, glim_to_rock, load_layers
 
 ROOT = Path(__file__).resolve().parents[2]
+SUBSURFACE_BANDS = ("upper_metre", "drill_zone", "deep")   # skin keeps the surface heat model
 
 
 def ground_for_band(rec, band, p):
@@ -30,8 +32,13 @@ def ground_for_band(rec, band, p):
     # Ice in this band if the cell has ground ice AND either the band is below the summer thaw
     # (active layer) or ERA5-Land says this band stays frozen all year (e.g. Dry Valleys,
     # where the top metre never thaws; MANIFEST rule for skin / upper_metre).
+    if rec["ice"] != rec["ice"] or rec["ice"] is None:     # unknown: the permafrost model was unsure
+        return ground, None
     frozen_all_year = real_frozen_fraction(rec, band) >= 0.99
-    ice = bool(rec["ice"]) and (top >= p["ground_rules"]["earth_active_layer_m"] - 1e-9 or frozen_all_year)
+    # Active layer: ESA CCI active-layer thickness where it exists, else the config default.
+    alt = rec.get("cci_alt_m", float("nan"))
+    active = alt if alt == alt and alt is not None else p["ground_rules"]["earth_active_layer_m"]
+    ice = bool(rec["ice"]) and (top >= active - 1e-9 or frozen_all_year)
     if not ice and ground in ("ice_cemented", "massive_ice"):
         ground = "dry_regolith"                  # active layer above the permafrost table
     return ground, ice
@@ -73,17 +80,20 @@ def near_known_pair_site(layers, radius_km=100):
 
 
 def add_real_frozen(layers):
-    """Bring the ERA5-Land frozen-share extras (frozen_l1..4) from data/earth/layers.parquet.
+    """Bring the extras (ERA5-Land frozen share frozen_l1..4, ice_source, CCI active layer cci_alt_m)
+    from data/earth/layers.parquet.
 
     common/sources.py keeps only the contract columns, so these extras are re-joined here
     by cell_id. Cells without them fall back to the heat model in extract_earth.
     """
     path = ROOT / "data" / "earth" / "layers.parquet"
-    extras = ["frozen_l1", "frozen_l2", "frozen_l3", "frozen_l4"]
+    extras = ["frozen_l1", "frozen_l2", "frozen_l3", "frozen_l4", "ice_source", "cci_alt_m",
+              *SUB_COLS, "sub_source"]
     if not path.exists() or all(c in layers for c in extras):
         return layers
     real = pd.read_parquet(path)
-    if not set(extras) <= set(real.columns):
+    extras = [c for c in extras if c in real.columns and c not in layers]
+    if not extras or "cell_id" not in layers:
         return layers
     return layers.merge(real[["cell_id"] + extras], on="cell_id", how="left")
 
@@ -97,14 +107,22 @@ def extract_earth(layers, params=None):
         for band in BANDS:
             mean, swing = earth_band_temps(rec["mean_temp_k"], rec["annual_range_k"],
                                            rec["diurnal_amp_k"], rec["thermal_inertia"], band, p)
+            q_temp = "modelled"
+            # Below the skin: measured-model CCI ground temperature or the PyTorch ensemble (profile_nn)
+            # instead of "mean at depth = surface mean". Extrapolating cells keep the heat model.
+            if band in SUBSURFACE_BANDS:
+                sub_k = band_temp_k(rec, band_mid_depth_m(band, p))
+                if sub_k == sub_k:
+                    mean = sub_k
+                    q_temp = "predicted" if rec.get("sub_source") == "nn" else "modelled"
             frozen = real_frozen_fraction(rec, band)
             if frozen != frozen:                 # NaN: no ERA5 soil layers -> heat model estimate
                 frozen = earth_frozen_fraction(rec["mean_temp_k"], rec["annual_range_k"],
                                                rec["thermal_inertia"], band, p)
             ground, ice = ground_for_band(rec, band, p)
             q_ice, q_gc = rec["ice_q"], rec["ground_class_q"]
-            vals = [("temp_mean", mean, "modelled"), ("frozen_fraction", frozen, "modelled"),
-                    ("temp_swing", swing, "modelled"), ("ice", int(ice), q_ice), ("ground_class", ground, q_gc),
+            vals = [("temp_mean", mean, q_temp), ("frozen_fraction", frozen, "modelled"),
+                    ("temp_swing", swing, "modelled"), ("ice", None if ice is None else int(ice), q_ice), ("ground_class", ground, q_gc),
                     ("hardness", hardness(ground, rock, p), q_gc), ("rock", rock, "measured"),
                     ("slope_deg", rec["slope_deg"], "measured"),
                     ("roughness_m", rec["roughness_m"], "measured"),
@@ -113,6 +131,22 @@ def extract_earth(layers, params=None):
             rows += [feature_row("earth", rec["cell_id"], rec["lat"], rec["lon"], band, f, v, q)
                      for f, v, q in vals if v is not None and v == v]
     return rows
+
+
+LOOKUP_NAME = "earth_all"   # data/features/earth_all_cells.parquet
+
+
+def build_lookup_table(all_land, candidates, p):
+    """Features for every land cell that is NOT a matching candidate (cities, farmland, forest...),
+    so the reverse search ("where on Mars is like Calgary?") can use the clicked cell itself.
+    Matching never reads this table. Same rules as the candidates; the ground-class gap model is
+    re-fitted on all land so its predictions cover these cells."""
+    rest = all_land[~all_land["cell_id"].isin(set(candidates["cell_id"]))].reset_index(drop=True)
+    if rest.empty:
+        return None
+    filled, _ = fill_gaps(all_land.reset_index(drop=True), p)
+    filled = filled[filled["cell_id"].isin(set(rest["cell_id"]))]
+    return write_features(extract_earth(filled, p), LOOKUP_NAME)
 
 
 def build_earth(params=None, out_dir=None, layers=None):
@@ -129,11 +163,20 @@ def build_earth(params=None, out_dir=None, layers=None):
     # sheet, and WorldCover has no Antarctica); grid cells must pass the bare-ground filter
     named = layers["name"].fillna("").ne("")
     bare = layers["bare_fraction"] >= p["bare_ground_min_fraction"]
+    all_land = layers
     layers = layers[named | bare | near_known_pair_site(layers)].reset_index(drop=True)
+    if out_dir is None and "ice_source" in layers:
+        build_lookup_table(all_land, layers, p)
     filled, cv = fill_gaps(layers, p)
     path = write_features(extract_earth(filled, p), "earth", out_dir)
     cv_path = path.parent / "gap_model_cv.json"
     cv_path.write_text(json.dumps(cv))
+    if "ice_source" in layers and out_dir is None:
+        from ..earth_ml.permafrost import write_report
+        write_report({"ground_class_gap_model": {
+            "task": "ground_class where it is still unknown (cells where the permafrost model was unsure)",
+            "spatial_block_cv_accuracy": cv.get("ground_class"),
+            "note": "perm_prob removed from the predictors (it leaked the labels; CV was ~0.99 before)"}})
     return path
 
 

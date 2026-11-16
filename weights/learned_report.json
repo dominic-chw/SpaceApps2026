@@ -1,0 +1,141 @@
+{
+  "method": "one multiplier per feature shared across bands (bounds 0.25-4), loss = mean log(rank) + 0.05 * mean(log(mult)^2); 300 random draws then Nelder-Mead; leave-one-Mars-site-out evaluation",
+  "multipliers": {
+    "temp_mean_rank": 0.872,
+    "frozen_fraction": 2.06,
+    "temp_swing": 4.0,
+    "ice": 2.878,
+    "ground_class": 2.308,
+    "hardness": 0.639,
+    "rock": 2.829,
+    "slope_deg": 0.346,
+    "roughness_m": 0.485,
+    "dryness": 1.442
+  },
+  "n_pairs": 12,
+  "n_groups": 9,
+  "loo": {
+    "learned": {
+      "n_pairs": 12,
+      "recall_at_1": 0.0,
+      "recall_at_3": 0.083,
+      "recall_at_10": 0.25,
+      "mean_rank": 225.92,
+      "random_recall_at_1": 0.001,
+      "random_recall_at_3": 0.006,
+      "random_recall_at_10": 0.019,
+      "random_mean_rank": 252.57
+    },
+    "hand_set": {
+      "n_pairs": 12,
+      "recall_at_1": 0.083,
+      "recall_at_3": 0.083,
+      "recall_at_10": 0.25,
+      "mean_rank": 213.83,
+      "random_recall_at_1": 0.001,
+      "random_recall_at_3": 0.006,
+      "random_recall_at_10": 0.019,
+      "random_mean_rank": 252.57
+    }
+  },
+  "loo_pairs": [
+    {
+      "pair_id": 5,
+      "group": "Arcadia Planitia (shallow excess ice; SHARAD)",
+      "band": "drill_zone",
+      "learned_rank": 38,
+      "hand_rank": 58,
+      "n_places": 486
+    },
+    {
+      "pair_id": 11,
+      "group": "Athabasca Valles (young lava + ground ice)",
+      "band": "upper_metre",
+      "learned_rank": 2,
+      "hand_rank": 1,
+      "n_places": 507
+    },
+    {
+      "pair_id": 10,
+      "group": "Gale crater (Curiosity drill sites)",
+      "band": "drill_zone",
+      "learned_rank": 349,
+      "hand_rank": 332,
+      "n_places": 491
+    },
+    {
+      "pair_id": 9,
+      "group": "Gusev crater Columbia Hills carbonates (Comanche)",
+      "band": "skin",
+      "learned_rank": 212,
+      "hand_rank": 41,
+      "n_places": 505
+    },
+    {
+      "pair_id": 12,
+      "group": "InSight landing site (Elysium Planitia)",
+      "band": "upper_metre",
+      "learned_rank": 377,
+      "hand_rank": 478,
+      "n_places": 518
+    },
+    {
+      "pair_id": 8,
+      "group": "Meridiani Planum (Opportunity; jarosite/sulfates)",
+      "band": "upper_metre",
+      "learned_rank": 238,
+      "hand_rank": 242,
+      "n_places": 508
+    },
+    {
+      "pair_id": 1,
+      "group": "Phoenix landing site (Vastitas Borealis)",
+      "band": "upper_metre",
+      "learned_rank": 6,
+      "hand_rank": 6,
+      "n_places": 509
+    },
+    {
+      "pair_id": 2,
+      "group": "Phoenix landing site (Vastitas Borealis)",
+      "band": "drill_zone",
+      "learned_rank": 5,
+      "hand_rank": 5,
+      "n_places": 499
+    },
+    {
+      "pair_id": 3,
+      "group": "Phoenix landing site (Vastitas Borealis)",
+      "band": "upper_metre",
+      "learned_rank": 19,
+      "hand_rank": 15,
+      "n_places": 509
+    },
+    {
+      "pair_id": 4,
+      "group": "Utopia Planitia scalloped terrain (excess ice)",
+      "band": "deep",
+      "learned_rank": 466,
+      "hand_rank": 444,
+      "n_places": 501
+    },
+    {
+      "pair_id": 6,
+      "group": "Viking 1 landing site (Chryse Planitia)",
+      "band": "skin",
+      "learned_rank": 502,
+      "hand_rank": 467,
+      "n_places": 504
+    },
+    {
+      "pair_id": 7,
+      "group": "Viking 1 landing site (Chryse Planitia)",
+      "band": "upper_metre",
+      "learned_rank": 497,
+      "hand_rank": 477,
+      "n_places": 511
+    }
+  ],
+  "adopted": false,
+  "verdict": "Learned weights did NOT beat the hand-set weights in leave-one-site-out testing; hand-set weights stay the default (learned ones are available as an option)."
+}
