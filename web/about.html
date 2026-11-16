@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#101214" />
-  <title>About · Planetary Twin</title>
+  <title>About · Planetary Twin: Mars Drill-Site Analog Finder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
@@ -12,8 +12,8 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="./index.html"><strong>Planetary Twin</strong><span>Mars drill-site analog finder</span></a>
-    <nav><a href="./index.html">Explorer</a><a href="./about.html" aria-current="page">About</a></nav>
+    <a class="brand" href="./index.html"><strong>Planetary Twin</strong><span>Mars Drill-Site Analog Finder</span></a>
+    <nav><a href="./index.html">Home</a><a href="./app.html">Explorer</a><a href="./app.html#accuracy">Models<span class="nav-long"> &amp; accuracy</span></a><a href="./about.html" aria-current="page">About</a></nav>
   </header>
 
   <main class="about">
@@ -21,11 +21,11 @@
       <p class="kicker">About the project</p>
       <h1>Test Mars drills where the ground behaves like Mars</h1>
       <p class="lede">Every drill bound for Mars is tested on Earth first. Planetary Twin finds the places on Earth whose ground best matches a chosen spot on Mars, at the depth the drill will actually reach, and explains why.</p>
-      <a class="btn" href="./index.html">Open the explorer</a>
+      <a class="btn" href="./app.html">Open the explorer</a>
     </section>
 
     <nav class="toc" aria-label="On this page">
-      <a href="#how">How it works</a><a href="#maths">The maths</a><a href="#untested">Untested sites</a><a href="#data">Data</a><a href="#limits">Limits</a>
+      <a href="#how">How it works</a><a href="#maths">The maths</a><a href="#ml">Machine learning</a><a href="#untested">Sites with no field tests yet</a><a href="#data">Data</a><a href="#limits">Limits</a>
     </nav>
 
     <section id="how">
@@ -92,9 +92,20 @@
       </div>
     </section>
 
+    <section id="ml">
+      <h2>Machine learning</h2>
+      <p>Satellite maps of what lies underground stop at 25° N, but several of the best Mars analogs (the Antarctic Dry Valleys, the high Andes) are further south. Machine learning fills that gap. Every model is scored on whole regions it never saw during training, next to the simple rule it replaces.</p>
+      <ul>
+        <li><strong>Ground ice.</strong> A gradient-boosted classifier and a PyTorch neural network, both trained on ESA's satellite permafrost map, predict whether a place has ground ice from its climate, terrain, soil and rock. Both clearly beat a temperature rule. A physics check stops them predicting ice in hot deserts, which they never saw in training.</li>
+        <li><strong>Underground temperature.</strong> A physics-informed PyTorch network predicts the whole temperature profile down to 10 m. Its training loss penalises profiles that break heat conduction. Five copies form an ensemble that flags places unlike its training data; there the app falls back to the heat model and says so.</li>
+        <li><strong>Match weights.</strong> Weights learned from 12 published Mars–Earth analog pairs were tested on Mars sites held out of training. They did not beat the hand-tuned weights, so the hand-tuned ones stay the default.</li>
+      </ul>
+      <p><a class="btn ghost" href="./app.html#accuracy">See the models and their scores</a></p>
+    </section>
+
     <section id="untested">
-      <h2>Untested sites</h2>
-      <p>Most Mars analog work happens in a short list of famous places: the Atacama, Devon Island, the Dry Valleys, Rio Tinto, Svalbard, Utah. Planetary Twin also scores bare ground across the rest of Earth. Places outside those known analog regions are marked <span class="inline-tag">Untested</span>. The explorer lists them even when they fall a few points below the main cut-off, because a slightly weaker match nobody has tested may be more useful than another visit to a well-worn site.</p>
+      <h2>Sites with no field tests yet</h2>
+      <p>Most Mars analog work happens in a short list of famous places: the Atacama, Devon Island, the Dry Valleys, Rio Tinto, Svalbard, Utah. Planetary Twin also scores bare ground across the rest of Earth. Places outside those known analog regions are marked <span class="inline-tag">No field tests yet</span>: no NASA, ESA or university field or drill campaign has been recorded there. The explorer lists them even when they fall a few points below the main cut-off, because a slightly weaker match nobody has tested may be more useful than another visit to a well-worn site.</p>
     </section>
 
     <section id="data">

@@ -55,8 +55,8 @@ processing:
     learning_rate: 0.05
     cv_block_deg: 10
 
-  # Source of each layer variable (pipeline/common/sources.py). Default: synthetic everywhere, so
-  # `python -m pipeline.run_all --build` runs end to end before datasets are picked (outputs fake: true).
+  # Source of each layer variable (pipeline/common/sources.py). Real layer files below; tests force
+  # synthetic (tests/conftest.py), and SPACEAPPS_SOURCES=synthetic runs the pipeline without data/.
   # Switch one variable at a time once it is in research/datasets.csv, e.g.
   #   soil_temp: {source: ee, id: "ECMWF/ERA5_LAND/MONTHLY_AGGR", start: "2015-01-01", end: "2023-01-01",
   #               path: data/earth/ee/soil_temp.csv,
@@ -69,22 +69,22 @@ processing:
   # The layers already built from downloads stay usable: {source: file, path: data/<planet>/layers.parquet}.
   sources:
     mars:
-      cells: {source: synthetic}
-      thermal_inertia: {source: synthetic}
-      ice: {source: synthetic}
-      geology: {source: synthetic}
-      terrain: {source: synthetic}
-      water_vapour: {source: synthetic}
-    earth:
-      cells: {source: synthetic}
-      elevation: {source: synthetic}
-      terrain: {source: synthetic}
-      land_cover: {source: synthetic}
-      soil_temp: {source: synthetic}
-      surface_temp: {source: synthetic}
-      soil_properties: {source: synthetic}
-      aridity: {source: synthetic}
-      permafrost: {source: synthetic}
-      lithology: {source: synthetic}
-      bedrock: {source: synthetic}
-      labels: {source: synthetic}
+      cells: {source: file, path: data/mars/layers.parquet}
+      thermal_inertia: {source: file, path: data/mars/layers.parquet}
+      ice: {source: file, path: data/mars/layers.parquet}
+      geology: {source: file, path: data/mars/layers.parquet}
+      terrain: {source: file, path: data/mars/layers.parquet}
+      water_vapour: {source: file, path: data/mars/layers.parquet}
+    earth:   # built by python -m pipeline.earth_library.build_layers (CCI labels + permafrost model)
+      cells: {source: file, path: data/earth/layers.parquet}
+      elevation: {source: file, path: data/earth/layers.parquet}
+      terrain: {source: file, path: data/earth/layers.parquet}
+      land_cover: {source: file, path: data/earth/layers.parquet}
+      soil_temp: {source: file, path: data/earth/layers.parquet}
+      surface_temp: {source: file, path: data/earth/layers.parquet}
+      soil_properties: {source: file, path: data/earth/layers.parquet}
+      aridity: {source: file, path: data/earth/layers.parquet}
+      permafrost: {source: file, path: data/earth/layers.parquet}
+      lithology: {source: file, path: data/earth/layers.parquet}
+      bedrock: {source: file, path: data/earth/layers.parquet}
+      labels: {source: file, path: data/earth/layers.parquet}

@@ -9,13 +9,15 @@ Inputs (data/ is gitignored):
   data/earth/ee/earth_layers_antarctica.csv ice-free Antarctica (ee_export --antarctica)
   data/earth/ee/earth_modis_lc_*.csv        NASA MODIS barren / snow-ice fractions (ee_export --modis-lc)
   data/earth/raw/glim/                      GLiM 0.5 deg grid + Classnames.txt  -> glim_class
-  data/earth/raw/gruber_pzi/PZI.flt         Gruber 2012 permafrost zonation     -> perm_prob
+  data/earth/raw/gruber_pzi/PZI.flt         Gruber 2012 permafrost zonation (no longer used)
   data/earth/raw/pelletier_dtb/.../average_soil_and_sedimentary-deposit_thickness.tif -> bedrock_depth_m
-Rules for perm_prob / ice_label / ground_label: data/earth/raw/MANIFEST.md and ground_lookup.csv.
+  data/earth/cci_permafrost/{PFR,ALT}_2021.nc  ESA CCI Permafrost (25-85 N) -> ice inside coverage
+Ground ice outside CCI coverage: the permafrost classifier (pipeline/earth_ml/permafrost.py).
 
 Run: python -m pipeline.earth_library.build_layers
 """
 import glob
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -80,8 +82,10 @@ def coarsen(read_rows, n_rows, n_cols, how, cache):
 
 def load_ee():
     """All Earth Engine grid CSVs (land grid + Antarctica), joined with MODIS land cover."""
-    files = sorted(glob.glob(str(EE_DIR / "earth_layers_grid_*.csv"))) + \
-        sorted(glob.glob(str(EE_DIR / "earth_layers_antarctica*.csv")))
+    grids = sorted(glob.glob(str(EE_DIR / "earth_layers_grid_*.csv")))
+    # Several grid exports (e.g. 2 deg and 0.5 deg) would overlap: use the finest one.
+    fine = [f for f in grids if "0p5deg" in Path(f).name] or grids
+    files = fine + sorted(glob.glob(str(EE_DIR / "earth_layers_antarctica*.csv")))
     if not files:
         raise SystemExit("No Earth Engine grid CSVs in data/earth/ee/ (download the spaceapps_ee Drive folder)")
     df = pd.concat([pd.read_csv(f) for f in files], ignore_index=True)
@@ -97,9 +101,37 @@ def load_ee():
     return df.reset_index(drop=True)
 
 
+def glim_grid_from_gdb(cache=EARTH / "glim" / "glim_0p5deg_centres.npy"):
+    """GLiM class at the CENTRE of every 0.5 deg cell, from the LiMW_GIS 2015 vector geodatabase
+    (data/earth/glim/*.gdb, 1.2 M polygons). Used when the 0.5 deg GLiM raster (data/earth/raw/glim)
+    isn't there. Spatial join of 259,200 cell centres; cached as .npy (takes a few minutes once)."""
+    if cache.exists():
+        return np.load(cache, allow_pickle=True)
+    import geopandas as gpd
+    import pyogrio
+    gdb = next((EARTH / "glim").glob("*.gdb"), None)
+    if gdb is None:
+        return None
+    polys = pyogrio.read_dataframe(gdb, columns=["xx"], use_arrow=True)
+    n_rows, n_cols = int(180 / GRID), int(360 / GRID)
+    lat = 90 - (np.arange(n_rows) + 0.5) * GRID
+    lon = -180 + (np.arange(n_cols) + 0.5) * GRID
+    lon2, lat2 = np.meshgrid(lon, lat)
+    pts = gpd.GeoDataFrame(geometry=gpd.points_from_xy(lon2.ravel(), lat2.ravel()), crs=4326).to_crs(polys.crs)
+    joined = gpd.sjoin(pts, polys, predicate="within", how="left")
+    joined = joined[~joined.index.duplicated(keep="first")].sort_index()
+    codes = joined["xx"].astype(object).where(joined["xx"].notna(), None).to_numpy(object).reshape(n_rows, n_cols)
+    codes = np.array([[c.strip() if isinstance(c, str) else None for c in row] for row in codes], dtype=object)
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    np.save(cache, codes, allow_pickle=True)
+    return codes
+
+
 def glim_grid():
     """GLiM 0.5 deg grid as 2-letter class codes (object array, 360 x 720, row 0 = 90 N)."""
     folder = RAW / "glim"
+    if not (folder / "Classnames.txt").exists():
+        return glim_grid_from_gdb()
     names = pd.read_csv(folder / "Classnames.txt", sep=";")
     code_of = dict(zip(names["Value_"].astype(int), names["xx"].str.strip()))
     ids = np.loadtxt(next(folder.glob("*.asc")), skiprows=6)
@@ -123,6 +155,46 @@ def gruber_grid():
         block[block < 0] = np.nan          # -9999 nodata (ocean / outside model)
         return block
     return coarsen(rows, n_rows, n_cols, "mean", RAW / "gruber_pzi" / "pzi_0p5deg_mean.npy")
+
+
+CCI_DIR = EARTH / "cci_permafrost"
+CCI_TOP, CCI_BOTTOM = 85.0, 25.0     # ESA CCI Permafrost v4 NH grid: 0.01 deg, 85 N .. 25 N
+
+
+def cci_grid(var):
+    """ESA CCI Permafrost 2021 (`PFR` fraction 0-1 or `ALT` active-layer metres) as a 0.5 deg
+    grid on the same 360 x 720 layout as the other grids (row 0 = 90 N), MEAN of the 0.01 deg
+    pixels with data; NaN outside CCI coverage (south of 25 N, oceans). Cached as .npy."""
+    cache = CCI_DIR / f"{var.lower()}_0p5deg_mean.npy"
+    if cache.exists():
+        return np.load(cache)
+    path = CCI_DIR / f"{var}_2021.nc"
+    if not path.exists():
+        return None
+    import h5py
+    with h5py.File(path, "r") as h:
+        ds = h[var]
+        fill = int(ds.attrs["_FillValue"][0])
+        scale = 0.01 if var == "PFR" else float(ds.attrs.get("scale_factor", [1.0])[0])
+        lats = h["lat"][:]
+        step = int(round(GRID / 0.01))                                   # 50 pixels per cell
+        n_rows, n_cols = ds.shape[1] // step, ds.shape[2] // step
+        out = np.full((n_rows, n_cols), np.nan)
+        north_first = lats[0] > lats[-1]
+        for r in range(n_rows):
+            r0 = r * step if north_first else ds.shape[1] - (r + 1) * step
+            block = ds[0, r0:r0 + step, :].astype(float)
+            block[block == fill] = np.nan
+            cells = block.reshape(step, n_cols, step).transpose(1, 0, 2).reshape(n_cols, -1)
+            with np.errstate(all="ignore"), __import__("warnings").catch_warnings():
+                __import__("warnings").simplefilter("ignore", RuntimeWarning)
+                out[r] = np.nanmean(cells, axis=1) * scale
+    full = np.full((int(180 / GRID), int(360 / GRID)), np.nan)
+    top = int(round((90 - CCI_TOP) / GRID))
+    full[top:top + out.shape[0]] = out
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    np.save(cache, full)
+    return full
 
 
 def pelletier_grid():
@@ -158,34 +230,68 @@ WARM_K = 278.0   # ground averaging above +5 C can't hold permafrost ice (Domini
 COLD_K = 271.15  # ground averaging below -2 C is permafrost where no map covers it (Dominic, PR #12)
 
 
-def labels(lat, perm, ice_frac, glim, bare, slope, bedrock_depth, mean_temp_k=None):
-    """perm_prob is final here; returns (ice_label, ground_label, assumed_antarctic).
+def ground_labels(ice, ice_frac, glim, bare, slope, bedrock_depth):
+    """ground_label from the FINAL ice label (CCI or permafrost model).
 
-    ice_label:    1 if ice_frac >= 0.5, perm >= 0.5 or ice-free Antarctica;
-                  0 if perm < 0.1 and ice_frac < 0.1 (missing ice_frac counts as 0); else NaN.
-    ground_label: massive_ice (ice_frac >= 0.5) > ice_cemented (perm >= 0.5 or Antarctica)
-                  > bedrock (fallback when no Pelletier depth: crystalline GLiM, bare >= 0.5, slope >= 15 deg)
-                  > dry_regolith (anything else with data) > NaN (nothing known).
-                  build_grid.py refines bedrock / active layer per depth band.
+    massive_ice (MODIS snow/ice >= 0.5) > ice_cemented (ice == 1) > bedrock (fallback when no
+    Pelletier depth: crystalline GLiM, bare >= 0.5, slope >= 15 deg) > dry_regolith (anything else
+    with data). None where ice is unknown (the model was unsure) or nothing is known: the gap model
+    fills those, marked predicted. build_grid.py refines bedrock / active layer per depth band.
     """
-    antarctic = lat < ANTARCTIC_LAT
-    ice_frac0 = np.nan_to_num(ice_frac, nan=0.0)
-    ice = np.full(len(lat), np.nan)
-    ice[(perm < 0.1) & (ice_frac0 < 0.1)] = 0.0
-    if mean_temp_k is not None:
-        t = np.asarray(mean_temp_k, float)
-        ice[np.isnan(ice) & (t > WARM_K)] = 0.0
-        ice[np.isnan(ice) & (t < COLD_K)] = 1.0
-    ice[(ice_frac0 >= 0.5) | (perm >= 0.5) | antarctic] = 1.0
-
-    has_data = np.isfinite(perm) | np.isfinite(ice_frac) | pd.notna(glim)
+    ice = np.asarray(ice, float)
+    ice_frac0 = np.nan_to_num(np.asarray(ice_frac, float), nan=0.0)
+    has_data = np.isfinite(ice) | np.isfinite(np.asarray(ice_frac, float)) | pd.notna(glim)
     ground = np.where(has_data, "dry_regolith", None).astype(object)
     fallback_bedrock = (np.isnan(bedrock_depth) & np.isin(glim, list(CRYSTALLINE))
                         & (np.nan_to_num(bare) >= 0.5) & (np.nan_to_num(slope) >= 15))
     ground[fallback_bedrock] = "bedrock"
-    ground[(perm >= 0.5) | antarctic] = "ice_cemented"
+    ground[ice == 1] = "ice_cemented"
+    ground[np.isnan(ice) & (ice_frac0 < 0.5)] = None
     ground[ice_frac0 >= 0.5] = "massive_ice"
-    return ice, ground, antarctic
+    return ground
+
+
+def ice_labels(df, params=None, report_path=None, model_path=None):
+    """Ground ice per cell: ESA CCI inside its coverage (25-85 N, measured), the permafrost model
+    outside it (predicted; NaN when its 90% conformal set is {0, 1}). MODIS snow/ice >= 0.5 is ice.
+    Returns (ice, ice_source, ice_prob, pfr, alt_m, report)."""
+    from ..earth_ml import permafrost
+    lat, lon = df["lat"].to_numpy(float), df["lon"].to_numpy(float)
+    pfr_grid, alt_grid = cci_grid("PFR"), cci_grid("ALT")
+    pfr = lookup(pfr_grid, lat, lon) if pfr_grid is not None else np.full(len(df), np.nan)
+    alt = lookup(alt_grid, lat, lon) if alt_grid is not None else np.full(len(df), np.nan)
+    work = df.assign(pfr=pfr)
+    bundle, report = permafrost.train_and_report(work, params, report_path=report_path)
+    prob, model_label = permafrost.predict(bundle, work)
+    if model_path is not None:
+        import joblib
+        Path(model_path).parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(bundle, model_path)
+    in_cci = np.isfinite(pfr)
+    ice = np.where(in_cci, (pfr >= permafrost.ICE_MIN).astype(float), model_label)
+    source = np.where(in_cci, "measured", "predicted").astype(object)
+    snow_ice = df["modis_snow_ice"].to_numpy(float) if "modis_snow_ice" in df else np.full(len(df), np.nan)
+    glacier = np.nan_to_num(snow_ice) >= 0.5
+    ice[glacier], source[glacier] = 1.0, "measured"
+    return ice, source, np.where(in_cci, pfr, prob), pfr, alt, report
+
+
+def subsurface(df, report_path=None, model_path=None):
+    """Ground temperature at 0/1/2/5/10 m per cell (earth_ml/profile_nn): ESA CCI inside its coverage,
+    the physics-informed PyTorch ensemble outside it, NaN where the ensemble is extrapolating.
+    None when torch is not installed (build_grid then uses the heat model everywhere)."""
+    from ..earth_ml import profile_nn
+    if not profile_nn.available():
+        warnings.warn("torch not installed: no subsurface ensemble; the heat model gives ground temperatures")
+        return None
+    nn_path = None if model_path is None else Path(model_path).with_name("profile_ensemble.pt")
+    sub, summary = profile_nn.subsurface_columns(df, nn_path)
+    if report_path is not None:
+        from ..earth_ml.permafrost import write_report
+        write_report({"subsurface_production": summary}, report_path)
+    print(f"subsurface: CCI {summary['from_cci']}, neural net {summary['from_nn']}, "
+          f"extrapolating (heat model) {summary['extrapolated']}")
+    return sub
 
 
 def soil_thermal_inertia(sand_gkg, bdod_cgcm3):
@@ -219,27 +325,28 @@ def tag_regions(df):
 # Build
 # ---------------------------------------------------------------------------
 
-def build(ee_df=None, glim=None, gruber=None, pelletier=None, out=EARTH / "layers.parquet"):
+def build(ee_df=None, glim=None, pelletier=None, out=EARTH / "layers.parquet", params=None,
+          report_path=ROOT / "output" / "ml_report.json", model_path=ROOT / "models" / "permafrost.joblib"):
     ee_df = load_ee() if ee_df is None else ee_df
     ee_df = tag_regions(ee_df)
     lat, lon = ee_df["lat"].to_numpy(float), ee_df["lon"].to_numpy(float)
     antarctic = lat < ANTARCTIC_LAT
 
     glim = glim_grid() if glim is None else glim
-    gruber = gruber_grid() if gruber is None else gruber
     pelletier = pelletier_grid() if pelletier is None else pelletier
 
-    glim_class = lookup(glim, lat, lon)
+    glim_class = lookup(glim, lat, lon) if glim is not None else np.full(len(lat), None, dtype=object)
     glim_class = np.where(pd.isna(glim_class), "nd", glim_class)
-    perm = lookup(gruber, lat, lon) if gruber is not None else np.full(len(lat), np.nan)
-    perm = np.where(np.isnan(perm) & ~antarctic & (gruber is not None), 0.0, perm)   # outside zones = 0
-    perm = np.where(antarctic, 1.0, perm)                                           # assumed (MANIFEST)
     depth = lookup(pelletier, lat, lon) if pelletier is not None else np.full(len(lat), np.nan)
 
     get = lambda c: ee_df[c].to_numpy(float) if c in ee_df else np.full(len(lat), np.nan)
-    bare = get("bare_fraction")
-    ice, ground, assumed = labels(lat, perm, get("modis_snow_ice"), glim_class, bare,
-                                  get("slope_deg"), depth, get("skin_temperature_mean"))
+    # Ice-free Antarctic cells were picked because MODIS sees barren ground at 1 km; their 5 km mean
+    # rounds to ~0 and WorldCover has no Antarctica, so they count as bare ground here.
+    bare = np.where(antarctic, 1.0, get("bare_fraction"))
+    ice, ice_source, ice_prob, pfr, alt, _ = ice_labels(ee_df.assign(glim_class=glim_class), params,
+                                                        report_path, model_path)
+    ground = ground_labels(ice, get("modis_snow_ice"), glim_class, bare, get("slope_deg"), depth)
+    sub = subsurface(ee_df.assign(glim_class=glim_class), report_path, model_path)
     aridity = get("aridity")
     aridity = np.where(antarctic & np.isnan(aridity), 0.0, aridity)                 # assumed (MANIFEST)
 
@@ -249,20 +356,26 @@ def build(ee_df=None, glim=None, gruber=None, pelletier=None, out=EARTH / "layer
         "mean_temp_k": get("skin_temperature_mean"), "annual_range_k": get("skin_temperature_range"),
         "diurnal_amp_k": (get("lst_day_k") - get("lst_night_k")) / 2,
         "thermal_inertia": soil_thermal_inertia(get("sand_0_2m"), get("bdod_0_2m")),
-        "aridity": aridity, "perm_prob": perm, "glim_class": glim_class,
+        # perm_prob (contract column): CCI permafrost fraction inside 25-85 N, model P(ice) outside.
+        # Not a predictor anywhere (earth_ml/permafrost.LEAKY).
+        "aridity": aridity, "perm_prob": ice_prob, "glim_class": glim_class,
         "slope_deg": get("slope_deg"), "roughness_m": get("roughness_m"),
         "bedrock_depth_m": depth, "ice_label": ice, "ground_label": ground,
         # extras (ignored downstream unless used on purpose)
+        "ice_source": ice_source, "cci_pfr": pfr, "cci_alt_m": alt,
         "frozen_l1": get("soil_temperature_level_1_frozen"), "frozen_l2": get("soil_temperature_level_2_frozen"),
         "frozen_l3": get("soil_temperature_level_3_frozen"), "frozen_l4": get("soil_temperature_level_4_frozen"),
         "modis_barren": get("modis_barren"), "modis_snow_ice": get("modis_snow_ice"),
-        "antarctic_assumed": assumed,
     })
+    if sub is not None:
+        df = pd.concat([df, sub.reset_index(drop=True)], axis=1)
     if out is not None:
         out.parent.mkdir(parents=True, exist_ok=True)
         df.to_parquet(out, index=False)
+        pred = ice_source == "predicted"
         print(f"wrote {out}: {len(df)} cells, {int((df['name'] != '').sum())} named regions, "
-              f"ice known {int(np.isfinite(ice).sum())}, bedrock depth known {int(np.isfinite(depth).sum())}")
+              f"ice measured {int((~pred).sum())}, predicted {int(np.isfinite(ice[pred]).sum())}, "
+              f"uncertain {int(np.isnan(ice).sum())}, bedrock depth known {int(np.isfinite(depth).sum())}")
     return df
 
 

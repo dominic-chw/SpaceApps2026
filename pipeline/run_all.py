@@ -80,7 +80,30 @@ def write_json(data, path):
     print(f"  wrote {path} ({path.stat().st_size / 1e6:.1f} MB)")
 
 
-def run(build=False):
+def match_weights(config):
+    """Weights for matching: config paths.weights (default weights/default.json)."""
+    path = ROOT / config.get("paths", {}).get("weights", "weights/default.json")
+    return match.load_weights(path), path.name
+
+
+def learned_weights(mars_tables, earth_tables, pairs, relearn=False):
+    """(learned table, report) from weights/learned.json + weights/learned_report.json;
+    re-learned (leave-one-site-out, several minutes) when relearn=True or nothing is saved yet."""
+    from pipeline.validation import learn_weights
+    report_path = learn_weights.LEARNED_PATH.with_name("learned_report.json")
+    if not relearn and learn_weights.LEARNED_PATH.exists() and report_path.exists():
+        return (json.loads(learn_weights.LEARNED_PATH.read_text(encoding="utf-8")),
+                json.loads(report_path.read_text(encoding="utf-8")))
+    if not len(pairs):
+        return None, None
+    print("Learning match weights from the known pairs (leave-one-site-out)...")
+    table, report = learn_weights.run(mars_tables, earth_tables, pairs)
+    if table is not None:
+        report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    return table, report
+
+
+def run(build=False, learn=False):
     config = load_config()
     if config.get("matcher", "knn") != "knn":
         warnings.warn(f"matcher '{config['matcher']}' not available yet; using knn")
@@ -101,13 +124,20 @@ def run(build=False):
 
     info_by_band, mars_tables, earth_tables = {}, {}, {}
     for band in config["bands"]:
+        mars_tables[band], earth_tables[band] = load_tables.load_band_tables(
+            band, mars_long=mars_long, earth_long=earth_long)
+    pairs = evaluate.load_known_pairs()
+    learned, learned_report = learned_weights(mars_tables, earth_tables, pairs, relearn=learn)
+    weights, weights_name = match_weights(config)
+    print(f"Matching with weights/{weights_name}")
+
+    for band in config["bands"]:
         print(f"Band {band}:")
-        mars, earth = load_tables.load_band_tables(band, mars_long=mars_long, earth_long=earth_long)
-        mars_tables[band], earth_tables[band] = mars, earth
+        mars, earth = mars_tables[band], earth_tables[band]
 
         # 2. Every Mars cell -> top 3 twins.
         cells, info = match.match_band(mars, earth, band, how_many=config["top_twins_grid"],
-                                       spacing_km=spacing, levels=levels)
+                                       spacing_km=spacing, levels=levels, all_weights=weights)
         info_by_band[band] = info
         write_json({"band": band, "grid_deg": config["grid_deg"], "matcher": matcher,
                     "fake": fake, "cells": cells}, OUTPUT / "grid" / f"{band}.json")
@@ -116,7 +146,7 @@ def run(build=False):
         rows = [nearest_row(mars, site["lat"], site["lon"]) for site in showcase]
         site_cells, _ = match.match_band(mars, earth, band, how_many=config["top_twins_showcase"],
                                          spacing_km=spacing, levels=levels, rows=rows,
-                                         steepness=info["curve_steepness"])
+                                         steepness=info["curve_steepness"], all_weights=weights)
         for site, row, cell in zip(showcase, rows, site_cells):
             quality = {c[:-len("_quality")]: mars.iloc[row][c]
                        for c in mars.columns if c.endswith("_quality") and pd.notna(mars.iloc[row][c])}
@@ -127,13 +157,32 @@ def run(build=False):
 
     # 4. Slider data for the web app.
     library = earth_library.build(info_by_band, levels, info_by_band[config["bands"][0]]["prepared"]
-                                  ["confidence_settings"]["min_coverage"], spacing, fake=fake)
+                                  ["confidence_settings"]["min_coverage"], spacing, fake=fake,
+                                  hand_weights=match.load_weights(), learned_weights=learned,
+                                  weights_in_use=weights_name)
     write_json(library, OUTPUT / "earth_library.json")
 
+    # 4a. Every other land cell (cities, farmland...), normalized like the library: reverse search only.
+    all_path = load_tables.FEATURES_DIR / "earth_all_cells.parquet"
+    if all_path.exists():
+        lookup = earth_library.build_lookup(info_by_band, pd.read_parquet(all_path), fake=fake)
+        if lookup:
+            write_json(lookup, OUTPUT / "earth_lookup.json")
+
+    # 4b. Underground temperature profile per Earth place (CCI / PyTorch ensemble), for the result card.
+    from pipeline.earth_ml.profile_nn import export_for_web
+    layers_path = ROOT / "data" / "earth" / "layers.parquet"
+    if layers_path.exists():
+        ids = {p["id"] for b in library["bands"].values() for p in b["places"]}
+        if export_for_web(ids, layers_path, OUTPUT / "earth_subsurface.json", fake=fake):
+            print("  wrote output/earth_subsurface.json")
+
     # 5. Validation (only once the team has filled in known_pairs.csv).
-    pairs = evaluate.load_known_pairs()
     if len(pairs):
-        result = evaluate.evaluate(mars_tables, earth_tables, pairs, matcher=matcher)
+        # Headline numbers use the hand-set weights; the learned weights are judged out-of-sample
+        # (leave-one-site-out) in the extra `learned_weights` block.
+        result = evaluate.evaluate(mars_tables, earth_tables, pairs, matcher=matcher,
+                                   learned_report=learned_report)
         result["fake"] = fake
         evaluate.write_validation(result, OUTPUT / "validation.json")
         print(f"  wrote output/validation.json ({len(pairs)} pairs)")
@@ -144,4 +193,7 @@ def run(build=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the Analog Finder pipeline.")
     parser.add_argument("--build", action="store_true", help="rebuild the feature tables first")
-    run(build=parser.parse_args().build)
+    parser.add_argument("--learn", action="store_true",
+                        help="re-learn the match weights from the known pairs (leave-one-site-out, slow)")
+    args = parser.parse_args()
+    run(build=args.build, learn=args.learn)

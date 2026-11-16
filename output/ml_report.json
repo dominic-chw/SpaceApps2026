@@ -1,0 +1,864 @@
+{
+  "permafrost_model": {
+    "task": "ground ice yes/no per 0.5 deg Earth cell",
+    "labels": "ESA CCI Permafrost 2021 PFR: ice if >= 0.5, no ice if < 0.1, in between dropped",
+    "n_labelled": 17898,
+    "n_ice": 12649,
+    "n_no_ice": 5249,
+    "n_ambiguous_dropped": 4012,
+    "predictors": [
+      "soil_temperature_level_1_mean",
+      "soil_temperature_level_2_mean",
+      "soil_temperature_level_3_mean",
+      "soil_temperature_level_4_mean",
+      "skin_temperature_mean",
+      "soil_temperature_level_1_range",
+      "soil_temperature_level_4_range",
+      "skin_temperature_range",
+      "lst_day_k",
+      "lst_night_k",
+      "elevation_m",
+      "slope_deg",
+      "roughness_m",
+      "aridity",
+      "sand_0_2m",
+      "clay_0_2m",
+      "bdod_0_2m",
+      "lat",
+      "glim_class"
+    ],
+    "excluded_as_leaky": [
+      "alt_m",
+      "antarctic_assumed",
+      "cci_alt",
+      "cci_pfr",
+      "ground_class",
+      "ground_class_q",
+      "ground_label",
+      "ice",
+      "ice_label",
+      "ice_prob",
+      "ice_q",
+      "ice_set",
+      "perm_prob",
+      "pfr"
+    ],
+    "physics_guard": "P(ice) = 0 where the 1-2.9 m ERA5-Land layer never drops below 0 C (mean - range/2 > 273.15 K); model_unguarded = same model without it",
+    "share_never_frozen_all_cells": 0.583,
+    "model": "HistGradientBoostingClassifier {\"n_estimators\": 300, \"max_depth\": 6, \"learning_rate\": 0.05}",
+    "spatial_block_cv": {
+      "block_deg": 10,
+      "folds": 5,
+      "model": {
+        "n": 17898,
+        "n_ice": 12649,
+        "f1": 0.98,
+        "balanced_accuracy": 0.972,
+        "roc_auc": 0.991
+      },
+      "model_unguarded": {
+        "n": 17898,
+        "n_ice": 12649,
+        "f1": 0.981,
+        "balanced_accuracy": 0.973,
+        "roc_auc": 0.997
+      },
+      "majority": {
+        "n": 17898,
+        "n_ice": 12649,
+        "f1": 0.828,
+        "balanced_accuracy": 0.5,
+        "roc_auc": 0.456
+      },
+      "latitude_logistic": {
+        "n": 17898,
+        "n_ice": 12649,
+        "f1": 0.804,
+        "balanced_accuracy": 0.537,
+        "roc_auc": 0.82
+      },
+      "temperature_rule": {
+        "n": 17898,
+        "n_ice": 12649,
+        "f1": 0.944,
+        "balanced_accuracy": 0.904,
+        "roc_auc": 0.912
+      },
+      "nn": {
+        "n": 17898,
+        "n_ice": 12649,
+        "f1": 0.978,
+        "balanced_accuracy": 0.974,
+        "roc_auc": 0.99
+      }
+    },
+    "leave_region_out": {
+      "Alaska": {
+        "model": {
+          "n": 1277,
+          "n_ice": 1097,
+          "f1": 0.988,
+          "balanced_accuracy": 0.974,
+          "roc_auc": 0.99
+        },
+        "model_unguarded": {
+          "n": 1277,
+          "n_ice": 1097,
+          "f1": 0.988,
+          "balanced_accuracy": 0.974,
+          "roc_auc": 0.991
+        },
+        "majority": {
+          "n": 1277,
+          "n_ice": 1097,
+          "f1": 0.924,
+          "balanced_accuracy": 0.5,
+          "roc_auc": 0.5
+        },
+        "latitude_logistic": {
+          "n": 1277,
+          "n_ice": 1097,
+          "f1": 0.924,
+          "balanced_accuracy": 0.5,
+          "roc_auc": 0.995
+        },
+        "temperature_rule": {
+          "n": 1277,
+          "n_ice": 1097,
+          "f1": 0.96,
+          "balanced_accuracy": 0.836,
+          "roc_auc": 0.846
+        },
+        "nn": {
+          "n": 1277,
+          "n_ice": 1097,
+          "f1": 0.989,
+          "balanced_accuracy": 0.972,
+          "roc_auc": 0.986
+        }
+      },
+      "Tibet": {
+        "model": {
+          "n": 913,
+          "n_ice": 885,
+          "f1": 0.897,
+          "balanced_accuracy": 0.889,
+          "roc_auc": 0.94
+        },
+        "model_unguarded": {
+          "n": 913,
+          "n_ice": 885,
+          "f1": 0.897,
+          "balanced_accuracy": 0.889,
+          "roc_auc": 0.926
+        },
+        "majority": {
+          "n": 913,
+          "n_ice": 885,
+          "f1": 0.984,
+          "balanced_accuracy": 0.5,
+          "roc_auc": 0.5
+        },
+        "latitude_logistic": {
+          "n": 913,
+          "n_ice": 885,
+          "f1": 0.0,
+          "balanced_accuracy": 0.5,
+          "roc_auc": 0.426
+        },
+        "temperature_rule": {
+          "n": 913,
+          "n_ice": 885,
+          "f1": 0.794,
+          "balanced_accuracy": 0.829,
+          "roc_auc": 0.922
+        },
+        "nn": {
+          "n": 913,
+          "n_ice": 885,
+          "f1": 0.905,
+          "balanced_accuracy": 0.914,
+          "roc_auc": 0.944
+        }
+      },
+      "Svalbard": {
+        "model": {
+          "n": 89,
+          "n_ice": 89,
+          "f1": 1.0,
+          "balanced_accuracy": null,
+          "roc_auc": null
+        },
+        "model_unguarded": {
+          "n": 89,
+          "n_ice": 89,
+          "f1": 1.0,
+          "balanced_accuracy": null,
+          "roc_auc": null
+        },
+        "majority": {
+          "n": 89,
+          "n_ice": 89,
+          "f1": 1.0,
+          "balanced_accuracy": null,
+          "roc_auc": null
+        },
+        "latitude_logistic": {
+          "n": 89,
+          "n_ice": 89,
+          "f1": 1.0,
+          "balanced_accuracy": null,
+          "roc_auc": null
+        },
+        "temperature_rule": {
+          "n": 89,
+          "n_ice": 89,
+          "f1": 1.0,
+          "balanced_accuracy": null,
+          "roc_auc": null
+        },
+        "nn": {
+          "n": 89,
+          "n_ice": 89,
+          "f1": 0.928,
+          "balanced_accuracy": null,
+          "roc_auc": null
+        }
+      },
+      "Siberia": {
+        "model": {
+          "n": 5750,
+          "n_ice": 4935,
+          "f1": 0.979,
+          "balanced_accuracy": 0.901,
+          "roc_auc": 0.992
+        },
+        "model_unguarded": {
+          "n": 5750,
+          "n_ice": 4935,
+          "f1": 0.979,
+          "balanced_accuracy": 0.902,
+          "roc_auc": 0.993
+        },
+        "majority": {
+          "n": 5750,
+          "n_ice": 4935,
+          "f1": 0.924,
+          "balanced_accuracy": 0.5,
+          "roc_auc": 0.5
+        },
+        "latitude_logistic": {
+          "n": 5750,
+          "n_ice": 4935,
+          "f1": 0.919,
+          "balanced_accuracy": 0.514,
+          "roc_auc": 0.873
+        },
+        "temperature_rule": {
+          "n": 5750,
+          "n_ice": 4935,
+          "f1": 0.955,
+          "balanced_accuracy": 0.791,
+          "roc_auc": 0.795
+        },
+        "nn": {
+          "n": 5750,
+          "n_ice": 4935,
+          "f1": 0.966,
+          "balanced_accuracy": 0.957,
+          "roc_auc": 0.989
+        }
+      }
+    },
+    "leave_region_out_wins": {
+      "f1": {
+        "latitude_logistic": {
+          "wins": 3,
+          "regions": 4
+        },
+        "temperature_rule": {
+          "wins": 3,
+          "regions": 4
+        },
+        "majority": {
+          "wins": 2,
+          "regions": 4
+        }
+      },
+      "balanced_accuracy": {
+        "latitude_logistic": {
+          "wins": 3,
+          "regions": 3
+        },
+        "temperature_rule": {
+          "wins": 3,
+          "regions": 3
+        },
+        "majority": {
+          "wins": 3,
+          "regions": 3
+        }
+      },
+      "roc_auc": {
+        "latitude_logistic": {
+          "wins": 2,
+          "regions": 3
+        },
+        "temperature_rule": {
+          "wins": 3,
+          "regions": 3
+        },
+        "majority": {
+          "wins": 3,
+          "regions": 3
+        }
+      }
+    },
+    "calibration": {
+      "calibration_cells": 3816,
+      "brier_raw": 0.0164,
+      "brier_calibrated": 0.0151,
+      "conformal": {
+        "alpha": 0.1,
+        "threshold": 0.0112,
+        "empirical_coverage": 0.821,
+        "share_uncertain": 0.0,
+        "n_test": 1771,
+        "threshold_final": 0.0398
+      }
+    },
+    "permutation_importance": [
+      {
+        "feature": "soil_temperature_level_4_mean",
+        "drop_in_auc": 0.0347,
+        "std": 0.0012
+      },
+      {
+        "feature": "skin_temperature_mean",
+        "drop_in_auc": 0.0061,
+        "std": 0.0001
+      },
+      {
+        "feature": "lst_night_k",
+        "drop_in_auc": 0.0049,
+        "std": 0.0006
+      },
+      {
+        "feature": "aridity",
+        "drop_in_auc": 0.0029,
+        "std": 0.0003
+      },
+      {
+        "feature": "lat",
+        "drop_in_auc": 0.0009,
+        "std": 0.0001
+      },
+      {
+        "feature": "elevation_m",
+        "drop_in_auc": 0.0005,
+        "std": 0.0
+      },
+      {
+        "feature": "soil_temperature_level_2_mean",
+        "drop_in_auc": 0.0003,
+        "std": 0.0
+      },
+      {
+        "feature": "roughness_m",
+        "drop_in_auc": 0.0003,
+        "std": 0.0
+      },
+      {
+        "feature": "bdod_0_2m",
+        "drop_in_auc": 0.0002,
+        "std": 0.0
+      },
+      {
+        "feature": "soil_temperature_level_3_mean",
+        "drop_in_auc": 0.0001,
+        "std": 0.0
+      },
+      {
+        "feature": "skin_temperature_range",
+        "drop_in_auc": 0.0001,
+        "std": 0.0
+      },
+      {
+        "feature": "clay_0_2m",
+        "drop_in_auc": 0.0001,
+        "std": 0.0
+      },
+      {
+        "feature": "soil_temperature_level_1_mean",
+        "drop_in_auc": 0.0,
+        "std": 0.0
+      },
+      {
+        "feature": "soil_temperature_level_1_range",
+        "drop_in_auc": 0.0,
+        "std": 0.0
+      },
+      {
+        "feature": "soil_temperature_level_4_range",
+        "drop_in_auc": 0.0,
+        "std": 0.0
+      },
+      {
+        "feature": "lst_day_k",
+        "drop_in_auc": 0.0,
+        "std": 0.0
+      },
+      {
+        "feature": "slope_deg",
+        "drop_in_auc": 0.0,
+        "std": 0.0
+      },
+      {
+        "feature": "sand_0_2m",
+        "drop_in_auc": -0.0,
+        "std": 0.0
+      },
+      {
+        "feature": "glim_class",
+        "drop_in_auc": 0.0,
+        "std": 0.0
+      }
+    ],
+    "sanity_outside_cci": {
+      "Dry Valleys (University Valley)": {
+        "cell": "dry_valleys",
+        "p_ice": 0.999,
+        "p_ice_unguarded": 0.999,
+        "label": 1,
+        "expected": 1,
+        "distance_deg": 0.11
+      },
+      "Death Valley": {
+        "cell": "+036.25_-116.75",
+        "p_ice": 0.0,
+        "p_ice_unguarded": 0.438,
+        "label": 0,
+        "expected": 0,
+        "distance_deg": 0.23
+      },
+      "Atacama lowlands (Yungay)": {
+        "cell": "atacama_coastal",
+        "p_ice": 0.0,
+        "p_ice_unguarded": 0.449,
+        "label": 0,
+        "expected": 0,
+        "distance_deg": 0.27
+      }
+    },
+    "verdict": [
+      "Leave-region-out vs latitude logistic: model has higher F1 in 3 of 4 regions and higher balanced accuracy in 3 of 3.",
+      "Leave-region-out vs temperature rule: model has higher F1 in 3 of 4 regions and higher balanced accuracy in 3 of 3.",
+      "Leave-region-out vs majority: model has higher F1 in 2 of 4 regions and higher balanced accuracy in 3 of 3.",
+      "Neural net (PyTorch MLP) vs gradient boosting, leave-region-out f1: the neural net is higher in 2 of 4 regions; spatial CV 0.978 vs 0.98.",
+      "Neural net (PyTorch MLP) vs gradient boosting, leave-region-out roc auc: the neural net is higher in 1 of 3 regions; spatial CV 0.99 vs 0.991.",
+      "Spatial block CV f1: model 0.98 vs best baseline 0.944 (temperature rule) - model is better.",
+      "Spatial block CV balanced accuracy: model 0.972 vs best baseline 0.904 (temperature rule) - model is better."
+    ],
+    "nn": {
+      "model": "PyTorch MLP (inputs + 4-d rock embedding) -> 128 -> 64 -> 1, ReLU, dropout 0.2; BCE with pos_weight, Adam 1e-3, early stopping on 15% of the training fold; same folds and physics guard as the gradient-boosting model, not tuned",
+      "spatial_block_cv": {
+        "n": 17898,
+        "n_ice": 12649,
+        "f1": 0.978,
+        "balanced_accuracy": 0.974,
+        "roc_auc": 0.99
+      },
+      "leave_region_out": {
+        "Alaska": {
+          "n": 1277,
+          "n_ice": 1097,
+          "f1": 0.989,
+          "balanced_accuracy": 0.972,
+          "roc_auc": 0.986
+        },
+        "Tibet": {
+          "n": 913,
+          "n_ice": 885,
+          "f1": 0.905,
+          "balanced_accuracy": 0.914,
+          "roc_auc": 0.944
+        },
+        "Svalbard": {
+          "n": 89,
+          "n_ice": 89,
+          "f1": 0.928,
+          "balanced_accuracy": null,
+          "roc_auc": null
+        },
+        "Siberia": {
+          "n": 5750,
+          "n_ice": 4935,
+          "f1": 0.966,
+          "balanced_accuracy": 0.957,
+          "roc_auc": 0.989
+        }
+      }
+    }
+  },
+  "ground_class_gap_model": {
+    "task": "ground_class where it is still unknown (cells where the permafrost model was unsure)",
+    "spatial_block_cv_accuracy": 0.983040216053752,
+    "note": "perm_prob removed from the predictors (it leaked the labels; CV was ~0.99 before)"
+  },
+  "profile_nn": {
+    "task": "subsurface from surface data: P(ice), active-layer thickness, mean annual ground temp at 0, 1, 2, 5, 10 m",
+    "labels": "ESA CCI Permafrost 2021 (PFR, ALT, GTD GST/T1m/T2m/T5m/T10m), 0.5 deg cell means, 25-85 N",
+    "n_cells": 21910,
+    "n_labelled": {
+      "ice": 17898,
+      "alt": 20228,
+      "t_0m": 21908,
+      "t_1m": 21908,
+      "t_2m": 21908,
+      "t_5m": 21908,
+      "t_10m": 21908
+    },
+    "model": "PyTorch multi-task MLP: shared trunk (inputs + 4-d rock embedding) -> 128 -> 128 -> 64, ReLU, dropout 0.2; heads ice (BCE), ALT and 5 depth temperatures (masked MSE); Adam, early stopping",
+    "physics_loss": {
+      "weight": 0.1,
+      "terms": [
+        "curvature: |grad(5-10 m) - grad(2-5 m)| <= 0.05 K/m",
+        "geothermal: |grad(5-10 m)| <= 0.1 K/m",
+        "ice consistency: P(ice) * relu(T5m) + (1 - P(ice)) * relu(-T5m)"
+      ]
+    },
+    "baselines": {
+      "plain_nn": "same net, physics weight 0",
+      "gbm_per_depth": "HistGradientBoostingRegressor per depth",
+      "heat_model": "pipeline/physics/heat_model.py: mean at depth = yearly mean (ERA5-Land 1-2.9 m)"
+    },
+    "spatial_block_cv": {
+      "block_deg": 10,
+      "folds": 5,
+      "physics_informed_nn": {
+        "rmse_0m": 1.123,
+        "rmse_1m": 1.008,
+        "rmse_2m": 1.02,
+        "rmse_5m": 0.975,
+        "rmse_10m": 0.954,
+        "alt_rmse_m": 0.339,
+        "ice": {
+          "n": 17898,
+          "n_ice": 12649,
+          "f1": 0.987,
+          "balanced_accuracy": 0.984,
+          "roc_auc": 0.999
+        },
+        "physics_violation_rate": 0.0802
+      },
+      "plain_nn": {
+        "rmse_0m": 1.125,
+        "rmse_1m": 1.014,
+        "rmse_2m": 0.984,
+        "rmse_5m": 0.956,
+        "rmse_10m": 0.946,
+        "alt_rmse_m": 0.337,
+        "ice": {
+          "n": 17898,
+          "n_ice": 12649,
+          "f1": 0.987,
+          "balanced_accuracy": 0.983,
+          "roc_auc": 0.999
+        },
+        "physics_violation_rate": 0.3214
+      },
+      "gbm_per_depth": {
+        "rmse_0m": 1.064,
+        "rmse_1m": 0.963,
+        "rmse_2m": 0.952,
+        "rmse_5m": 0.921,
+        "rmse_10m": 0.908,
+        "physics_violation_rate": 0.6072
+      },
+      "heat_model": {
+        "rmse_0m": 3.358,
+        "rmse_1m": 3.493,
+        "rmse_2m": 3.506,
+        "rmse_5m": 3.557,
+        "rmse_10m": 3.643,
+        "physics_violation_rate": 0.0
+      }
+    },
+    "leave_region_out": {
+      "Alaska": {
+        "physics_informed_nn": {
+          "rmse_0m": 1.824,
+          "rmse_1m": 1.456,
+          "rmse_2m": 1.384,
+          "rmse_5m": 1.216,
+          "rmse_10m": 1.092,
+          "alt_rmse_m": 0.378,
+          "ice": {
+            "n": 1277,
+            "n_ice": 1097,
+            "f1": 0.99,
+            "balanced_accuracy": 0.974,
+            "roc_auc": 0.996
+          },
+          "physics_violation_rate": 0.0191
+        },
+        "plain_nn": {
+          "rmse_0m": 1.93,
+          "rmse_1m": 1.582,
+          "rmse_2m": 1.497,
+          "rmse_5m": 1.334,
+          "rmse_10m": 1.233,
+          "alt_rmse_m": 0.399,
+          "ice": {
+            "n": 1277,
+            "n_ice": 1097,
+            "f1": 0.989,
+            "balanced_accuracy": 0.97,
+            "roc_auc": 0.994
+          },
+          "physics_violation_rate": 0.2823
+        },
+        "gbm_per_depth": {
+          "rmse_0m": 1.303,
+          "rmse_1m": 1.111,
+          "rmse_2m": 1.042,
+          "rmse_5m": 0.966,
+          "rmse_10m": 0.917,
+          "physics_violation_rate": 0.5053
+        },
+        "heat_model": {
+          "rmse_0m": 3.021,
+          "rmse_1m": 3.138,
+          "rmse_2m": 3.119,
+          "rmse_5m": 3.072,
+          "rmse_10m": 3.024,
+          "physics_violation_rate": 0.0
+        }
+      },
+      "Tibet": {
+        "physics_informed_nn": {
+          "rmse_0m": 1.366,
+          "rmse_1m": 1.477,
+          "rmse_2m": 1.375,
+          "rmse_5m": 1.273,
+          "rmse_10m": 1.233,
+          "alt_rmse_m": 0.647,
+          "ice": {
+            "n": 913,
+            "n_ice": 885,
+            "f1": 0.925,
+            "balanced_accuracy": 0.843,
+            "roc_auc": 0.937
+          },
+          "physics_violation_rate": 0.0431
+        },
+        "plain_nn": {
+          "rmse_0m": 1.689,
+          "rmse_1m": 1.584,
+          "rmse_2m": 1.547,
+          "rmse_5m": 1.465,
+          "rmse_10m": 1.385,
+          "alt_rmse_m": 0.663,
+          "ice": {
+            "n": 913,
+            "n_ice": 885,
+            "f1": 0.916,
+            "balanced_accuracy": 0.836,
+            "roc_auc": 0.94
+          },
+          "physics_violation_rate": 0.1027
+        },
+        "gbm_per_depth": {
+          "rmse_0m": 1.586,
+          "rmse_1m": 1.533,
+          "rmse_2m": 1.551,
+          "rmse_5m": 1.54,
+          "rmse_10m": 1.566,
+          "physics_violation_rate": 0.673
+        },
+        "heat_model": {
+          "rmse_0m": 3.467,
+          "rmse_1m": 3.51,
+          "rmse_2m": 3.539,
+          "rmse_5m": 3.582,
+          "rmse_10m": 3.592,
+          "physics_violation_rate": 0.0
+        }
+      },
+      "Svalbard": {
+        "physics_informed_nn": {
+          "rmse_0m": 1.915,
+          "rmse_1m": 2.002,
+          "rmse_2m": 1.945,
+          "rmse_5m": 1.873,
+          "rmse_10m": 1.879,
+          "alt_rmse_m": 0.548,
+          "ice": {
+            "n": 89,
+            "n_ice": 89,
+            "f1": 0.953,
+            "balanced_accuracy": null,
+            "roc_auc": null
+          },
+          "physics_violation_rate": 0.0
+        },
+        "plain_nn": {
+          "rmse_0m": 3.216,
+          "rmse_1m": 3.148,
+          "rmse_2m": 2.885,
+          "rmse_5m": 2.897,
+          "rmse_10m": 2.701,
+          "alt_rmse_m": 0.62,
+          "ice": {
+            "n": 89,
+            "n_ice": 89,
+            "f1": 0.934,
+            "balanced_accuracy": null,
+            "roc_auc": null
+          },
+          "physics_violation_rate": 0.3371
+        },
+        "gbm_per_depth": {
+          "rmse_0m": 1.333,
+          "rmse_1m": 1.33,
+          "rmse_2m": 1.211,
+          "rmse_5m": 1.1,
+          "rmse_10m": 1.074,
+          "physics_violation_rate": 0.8427
+        },
+        "heat_model": {
+          "rmse_0m": 5.16,
+          "rmse_1m": 5.182,
+          "rmse_2m": 5.197,
+          "rmse_5m": 5.132,
+          "rmse_10m": 4.96,
+          "physics_violation_rate": 0.0
+        }
+      },
+      "Siberia": {
+        "physics_informed_nn": {
+          "rmse_0m": 1.891,
+          "rmse_1m": 1.614,
+          "rmse_2m": 1.557,
+          "rmse_5m": 1.425,
+          "rmse_10m": 1.335,
+          "alt_rmse_m": 0.381,
+          "ice": {
+            "n": 5750,
+            "n_ice": 4935,
+            "f1": 0.966,
+            "balanced_accuracy": 0.956,
+            "roc_auc": 0.993
+          },
+          "physics_violation_rate": 0.0014
+        },
+        "plain_nn": {
+          "rmse_0m": 1.861,
+          "rmse_1m": 1.581,
+          "rmse_2m": 1.532,
+          "rmse_5m": 1.39,
+          "rmse_10m": 1.297,
+          "alt_rmse_m": 0.401,
+          "ice": {
+            "n": 5750,
+            "n_ice": 4935,
+            "f1": 0.967,
+            "balanced_accuracy": 0.96,
+            "roc_auc": 0.993
+          },
+          "physics_violation_rate": 0.2233
+        },
+        "gbm_per_depth": {
+          "rmse_0m": 2.379,
+          "rmse_1m": 2.017,
+          "rmse_2m": 1.9,
+          "rmse_5m": 1.735,
+          "rmse_10m": 1.719,
+          "physics_violation_rate": 0.7182
+        },
+        "heat_model": {
+          "rmse_0m": 2.351,
+          "rmse_1m": 2.668,
+          "rmse_2m": 2.749,
+          "rmse_5m": 2.962,
+          "rmse_10m": 3.247,
+          "physics_violation_rate": 0.0
+        }
+      }
+    },
+    "train_seconds_physics_nn_cv": 116.2
+  },
+  "profile_ensemble": {
+    "members": 5,
+    "ood_method": "Mahalanobis distance in the 64-d hidden layer (Ledoit-Wolf), mean over members; flagged above the 99% quantile of held-out calibration blocks",
+    "leave_region_out": {
+      "Alaska": {
+        "n": 1619,
+        "rmse_all_depths_single_net": 1.523,
+        "rmse_all_depths_ensemble": 1.41,
+        "within_2_std": 0.402,
+        "spread_error_corr": 0.546,
+        "share_flagged": 0.01,
+        "rmse_flagged": 1.938,
+        "rmse_not_flagged": 1.404
+      },
+      "Tibet": {
+        "n": 1159,
+        "rmse_all_depths_single_net": 1.492,
+        "rmse_all_depths_ensemble": 1.515,
+        "within_2_std": 0.411,
+        "spread_error_corr": -0.077,
+        "share_flagged": 0.123,
+        "rmse_flagged": 1.51,
+        "rmse_not_flagged": 1.516
+      },
+      "Svalbard": {
+        "n": 89,
+        "rmse_all_depths_single_net": 2.211,
+        "rmse_all_depths_ensemble": 2.404,
+        "within_2_std": 0.449,
+        "spread_error_corr": -0.035,
+        "share_flagged": 0.371,
+        "rmse_flagged": 3.725,
+        "rmse_not_flagged": 1.004
+      },
+      "Siberia": {
+        "n": 6664,
+        "rmse_all_depths_single_net": 1.64,
+        "rmse_all_depths_ensemble": 1.511,
+        "within_2_std": 0.363,
+        "spread_error_corr": 0.071,
+        "share_flagged": 0.001,
+        "rmse_flagged": 1.138,
+        "rmse_not_flagged": 1.511
+      }
+    },
+    "unlabelled_world": {
+      "Antarctica (< 60 S)": {
+        "n": 27,
+        "share_flagged": 0.963
+      },
+      "Southern mid-latitudes (60-25 S)": {
+        "n": 3727,
+        "share_flagged": 0.843
+      },
+      "Tropics (25 S-25 N)": {
+        "n": 17819,
+        "share_flagged": 0.995
+      },
+      "North, outside CCI cover": {
+        "n": 18243,
+        "share_flagged": 0.509
+      }
+    },
+    "latitude_input": "|lat| (hemisphere-symmetric)"
+  },
+  "subsurface_production": {
+    "cells": 61726,
+    "from_cci": 21908,
+    "from_nn": 8485,
+    "extrapolated": 31333,
+    "ood_threshold": 14.962,
+    "members": 5
+  }
+}

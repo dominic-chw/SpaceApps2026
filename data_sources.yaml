@@ -249,6 +249,30 @@ earth:
     features: [rock]
     notes: "Link from the University of Hamburg page. The old ?dl=0 link returns an HTML page; this dl=1 redirect target serves the ZIP. Classes map to rock via pipeline/earth_library/glim_lookup.csv."
 
+  - id: pelletier_dtb
+    role: required
+    access: earthdata
+    status: ready
+    title: Global 1-km gridded thickness of soil, regolith and sedimentary deposits (Pelletier et al. 2016)
+    url: "https://doi.org/10.3334/ORNLDAAC/1304"
+    local_dir: data/earth/raw/pelletier_dtb
+    files:
+      - {url: "https://daac.ornl.gov/daacdata/global_soil/Global_Soil_Regolith_Sediment/data/average_soil_and_sedimentary-deposit_thickness.tif", name: average_soil_and_sedimentary-deposit_thickness.tif, size_mb: 73}
+    licence: "NASA ORNL DAAC, free with Earthdata login; cite Pelletier et al. 2016, JAMES 8, 41"
+    features: [ground_class, hardness]
+    notes: "Depth to bedrock -> bedrock in the deeper bands (build_layers.pelletier_grid, mean per 0.5 deg cell)."
+
+  - id: cci_permafrost
+    role: required
+    access: http
+    status: ready
+    title: ESA CCI Permafrost v4 (2021) permafrost fraction PFR and active-layer thickness ALT, NH 0.01 deg
+    local_dir: data/earth/cci_permafrost
+    landing: "https://climate.esa.int/en/projects/permafrost/"
+    licence: "CC BY 4.0; ESA Permafrost CCI"
+    features: [ice, ground_class]
+    notes: "PFR_2021.nc and ALT_2021.nc from the CEDA archive. Labels for the permafrost classifier (pipeline/earth_ml/permafrost.py) and ice inside 25-85 N."
+
   - id: nsidc_circumarctic_ground_ice
     role: required
     access: earthdata

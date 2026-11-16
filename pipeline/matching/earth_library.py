@@ -70,15 +70,84 @@ def band_entry(info):
     }
 
 
-def build(info_by_band, levels, min_coverage, spacing_km, fake=False):
-    """Assemble the whole earth_library.json dictionary."""
-    return {
+def build(info_by_band, levels, min_coverage, spacing_km, fake=False, hand_weights=None,
+          learned_weights=None, weights_in_use=None):
+    """Assemble the whole earth_library.json dictionary.
+
+    Extra keys (additions only, plan s3): per band `hand_weights` and `learned_weights` (for the
+    app's Hand-tuned / Learned toggle) and top-level `weights_in_use` (file the pipeline matched with).
+    """
+    bands = {band: band_entry(info) for band, info in info_by_band.items()}
+    for band, entry in bands.items():
+        names = [f["name"] for f in entry["features"]]
+        if hand_weights and band in hand_weights:
+            entry["hand_weights"] = {n: float(hand_weights[band].get(n, 1.0)) for n in names}
+        if learned_weights and band in learned_weights:
+            entry["learned_weights"] = {n: float(learned_weights[band].get(n, 1.0)) for n in names}
+    out = {
         "fake": fake,
         "levels": levels,
         "min_coverage": min_coverage,
         "spacing_km": spacing_km,
-        "bands": {band: band_entry(info) for band, info in info_by_band.items()},
+        "bands": bands,
     }
+    if weights_in_use:
+        out["weights_in_use"] = weights_in_use
+    return out
+
+
+def normalize_like(earth, prepared):
+    """Normalize a raw Earth wide table (load_tables.to_wide) EXACTLY like the library places of
+    `prepared` (match.prepare_band), so its rows can be scored in the browser the same way.
+    percentile -> position among the library's Earth values; log_z -> the library's Earth log mean/std;
+    same -> the library's word codes (unknown word = NaN); absolute / steps -> raw value."""
+    import numpy as np
+    import pandas as pd
+    from . import normalize
+    cols = []
+    for name, feature in prepared["features"].items():
+        column, compare = feature["column"], feature["compare"]
+        settings = prepared["settings"][name]
+        raw = earth[column] if column in earth else pd.Series(np.nan, index=earth.index)
+        if compare == "same":
+            codes = settings["codes"]
+            vals = raw.map(normalize.clean_word).map(lambda w: codes.get(w, np.nan) if w is not None else np.nan)
+        else:
+            x = pd.to_numeric(raw, errors="coerce").to_numpy(float)
+            if compare == "percentile":
+                ref = np.sort(pd.to_numeric(prepared["earth"][column], errors="coerce").dropna().to_numpy(float))
+                vals = np.full(len(x), np.nan)
+                if len(ref) == 1:
+                    vals[np.isfinite(x)] = 0.5
+                elif len(ref) > 1:
+                    ok = np.isfinite(x)
+                    vals[ok] = np.interp(x[ok], ref, np.linspace(0, 1, len(ref)))
+            elif compare == "log_z":
+                vals = (np.log1p(np.clip(x, 0, None)) - settings["earth_log_mean"]) / settings["earth_log_std"]
+            else:
+                vals = x
+        cols.append(np.asarray(vals, dtype=float))
+    return np.column_stack(cols) if cols else np.empty((len(earth), 0))
+
+
+def build_lookup(info_by_band, all_long, fake=False):
+    """output/earth_lookup.json: every land cell that is not a library place, normalized like the library,
+    for the reverse search only (these cells are never offered as Mars twins).
+    {fake, ids, lat, lon, bands: {band: {features: [names], v: [[...] per cell]}}}"""
+    from . import load_tables
+    wide = {band: load_tables.to_wide(all_long, band) for band in info_by_band}
+    ids = sorted(set.intersection(*(set(w["cell_id"]) for w in wide.values())))
+    if not ids:
+        return None
+    first = wide[next(iter(wide))].set_index("cell_id").loc[ids]
+    out = {"fake": fake, "ids": ids, "lat": [rounded(v, 3) for v in first["lat"]],
+           "lon": [rounded(v, 3) for v in first["lon"]], "bands": {}}
+    for band, info in info_by_band.items():
+        table = wide[band].set_index("cell_id").loc[ids].reset_index()
+        grid = normalize_like(table, info["prepared"])
+        out["bands"][band] = {"features": list(info["prepared"]["names"]),
+                              "v": [[rounded(v, 3) for v in row] for row in grid]}
+    return out
 
 
 def write(library, path=OUTPUT_PATH):
